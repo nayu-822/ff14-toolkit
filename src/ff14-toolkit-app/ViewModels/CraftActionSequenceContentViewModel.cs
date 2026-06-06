@@ -134,19 +134,15 @@ public sealed class CraftActionSequenceContentViewModel : ShellContentViewModel
 
     public string EditorTitle => DisplayName;
 
-    public string NameLabel => IsJapaneseCulture
-        ? "クラフトシーケンス名"
-        : localizationService["CraftingSequence_NameLabel"];
+    public string NameLabel => localizationService["CraftingSequence_NameFieldLabel"];
 
     public string NamePlaceholder => localizationService["CraftingSequence_NamePlaceholder"];
 
     public string SaveButtonLabel => IsEditing
-        ? IsJapaneseCulture ? "編集" : localizationService["CraftingSequence_UpdateButton"]
-        : IsJapaneseCulture ? "登録" : localizationService["CraftingSequence_CreateButton"];
+        ? localizationService["CraftingSequence_SaveUpdateLabel"]
+        : localizationService["CraftingSequence_SaveCreateLabel"];
 
-    public string CurrentStepsTitle => IsJapaneseCulture
-        ? "シーケンス"
-        : localizationService["CraftingSequence_CurrentStepsTitle"];
+    public string CurrentStepsTitle => localizationService["CraftingSequence_SequenceTitle"];
 
     public string CurrentStepsDescription => localizationService["CraftingSequence_CurrentStepsDescription"];
 
@@ -163,9 +159,6 @@ public sealed class CraftActionSequenceContentViewModel : ShellContentViewModel
         : localizationService["CraftingSequence_StatusIconsUnavailable"];
 
     public bool IsEditing => editingSequenceId.HasValue;
-
-    private bool IsJapaneseCulture =>
-        localizationService.CurrentCultureName.StartsWith("ja", StringComparison.OrdinalIgnoreCase);
 
     public void BeginCreate()
     {

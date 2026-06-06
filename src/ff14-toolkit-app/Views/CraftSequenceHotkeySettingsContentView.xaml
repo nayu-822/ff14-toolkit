@@ -1,0 +1,164 @@
+<UserControl x:Class="FF14Toolkit.App.Views.CraftSequenceHotkeySettingsContentView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d">
+    <Border Padding="24"
+            Style="{StaticResource SurfaceCardStyle}">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="12" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="12" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="12" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="16" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <TextBlock FontSize="16"
+                       Foreground="{StaticResource AppMutedTextBrush}"
+                       Text="{Binding OverlayOnlyNotice}" />
+
+            <Border Grid.Row="2"
+                    Padding="0,0,0,10"
+                    BorderBrush="{StaticResource AppBorderBrush}"
+                    BorderThickness="0,0,0,1">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="88" />
+                        <ColumnDefinition Width="120" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="120" />
+                        <ColumnDefinition Width="110" />
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock HorizontalAlignment="Center"
+                               FontWeight="SemiBold"
+                               Foreground="{StaticResource AppMutedTextBrush}"
+                               Text="{Binding EnabledColumnLabel}" />
+                    <TextBlock Grid.Column="1"
+                               HorizontalAlignment="Center"
+                               FontWeight="SemiBold"
+                               Foreground="{StaticResource AppMutedTextBrush}"
+                               Text="{Binding HotkeyColumnLabel}" />
+                    <TextBlock Grid.Column="2"
+                               Margin="8,0,8,0"
+                               FontWeight="SemiBold"
+                               Foreground="{StaticResource AppMutedTextBrush}"
+                               Text="{Binding SequenceColumnLabel}" />
+                    <TextBlock Grid.Column="3"
+                               HorizontalAlignment="Center"
+                               FontWeight="SemiBold"
+                               Foreground="{StaticResource AppMutedTextBrush}"
+                               Text="{Binding RepeatColumnLabel}" />
+                    <TextBlock Grid.Column="4"
+                               HorizontalAlignment="Center"
+                               FontWeight="SemiBold"
+                               Foreground="{StaticResource AppMutedTextBrush}"
+                               Text="{Binding StatusColumnLabel}" />
+                </Grid>
+            </Border>
+
+            <Grid Grid.Row="4">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="110" />
+                    <ColumnDefinition Width="12" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <TextBlock VerticalAlignment="Top"
+                           FontWeight="SemiBold"
+                           Foreground="{StaticResource AppTextBrush}"
+                           Text="{Binding LastActivityLabel}" />
+                <TextBlock Grid.Column="2"
+                           Foreground="{StaticResource AppMutedTextBrush}"
+                           TextWrapping="Wrap"
+                           Text="{Binding LastActivity}" />
+            </Grid>
+
+            <Grid Grid.Row="6">
+                <ScrollViewer VerticalScrollBarVisibility="Auto"
+                              HorizontalScrollBarVisibility="Disabled">
+                    <ItemsControl ItemsSource="{Binding HotkeySlots}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Padding="0,10,0,10"
+                                        BorderBrush="{StaticResource AppBorderBrush}"
+                                        BorderThickness="0,0,0,1">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="88" />
+                                            <ColumnDefinition Width="120" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="120" />
+                                            <ColumnDefinition Width="110" />
+                                        </Grid.ColumnDefinitions>
+
+                                        <CheckBox HorizontalAlignment="Center"
+                                                  VerticalAlignment="Center"
+                                                  IsChecked="{Binding IsEnabled, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+
+                                        <TextBlock Grid.Column="1"
+                                                   VerticalAlignment="Center"
+                                                   HorizontalAlignment="Center"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="{StaticResource AppTextBrush}"
+                                                   Text="{Binding HotkeyText}" />
+
+                                        <ComboBox Grid.Column="2"
+                                                  Margin="8,0,8,0"
+                                                  ItemsSource="{Binding DataContext.AvailableSequences, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                  SelectedValuePath="SequenceId"
+                                                  DisplayMemberPath="DisplayName"
+                                                  SelectedValue="{Binding SelectedSequenceId, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                  Style="{StaticResource ToolkitComboBoxStyle}" />
+
+                                        <TextBox Grid.Column="3"
+                                                 Width="96"
+                                                 HorizontalAlignment="Center"
+                                                 Text="{Binding RepeatCountText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                 Style="{StaticResource ToolkitTextBoxStyle}" />
+
+                                        <TextBlock Grid.Column="4"
+                                                   VerticalAlignment="Center"
+                                                   HorizontalAlignment="Center"
+                                                   Foreground="{StaticResource AppMutedTextBrush}"
+                                                   Text="{Binding RegistrationStatusText}" />
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+
+                <TextBlock HorizontalAlignment="Center"
+                           VerticalAlignment="Center"
+                           Foreground="{StaticResource AppMutedTextBrush}"
+                           Text="{Binding EmptySequencesMessage}">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding AvailableSequences.Count}" Value="1">
+                                    <Setter Property="Visibility" Value="Visible" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
+            </Grid>
+
+            <Button Grid.Row="8"
+                    HorizontalAlignment="Left"
+                    MinWidth="88"
+                    Padding="16,8"
+                    Command="{Binding SaveCommand}"
+                    Content="{Binding SaveButtonLabel}"
+                    Style="{StaticResource PrimaryButtonStyle}" />
+        </Grid>
+    </Border>
+</UserControl>

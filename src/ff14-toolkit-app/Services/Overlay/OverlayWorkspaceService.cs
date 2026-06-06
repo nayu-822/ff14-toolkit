@@ -1,4 +1,5 @@
 using FF14Toolkit.App.Models.Overlay;
+using FF14Toolkit.App.Services.Localization;
 using FF14Toolkit.App.ViewModels;
 using FF14Toolkit.App.Views;
 using System.Windows;
@@ -13,14 +14,20 @@ public sealed class OverlayWorkspaceService
     private const double DefaultMargin = 24;
 
     private readonly OverlayLayoutStore layoutStore;
+    private readonly ILocalizationService localizationService;
     private readonly DispatcherTimer persistTimer;
     private readonly Dictionary<string, OverlayWindowLayout> layoutsById;
     private readonly List<OverlayWindowHost> overlayWindows;
     private Window? mainWindow;
 
-    public OverlayWorkspaceService(OverlayLayoutStore layoutStore)
+    public event EventHandler? StateChanged;
+
+    public OverlayWorkspaceService(
+        OverlayLayoutStore layoutStore,
+        ILocalizationService localizationService)
     {
         this.layoutStore = layoutStore;
+        this.localizationService = localizationService;
         layoutsById = layoutStore.LoadLayouts()
             .Where(IsValidLayout)
             .ToDictionary(layout => layout.WindowId, StringComparer.OrdinalIgnoreCase);
@@ -66,6 +73,8 @@ public sealed class OverlayWorkspaceService
         {
             host.Window.SetEditMode(IsEditMode);
         }
+
+        StateChanged?.Invoke(this, EventArgs.Empty);
     }
 
     public void Shutdown()
@@ -87,7 +96,7 @@ public sealed class OverlayWorkspaceService
 
         foreach (OverlayWindowDefinition definition in CreateDefinitions())
         {
-            OverlayWindow window = new(new OverlayWindowViewModel(definition.Title));
+            OverlayWindow window = new(new OverlayWindowViewModel(localizationService, definition.TitleResourceKey));
             window.LayoutChanged += OnOverlayWindowLayoutChanged;
             window.SetEditMode(IsEditMode);
             ApplyLayout(window, definition);
@@ -114,6 +123,7 @@ public sealed class OverlayWorkspaceService
 
         mainWindow.Hide();
         IsOverlayMode = true;
+        StateChanged?.Invoke(this, EventArgs.Empty);
     }
 
     private void ShowForegroundWindow()
@@ -141,6 +151,7 @@ public sealed class OverlayWorkspaceService
         mainWindow.Topmost = false;
 
         IsOverlayMode = false;
+        StateChanged?.Invoke(this, EventArgs.Empty);
     }
 
     private void ApplyLayout(OverlayWindow window, OverlayWindowDefinition definition)
@@ -238,13 +249,13 @@ public sealed class OverlayWorkspaceService
     {
         return
         [
-            new OverlayWindowDefinition("overlay-top-left", "オーバーレイ 1", OverlayAnchor.TopLeft),
-            new OverlayWindowDefinition("overlay-top-right", "オーバーレイ 2", OverlayAnchor.TopRight),
-            new OverlayWindowDefinition("overlay-bottom-right", "オーバーレイ 3", OverlayAnchor.BottomRight)
+            new OverlayWindowDefinition("overlay-top-left", "Overlay_WindowTitle1", OverlayAnchor.TopLeft),
+            new OverlayWindowDefinition("overlay-top-right", "Overlay_WindowTitle2", OverlayAnchor.TopRight),
+            new OverlayWindowDefinition("overlay-bottom-right", "Overlay_WindowTitle3", OverlayAnchor.BottomRight)
         ];
     }
 
-    private sealed record OverlayWindowDefinition(string WindowId, string Title, OverlayAnchor Anchor);
+    private sealed record OverlayWindowDefinition(string WindowId, string TitleResourceKey, OverlayAnchor Anchor);
 
     private sealed record OverlayWindowHost(OverlayWindowDefinition Definition, OverlayWindow Window);
 

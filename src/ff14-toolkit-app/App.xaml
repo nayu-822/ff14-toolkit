@@ -246,8 +246,8 @@
             <Setter Property="Background" Value="{StaticResource AppSurfaceBrush}" />
             <Setter Property="BorderBrush" Value="{StaticResource AppBorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="Padding" Value="16,11" />
-            <Setter Property="MinHeight" Value="46" />
+            <Setter Property="Padding" Value="14,8" />
+            <Setter Property="MinHeight" Value="40" />
             <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled" />
             <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto" />
             <Setter Property="ItemContainerStyle" Value="{StaticResource ToolkitComboBoxItemStyle}" />
@@ -354,7 +354,7 @@
                         </Grid>
                         <ControlTemplate.Triggers>
                             <Trigger Property="HasItems" Value="False">
-                                <Setter Property="MinHeight" Value="46" />
+                                <Setter Property="MinHeight" Value="40" />
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="False">
                                 <Setter Property="Opacity" Value="0.55" />
@@ -370,8 +370,8 @@
             <Setter Property="Background" Value="{StaticResource AppSurfaceBrush}" />
             <Setter Property="BorderBrush" Value="{StaticResource AppBorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="Padding" Value="16,11" />
-            <Setter Property="MinHeight" Value="46" />
+            <Setter Property="Padding" Value="14,8" />
+            <Setter Property="MinHeight" Value="40" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="TextBox">

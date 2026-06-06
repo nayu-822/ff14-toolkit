@@ -8,79 +8,386 @@
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />
             <ColumnDefinition Width="16" />
-            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="1.4*" />
         </Grid.ColumnDefinitions>
 
-        <Border Padding="24"
-                Style="{StaticResource SurfaceCardStyle}">
-            <StackPanel>
-                <TextBlock FontSize="18"
-                           FontWeight="SemiBold"
-                           Foreground="{StaticResource AppTextBrush}"
-                           Text="{Binding LanguageCardTitle}" />
-                <TextBlock Margin="0,12,0,0"
-                           Foreground="{StaticResource AppMutedTextBrush}"
-                           TextWrapping="Wrap"
-                           Text="{Binding LanguageCardDescription}" />
-            </StackPanel>
-        </Border>
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="16" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <Border Padding="24"
+                    Style="{StaticResource SurfaceCardStyle}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="12" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="12" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <StackPanel>
+                        <TextBlock FontSize="18"
+                                   FontWeight="SemiBold"
+                                   Foreground="{StaticResource AppTextBrush}"
+                                   Text="{Binding HotkeyCardTitle}" />
+                        <TextBlock Margin="0,12,0,0"
+                                   Foreground="{StaticResource AppMutedTextBrush}"
+                                   TextWrapping="Wrap"
+                                   Text="{Binding HotkeyCardDescription}" />
+                    </StackPanel>
+
+                    <Grid Grid.Row="2">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="10" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="170" />
+                            <ColumnDefinition Width="12" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="10" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="10" />
+                            <ColumnDefinition Width="48" />
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock VerticalAlignment="Center"
+                                   FontWeight="SemiBold"
+                                   Foreground="{StaticResource AppTextBrush}"
+                                   Text="{Binding ToggleOverlayHotKeyLabel}" />
+                        <TextBox x:Name="ToggleOverlayHotKeyTextBox"
+                                 Grid.Column="2"
+                                 IsReadOnly="True"
+                                 GotKeyboardFocus="OnHotKeyTextBoxGotKeyboardFocus"
+                                 LostKeyboardFocus="OnHotKeyTextBoxLostKeyboardFocus"
+                                 PreviewMouseLeftButtonDown="OnHotKeyTextBoxPreviewMouseLeftButtonDown"
+                                 PreviewKeyDown="OnHotKeyTextBoxPreviewKeyDown"
+                                 PreviewTextInput="OnHotKeyTextBoxPreviewTextInput"
+                                 Text="{Binding ToggleOverlayHotKey, UpdateSourceTrigger=PropertyChanged}"
+                                 Style="{StaticResource ToolkitTextBoxStyle}" />
+                        <TextBlock x:Name="ToggleOverlayHotKeyCaptureStateTextBlock"
+                                   Grid.Column="6"
+                                   VerticalAlignment="Center"
+                                   Foreground="{StaticResource AppAccentBrush}"
+                                   FontWeight="SemiBold"
+                                   Text="{Binding HotkeyCapturingLabel}"
+                                   Visibility="Hidden" />
+
+                        <TextBlock Grid.Row="2"
+                                   VerticalAlignment="Center"
+                                   FontWeight="SemiBold"
+                                   Foreground="{StaticResource AppTextBrush}"
+                                   Text="{Binding ToggleOverlayEditHotKeyLabel}" />
+                        <TextBox x:Name="ToggleOverlayEditHotKeyTextBox"
+                                 Grid.Row="2"
+                                 Grid.Column="2"
+                                 IsReadOnly="True"
+                                 GotKeyboardFocus="OnHotKeyTextBoxGotKeyboardFocus"
+                                 LostKeyboardFocus="OnHotKeyTextBoxLostKeyboardFocus"
+                                 PreviewMouseLeftButtonDown="OnHotKeyTextBoxPreviewMouseLeftButtonDown"
+                                 PreviewKeyDown="OnHotKeyTextBoxPreviewKeyDown"
+                                 PreviewTextInput="OnHotKeyTextBoxPreviewTextInput"
+                                 Text="{Binding ToggleOverlayEditHotKey, UpdateSourceTrigger=PropertyChanged}"
+                                 Style="{StaticResource ToolkitTextBoxStyle}" />
+                        <TextBlock x:Name="ToggleOverlayEditHotKeyCaptureStateTextBlock"
+                                   Grid.Row="2"
+                                   Grid.Column="6"
+                                   VerticalAlignment="Center"
+                                   Foreground="{StaticResource AppAccentBrush}"
+                                   FontWeight="SemiBold"
+                                   Text="{Binding HotkeyCapturingLabel}"
+                                   Visibility="Hidden" />
+                    </Grid>
+
+                    <Button Grid.Row="4"
+                            HorizontalAlignment="Left"
+                            MinWidth="88"
+                            Padding="16,8"
+                            Command="{Binding SaveHotkeysCommand}"
+                            Content="{Binding SaveHotkeysButtonLabel}"
+                            Style="{StaticResource PrimaryButtonStyle}" />
+                </Grid>
+            </Border>
+
+            <Border Grid.Row="2"
+                    Padding="20"
+                    Style="{StaticResource SurfaceCardStyle}">
+                <StackPanel>
+                    <TextBlock FontSize="18"
+                               FontWeight="SemiBold"
+                               Foreground="{StaticResource AppTextBrush}"
+                               Text="{Binding CachePathTitle}" />
+                    <TextBlock Margin="0,12,0,0"
+                               FontFamily="Consolas"
+                               Foreground="{StaticResource AppAccentBrush}"
+                               TextWrapping="Wrap"
+                               Text="{Binding CacheRootPath}" />
+                    <TextBlock Margin="0,8,0,0"
+                               FontFamily="Consolas"
+                               Foreground="{StaticResource AppAccentBrush}"
+                               TextWrapping="Wrap"
+                               Text="{Binding CacheIconsPath}" />
+                    <Button Margin="0,12,0,0"
+                            HorizontalAlignment="Left"
+                            Command="{Binding OpenCacheRootPathCommand}"
+                            Content="{Binding OpenCacheRootPathLabel}"
+                            Style="{StaticResource QuietButtonStyle}" />
+                </StackPanel>
+            </Border>
+        </Grid>
 
         <Border Grid.Column="2"
                 Padding="20"
                 Style="{StaticResource SurfaceCardStyle}">
-            <StackPanel>
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="12" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="16" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="10" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="20" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="12" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
                 <TextBlock FontSize="18"
                            FontWeight="SemiBold"
                            Foreground="{StaticResource AppTextBrush}"
                            Text="{Binding CharacterSettingsCardTitle}" />
-                <TextBlock Margin="0,12,0,0"
-                           Foreground="{StaticResource AppMutedTextBrush}"
-                           TextWrapping="Wrap"
-                           Text="{Binding CharacterSettingsCardDescription}" />
-                <TextBlock Margin="0,12,0,0"
-                           FontFamily="Consolas"
-                           Foreground="{StaticResource AppAccentBrush}"
-                           TextWrapping="Wrap"
-                           Text="{Binding CharacterSettingsCurrentPath}" />
-                <Grid Margin="0,12,0,0">
+
+                <Grid Grid.Row="2">
                     <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="110" />
+                        <ColumnDefinition Width="12" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock VerticalAlignment="Center"
+                               FontWeight="SemiBold"
+                               Foreground="{StaticResource AppTextBrush}"
+                               Text="{Binding CharacterSettingsSelectionLabel}" />
+
+                    <ComboBox Grid.Column="2"
+                              ItemsSource="{Binding RegisteredCharacters}"
+                              SelectedItem="{Binding SelectedCharacter, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                              DisplayMemberPath="DisplayLabel"
+                              Style="{StaticResource ToolkitComboBoxStyle}" />
+                </Grid>
+
+                <Grid Grid.Row="4">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="110" />
+                        <ColumnDefinition Width="12" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock VerticalAlignment="Top"
+                               FontWeight="SemiBold"
+                               Foreground="{StaticResource AppTextBrush}"
+                               Text="{Binding CharacterSettingsCurrentPathLabel}" />
+
+                    <TextBlock Grid.Column="2"
+                               Foreground="{StaticResource AppAccentBrush}"
+                               FontFamily="Consolas"
+                               TextWrapping="Wrap"
+                               Text="{Binding CharacterSettingsCurrentPath}" />
+                </Grid>
+
+                <Grid Grid.Row="6"
+                      Grid.IsSharedSizeScope="True">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="10" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" SharedSizeGroup="CharacterNameColumn" />
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="WorldColumn" />
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="EditColumn" />
+                            <ColumnDefinition Width="12" />
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="DeleteColumn" />
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock FontWeight="SemiBold"
+                                   Foreground="{StaticResource AppMutedTextBrush}"
+                                   Margin="4,0,0,0"
+                                   Text="{Binding CharacterListNameColumnLabel}" />
+
+                        <TextBlock Grid.Column="1"
+                                   MinWidth="140"
+                                   HorizontalAlignment="Center"
+                                   FontWeight="SemiBold"
+                                   Foreground="{StaticResource AppMutedTextBrush}"
+                                   Text="{Binding CharacterListWorldColumnLabel}" />
+
+                        <TextBlock Grid.Column="2"
+                                   MinWidth="88"
+                                   HorizontalAlignment="Center"
+                                   FontWeight="SemiBold"
+                                   Foreground="{StaticResource AppMutedTextBrush}"
+                                   Text="{Binding CharacterListEditColumnLabel}" />
+
+                        <TextBlock Grid.Column="4"
+                                   MinWidth="88"
+                                   HorizontalAlignment="Center"
+                                   FontWeight="SemiBold"
+                                   Foreground="{StaticResource AppMutedTextBrush}"
+                                   Text="{Binding CharacterListDeleteColumnLabel}" />
+                    </Grid>
+
+                    <Grid Grid.Row="2">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto"
+                                      HorizontalScrollBarVisibility="Disabled">
+                            <ItemsControl ItemsSource="{Binding RegisteredCharacters}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Padding="0,10,0,10"
+                                                BorderBrush="{StaticResource AppBorderBrush}"
+                                                BorderThickness="0,0,0,1">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" SharedSizeGroup="CharacterNameColumn" />
+                                                    <ColumnDefinition Width="Auto" SharedSizeGroup="WorldColumn" />
+                                                    <ColumnDefinition Width="Auto" SharedSizeGroup="EditColumn" />
+                                                    <ColumnDefinition Width="12" />
+                                                    <ColumnDefinition Width="Auto" SharedSizeGroup="DeleteColumn" />
+                                                </Grid.ColumnDefinitions>
+
+                                                <TextBlock Margin="4,0,12,0"
+                                                           VerticalAlignment="Center"
+                                                           FontWeight="SemiBold"
+                                                           Foreground="{StaticResource AppTextBrush}"
+                                                           Text="{Binding CharacterName}" />
+
+                                                <TextBlock Grid.Column="1"
+                                                           MinWidth="140"
+                                                           HorizontalAlignment="Center"
+                                                           VerticalAlignment="Center"
+                                                           Foreground="{StaticResource AppMutedTextBrush}"
+                                                           Text="{Binding WorldName}" />
+
+                                                <Button Grid.Column="2"
+                                                        MinWidth="88"
+                                                        Command="{Binding DataContext.EditCharacterCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                        CommandParameter="{Binding}"
+                                                        Content="{Binding DataContext.CharacterListEditColumnLabel, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                        Style="{StaticResource QuietButtonStyle}" />
+
+                                                <Button Grid.Column="4"
+                                                        MinWidth="88"
+                                                        Command="{Binding DataContext.DeleteCharacterCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                        CommandParameter="{Binding}"
+                                                        Content="{Binding DataContext.CharacterListDeleteColumnLabel, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                        Style="{StaticResource QuietButtonStyle}" />
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+
+                        <TextBlock HorizontalAlignment="Center"
+                                   VerticalAlignment="Center"
+                                   Foreground="{StaticResource AppMutedTextBrush}"
+                                   Text="{Binding CharacterListEmptyMessage}">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding RegisteredCharacters.Count}" Value="0">
+                                            <Setter Property="Visibility" Value="Visible" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                    </Grid>
+                </Grid>
+
+                <Grid Grid.Row="8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock VerticalAlignment="Center"
+                               FontSize="18"
+                               FontWeight="SemiBold"
+                               Foreground="{StaticResource AppTextBrush}"
+                               Text="{Binding CharacterFormTitle}" />
+
+                    <Button Grid.Column="1"
+                            MinWidth="110"
+                            Padding="16,8"
+                            Command="{Binding BeginCreateCharacterCommand}"
+                            Content="{Binding CharacterSettingsCreateButtonLabel}"
+                            Style="{StaticResource QuietButtonStyle}" />
+                </Grid>
+
+                <Grid Grid.Row="10">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="10" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="10" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="110" />
+                        <ColumnDefinition Width="12" />
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="10" />
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
 
-                    <TextBox Grid.Column="0"
+                    <TextBlock VerticalAlignment="Center"
+                               FontWeight="SemiBold"
+                               Foreground="{StaticResource AppTextBrush}"
+                               Text="{Binding CharacterNameLabel}" />
+                    <TextBox Grid.Column="2"
+                             Text="{Binding CharacterName, UpdateSourceTrigger=PropertyChanged}"
+                             Style="{StaticResource ToolkitTextBoxStyle}" />
+
+                    <TextBlock Grid.Row="2"
+                               VerticalAlignment="Center"
+                               FontWeight="SemiBold"
+                               Foreground="{StaticResource AppTextBrush}"
+                               Text="{Binding WorldNameLabel}" />
+                    <TextBox Grid.Row="2"
+                             Grid.Column="2"
+                             Text="{Binding WorldName, UpdateSourceTrigger=PropertyChanged}"
+                             Style="{StaticResource ToolkitTextBoxStyle}" />
+
+                    <TextBlock Grid.Row="4"
+                               VerticalAlignment="Center"
+                               FontWeight="SemiBold"
+                               Foreground="{StaticResource AppTextBrush}"
+                               Text="{Binding CharacterSettingsPathLabel}" />
+                    <TextBox Grid.Row="4"
+                             Grid.Column="2"
                              Text="{Binding CharacterSettingsPath, UpdateSourceTrigger=PropertyChanged}"
                              Style="{StaticResource ToolkitTextBoxStyle}" />
 
-                    <Button Grid.Column="2"
+                    <Button Grid.Row="4"
+                            Grid.Column="4"
                             MinWidth="96"
                             Padding="16,8"
                             Command="{Binding SaveCharacterSettingsCommand}"
                             Content="{Binding CharacterSettingsSaveButtonLabel}"
                             Style="{StaticResource PrimaryButtonStyle}" />
                 </Grid>
-
-                <TextBlock FontSize="18"
-                           Margin="0,20,0,0"
-                           FontWeight="SemiBold"
-                           Foreground="{StaticResource AppTextBrush}"
-                           Text="{Binding CachePathTitle}" />
-                <TextBlock Margin="0,12,0,0"
-                           Foreground="{StaticResource AppMutedTextBrush}"
-                           TextWrapping="Wrap"
-                           Text="{Binding CachePathDescription}" />
-                <TextBlock Margin="0,12,0,0"
-                           FontFamily="Consolas"
-                           Foreground="{StaticResource AppAccentBrush}"
-                           TextWrapping="Wrap"
-                           Text="{Binding CacheRootPath}" />
-                <TextBlock Margin="0,8,0,0"
-                           FontFamily="Consolas"
-                           Foreground="{StaticResource AppAccentBrush}"
-                           TextWrapping="Wrap"
-                           Text="{Binding CacheIconsPath}" />
-            </StackPanel>
+            </Grid>
         </Border>
     </Grid>
 </UserControl>

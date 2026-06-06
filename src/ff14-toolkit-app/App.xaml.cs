@@ -13,6 +13,8 @@ namespace FF14Toolkit.App;
 
 public partial class App : Application
 {
+    public static IServiceProvider? Services { get; private set; }
+
     private IHost? host;
 
     protected override async void OnStartup(StartupEventArgs e)
@@ -35,6 +37,7 @@ public partial class App : Application
             .Build();
 
         await host.StartAsync();
+        Services = host.Services;
 
         var localizationOptions = host.Services.GetRequiredService<IOptions<LocalizationOptions>>().Value;
         var localizationService = host.Services.GetRequiredService<ILocalizationService>();
@@ -53,6 +56,8 @@ public partial class App : Application
             await host.StopAsync();
             host.Dispose();
         }
+
+        Services = null;
 
         base.OnExit(e);
     }

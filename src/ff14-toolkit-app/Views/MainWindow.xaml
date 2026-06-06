@@ -8,10 +8,10 @@
         xmlns:views="clr-namespace:FF14Toolkit.App.Views"
         mc:Ignorable="d"
         Title="{markup:Localize App_Title}"
-        Height="760"
-        Width="1480"
-        MinHeight="640"
-        MinWidth="1200"
+        Height="820"
+        Width="1560"
+        MinHeight="820"
+        MinWidth="1560"
         Background="{StaticResource AppWindowBackgroundBrush}">
     <Window.Resources>
         <DataTemplate DataType="{x:Type viewModels:PlaceholderContentViewModel}">
@@ -24,6 +24,10 @@
 
         <DataTemplate DataType="{x:Type viewModels:CraftActionSequenceContentViewModel}">
             <views:CraftActionSequenceContentView />
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type viewModels:CraftSequenceHotkeySettingsContentViewModel}">
+            <views:CraftSequenceHotkeySettingsContentView />
         </DataTemplate>
 
         <DataTemplate DataType="{x:Type viewModels:SettingsContentViewModel}">

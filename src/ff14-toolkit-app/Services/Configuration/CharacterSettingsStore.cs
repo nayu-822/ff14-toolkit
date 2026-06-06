@@ -13,7 +13,8 @@ public sealed class CharacterSettingsStore
     };
 
     private readonly string storagePath;
-    private string rootPath;
+    private readonly List<CharacterProfile> profiles;
+    private Guid? selectedProfileId;
 
     public CharacterSettingsStore(
         IOptions<CacheOptions> cacheOptions,
@@ -30,21 +31,93 @@ public sealed class CharacterSettingsStore
         }
 
         storagePath = ResolveStoragePath(cacheOptions.Value);
-        rootPath = characterSettingsOptions.Value.RootPath ?? string.Empty;
+
+        CharacterSettingsState state = new()
+        {
+            SelectedProfileId = characterSettingsOptions.Value.SelectedProfileId,
+            Profiles = characterSettingsOptions.Value.Profiles
+                .Select(CloneProfile)
+                .ToList()
+        };
 
         CharacterSettingsState? persistedState = Load();
         if (persistedState is not null)
         {
-            rootPath = persistedState.RootPath ?? string.Empty;
+            state = persistedState;
         }
+
+        profiles = state.Profiles
+            .Where(profile => profile is not null)
+            .Select(NormalizeProfile)
+            .ToList();
+        selectedProfileId = profiles.Any(profile => profile.ProfileId == state.SelectedProfileId)
+            ? state.SelectedProfileId
+            : profiles.FirstOrDefault()?.ProfileId;
     }
 
-    public string RootPath => rootPath;
+    public IReadOnlyList<CharacterProfile> Profiles => profiles;
 
-    public void Save(string path)
+    public Guid? SelectedProfileId => selectedProfileId;
+
+    public CharacterProfile? SelectedProfile => selectedProfileId is Guid profileId
+        ? profiles.FirstOrDefault(profile => profile.ProfileId == profileId)
+        : null;
+
+    public string RootPath => SelectedProfile?.RootPath ?? string.Empty;
+
+    public void Select(Guid? profileId)
     {
-        rootPath = path?.Trim() ?? string.Empty;
+        if (profileId is not Guid value || profiles.All(profile => profile.ProfileId != value))
+        {
+            selectedProfileId = null;
+        }
+        else
+        {
+            selectedProfileId = value;
+        }
 
+        Persist();
+    }
+
+    public CharacterProfile Save(CharacterProfile profile)
+    {
+        CharacterProfile normalizedProfile = NormalizeProfile(profile);
+        int existingIndex = profiles.FindIndex(item => item.ProfileId == normalizedProfile.ProfileId);
+        if (existingIndex >= 0)
+        {
+            profiles[existingIndex] = normalizedProfile;
+        }
+        else
+        {
+            profiles.Add(normalizedProfile);
+        }
+
+        selectedProfileId = normalizedProfile.ProfileId;
+        Persist();
+        return normalizedProfile;
+    }
+
+    public bool Delete(Guid profileId)
+    {
+        int existingIndex = profiles.FindIndex(profile => profile.ProfileId == profileId);
+        if (existingIndex < 0)
+        {
+            return false;
+        }
+
+        profiles.RemoveAt(existingIndex);
+
+        if (selectedProfileId == profileId)
+        {
+            selectedProfileId = profiles.FirstOrDefault()?.ProfileId;
+        }
+
+        Persist();
+        return true;
+    }
+
+    private void Persist()
+    {
         string? directoryPath = Path.GetDirectoryName(storagePath);
         if (!string.IsNullOrWhiteSpace(directoryPath))
         {
@@ -53,7 +126,8 @@ public sealed class CharacterSettingsStore
 
         CharacterSettingsState state = new()
         {
-            RootPath = rootPath
+            SelectedProfileId = selectedProfileId,
+            Profiles = profiles.Select(CloneProfile).ToList()
         };
 
         string json = JsonSerializer.Serialize(state, SerializerOptions);
@@ -76,6 +150,31 @@ public sealed class CharacterSettingsStore
         {
             return null;
         }
+    }
+
+    private static CharacterProfile NormalizeProfile(CharacterProfile profile)
+    {
+        CharacterProfile normalizedProfile = CloneProfile(profile);
+        if (normalizedProfile.ProfileId == Guid.Empty)
+        {
+            normalizedProfile.ProfileId = Guid.NewGuid();
+        }
+
+        normalizedProfile.CharacterName = normalizedProfile.CharacterName.Trim();
+        normalizedProfile.WorldName = normalizedProfile.WorldName.Trim();
+        normalizedProfile.RootPath = normalizedProfile.RootPath.Trim();
+        return normalizedProfile;
+    }
+
+    private static CharacterProfile CloneProfile(CharacterProfile profile)
+    {
+        return new CharacterProfile
+        {
+            ProfileId = profile.ProfileId,
+            CharacterName = profile.CharacterName,
+            WorldName = profile.WorldName,
+            RootPath = profile.RootPath
+        };
     }
 
     private static string ResolveStoragePath(CacheOptions cacheOptions)

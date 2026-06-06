@@ -22,12 +22,20 @@ public static class ServiceCollectionExtensions
             .BindConfiguration("Cache");
         services.AddOptions<CharacterSettingsOptions>()
             .BindConfiguration("CharacterSettings");
+        services.AddOptions<HotkeySettingsOptions>()
+            .BindConfiguration("Hotkeys");
         services.AddOptions<LuminaOptions>()
             .BindConfiguration("Lumina");
         services.AddSingleton(LocalizationService.Instance);
         services.AddSingleton<ILocalizationService>(serviceProvider => serviceProvider.GetRequiredService<LocalizationService>());
         services.AddSingleton<CharacterSettingsStore>();
+        services.AddSingleton<HotkeySettingsStore>();
+        services.AddSingleton<HotkeyCaptureState>();
         services.AddSingleton<CraftActionSequenceStore>();
+        services.AddSingleton<CraftSequenceHotkeyStore>();
+        services.AddSingleton<CraftSequenceHotkeyRegistrationState>();
+        services.AddSingleton<CraftSequenceHotkeyActivityState>();
+        services.AddSingleton<CraftSequenceHotkeyExecutionService>();
         services.AddSingleton<IGameDataService, LuminaGameDataService>();
         services.AddSingleton<HotbarDatParser>();
         services.AddSingleton<HotbarPathResolver>();

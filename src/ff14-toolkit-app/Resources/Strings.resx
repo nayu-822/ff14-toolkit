@@ -282,4 +282,208 @@
   <data name="CraftingSequence_UpdateButton" xml:space="preserve">
     <value>更新する</value>
   </data>
+  <data name="Settings_HotkeyCardTitle" xml:space="preserve">
+    <value>キーバインド設定</value>
+  </data>
+  <data name="Settings_HotkeyCardDescription" xml:space="preserve">
+    <value>オーバーレイ切替とオーバーレイUI編集モード切替のキーバインドを設定します。</value>
+  </data>
+  <data name="Settings_ToggleOverlayHotKeyLabel" xml:space="preserve">
+    <value>オーバーレイ切替</value>
+  </data>
+  <data name="Settings_ToggleOverlayEditHotKeyLabel" xml:space="preserve">
+    <value>オーバーレイUI編集モード切替</value>
+  </data>
+  <data name="Settings_SaveButtonLabel" xml:space="preserve">
+    <value>保存</value>
+  </data>
+  <data name="Settings_OpenCacheRootPathLabel" xml:space="preserve">
+    <value>キャッシュフォルダを開く</value>
+  </data>
+  <data name="Settings_HotkeyCapturingLabel" xml:space="preserve">
+    <value>入力中</value>
+  </data>
+  <data name="Settings_CharacterCardTitle" xml:space="preserve">
+    <value>キャラクター設定</value>
+  </data>
+  <data name="Settings_CharacterSelectionLabel" xml:space="preserve">
+    <value>利用キャラクター</value>
+  </data>
+  <data name="Settings_CharacterCurrentPathLabel" xml:space="preserve">
+    <value>設定フォルダパス</value>
+  </data>
+  <data name="Settings_Unconfigured" xml:space="preserve">
+    <value>未設定</value>
+  </data>
+  <data name="Settings_CharacterNameColumnLabel" xml:space="preserve">
+    <value>キャラクター名</value>
+  </data>
+  <data name="Settings_WorldColumnLabel" xml:space="preserve">
+    <value>サーバー名</value>
+  </data>
+  <data name="Settings_EditColumnLabel" xml:space="preserve">
+    <value>編集</value>
+  </data>
+  <data name="Settings_DeleteColumnLabel" xml:space="preserve">
+    <value>削除</value>
+  </data>
+  <data name="Settings_CharacterEditTitle" xml:space="preserve">
+    <value>キャラクター編集</value>
+  </data>
+  <data name="Settings_CharacterCreateTitle" xml:space="preserve">
+    <value>キャラクター登録</value>
+  </data>
+  <data name="Settings_CharacterNameLabel" xml:space="preserve">
+    <value>キャラクター名</value>
+  </data>
+  <data name="Settings_WorldNameLabel" xml:space="preserve">
+    <value>サーバー名</value>
+  </data>
+  <data name="Settings_CharacterSettingsPathLabel" xml:space="preserve">
+    <value>設定フォルダパス</value>
+  </data>
+  <data name="Settings_CharacterUpdateButtonLabel" xml:space="preserve">
+    <value>編集</value>
+  </data>
+  <data name="Settings_CharacterCreateButtonLabel" xml:space="preserve">
+    <value>登録</value>
+  </data>
+  <data name="Settings_CharacterNewButtonLabel" xml:space="preserve">
+    <value>新規作成</value>
+  </data>
+  <data name="Settings_CharacterEmptyMessage" xml:space="preserve">
+    <value>登録済みのキャラクターはありません。</value>
+  </data>
+  <data name="CraftingSequence_NameFieldLabel" xml:space="preserve">
+    <value>クラフトシーケンス名</value>
+  </data>
+  <data name="CraftingSequence_SaveCreateLabel" xml:space="preserve">
+    <value>登録</value>
+  </data>
+  <data name="CraftingSequence_SaveUpdateLabel" xml:space="preserve">
+    <value>編集</value>
+  </data>
+  <data name="CraftingSequence_SequenceTitle" xml:space="preserve">
+    <value>シーケンス</value>
+  </data>
+  <data name="Overlay_ModeNormal" xml:space="preserve">
+    <value>通常モード: 背面のウィンドウを操作できます</value>
+  </data>
+  <data name="Overlay_ModeEdit" xml:space="preserve">
+    <value>編集モード: 上部で移動 / 右下でサイズ変更</value>
+  </data>
+  <data name="Overlay_WindowTitle1" xml:space="preserve">
+    <value>オーバーレイ 1</value>
+  </data>
+  <data name="Overlay_WindowTitle2" xml:space="preserve">
+    <value>オーバーレイ 2</value>
+  </data>
+  <data name="Overlay_WindowTitle3" xml:space="preserve">
+    <value>オーバーレイ 3</value>
+  </data>
+  <data name="Nav_CraftingSequenceHotkeys" xml:space="preserve">
+    <value>シーケンス実行設定</value>
+  </data>
+  <data name="Section_CraftingSequenceHotkeys_Description" xml:space="preserve">
+    <value>クラフトシーケンス実行用の固定ホットキー設定を管理します。</value>
+  </data>
+  <data name="CraftingSequenceHotkeys_SaveButton" xml:space="preserve">
+    <value>保存</value>
+  </data>
+  <data name="CraftingSequenceHotkeys_EnabledColumn" xml:space="preserve">
+    <value>有効</value>
+  </data>
+  <data name="CraftingSequenceHotkeys_HotkeyColumn" xml:space="preserve">
+    <value>ホットキー</value>
+  </data>
+  <data name="CraftingSequenceHotkeys_SequenceColumn" xml:space="preserve">
+    <value>クラフトシーケンス</value>
+  </data>
+  <data name="CraftingSequenceHotkeys_RepeatColumn" xml:space="preserve">
+    <value>回数</value>
+  </data>
+  <data name="CraftingSequenceHotkeys_StatusColumn" xml:space="preserve">
+    <value>状態</value>
+  </data>
+  <data name="CraftingSequenceHotkeys_SequenceEmptyOption" xml:space="preserve">
+    <value>未選択</value>
+  </data>
+  <data name="CraftingSequenceHotkeys_EmptySequences" xml:space="preserve">
+    <value>登録済みのクラフトシーケンスがありません。</value>
+  </data>
+  <data name="CraftingSequenceHotkeys_OverlayOnlyNotice" xml:space="preserve">
+    <value>これらのホットキーはオーバーレイモード中のみ動作します。</value>
+  </data>
+  <data name="CraftingSequenceHotkeys_LastActivityLabel" xml:space="preserve">
+    <value>最終イベント</value>
+  </data>
+  <data name="CraftingSequenceHotkeys_LastActivityEmpty" xml:space="preserve">
+    <value>まだイベントはありません。</value>
+  </data>
+  <data name="CraftingSequenceHotkeys_ActivityOverlayInactive" xml:space="preserve">
+    <value>{0}: オーバーレイモード外</value>
+  </data>
+  <data name="CraftingSequenceHotkeys_ActivityEditMode" xml:space="preserve">
+    <value>{0}: 編集モード中</value>
+  </data>
+  <data name="CraftingSequenceHotkeys_ActivityStart" xml:space="preserve">
+    <value>{0}: 「{1}」開始</value>
+  </data>
+  <data name="CraftingSequenceHotkeys_ActivityStop" xml:space="preserve">
+    <value>{0}: 「{1}」終了</value>
+  </data>
+  <data name="CraftingSequenceHotkeys_StartDialogTitle" xml:space="preserve">
+    <value>クラフトシーケンス開始</value>
+  </data>
+  <data name="CraftingSequenceHotkeys_StartDialogMessage" xml:space="preserve">
+    <value>{0} で「{1}」を {2} 回実行する処理を開始しました。</value>
+  </data>
+  <data name="CraftingSequenceHotkeys_StopDialogTitle" xml:space="preserve">
+    <value>クラフトシーケンス終了</value>
+  </data>
+  <data name="CraftingSequenceHotkeys_InfoDialogTitle" xml:space="preserve">
+    <value>クラフトシーケンス情報</value>
+  </data>
+  <data name="CraftingSequenceHotkeys_StopDialogMessage" xml:space="preserve">
+    <value>{0} の「{1}」を終了しました。理由: {2}</value>
+  </data>
+  <data name="CraftingSequenceHotkeys_InfoOverlayInactiveMessage" xml:space="preserve">
+    <value>{0} はオーバーレイモード中のみ利用できます。</value>
+  </data>
+  <data name="CraftingSequenceHotkeys_InfoEditModeMessage" xml:space="preserve">
+    <value>{0} は編集モード中は利用できません。</value>
+  </data>
+  <data name="CraftingSequenceHotkeys_InfoDisabledMessage" xml:space="preserve">
+    <value>{0} は無効になっています。</value>
+  </data>
+  <data name="CraftingSequenceHotkeys_InfoSequenceMissingMessage" xml:space="preserve">
+    <value>{0} にはクラフトシーケンスが設定されていません。</value>
+  </data>
+  <data name="CraftingSequenceHotkeys_InfoSequenceNotFoundMessage" xml:space="preserve">
+    <value>{0} に設定されたクラフトシーケンスが見つかりません。</value>
+  </data>
+  <data name="CraftingSequenceHotkeys_StopReasonSameHotkey" xml:space="preserve">
+    <value>同じホットキーが再入力されたため</value>
+  </data>
+  <data name="CraftingSequenceHotkeys_StopReasonOtherSequence" xml:space="preserve">
+    <value>別のクラフトシーケンスが開始されたため</value>
+  </data>
+  <data name="CraftingSequenceHotkeys_StopReasonOverlayClosed" xml:space="preserve">
+    <value>オーバーレイモードが解除されたため</value>
+  </data>
+  <data name="CraftingSequenceHotkeys_StopReasonEditMode" xml:space="preserve">
+    <value>編集モードへ切り替わったため</value>
+  </data>
+  <data name="CraftingSequenceHotkeys_StatusPending" xml:space="preserve">
+    <value>未判定</value>
+  </data>
+  <data name="CraftingSequenceHotkeys_StatusNotConfigured" xml:space="preserve">
+    <value>未設定</value>
+  </data>
+  <data name="CraftingSequenceHotkeys_StatusRegistered" xml:space="preserve">
+    <value>登録済み</value>
+  </data>
+  <data name="CraftingSequenceHotkeys_StatusRegistrationFailed" xml:space="preserve">
+    <value>登録失敗</value>
+  </data>
 </root>

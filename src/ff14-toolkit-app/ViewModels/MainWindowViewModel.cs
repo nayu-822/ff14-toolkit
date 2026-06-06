@@ -17,6 +17,7 @@ public sealed class MainWindowViewModel : ViewModelBase
     private readonly IReadOnlyList<ShellNavigationItemViewModel> allNavigationItems;
     private readonly CraftActionSequenceListContentViewModel craftActionSequenceListContentViewModel;
     private readonly CraftActionSequenceContentViewModel craftActionSequenceEditorContentViewModel;
+    private readonly CraftSequenceHotkeySettingsContentViewModel craftSequenceHotkeySettingsContentViewModel;
     private UiLanguageOption? selectedLanguage;
     private ShellNavigationItemViewModel? selectedNavigationItem;
     private ShellContentViewModel? currentContentViewModel;
@@ -25,8 +26,12 @@ public sealed class MainWindowViewModel : ViewModelBase
         ILocalizationService localizationService,
         IOptions<CacheOptions> cacheOptions,
         CharacterSettingsStore characterSettingsStore,
+        HotkeySettingsStore hotkeySettingsStore,
         IGameDataService gameDataService,
-        CraftActionSequenceStore craftActionSequenceStore)
+        CraftActionSequenceStore craftActionSequenceStore,
+        CraftSequenceHotkeyStore craftSequenceHotkeyStore,
+        CraftSequenceHotkeyActivityState craftSequenceHotkeyActivityState,
+        CraftSequenceHotkeyRegistrationState craftSequenceHotkeyRegistrationState)
     {
         this.localizationService = localizationService;
         this.localizationService.PropertyChanged += OnLocalizationPropertyChanged;
@@ -41,8 +46,20 @@ public sealed class MainWindowViewModel : ViewModelBase
             gameDataService,
             craftActionSequenceStore,
             ShowCraftActionSequenceList);
+        craftSequenceHotkeySettingsContentViewModel = new CraftSequenceHotkeySettingsContentViewModel(
+            localizationService,
+            craftSequenceHotkeyActivityState,
+            craftActionSequenceStore,
+            craftSequenceHotkeyStore,
+            craftSequenceHotkeyRegistrationState);
 
-        contentBySectionKey = CreateContentMap(cacheOptions, characterSettingsStore, craftActionSequenceListContentViewModel, craftActionSequenceEditorContentViewModel);
+        contentBySectionKey = CreateContentMap(
+            cacheOptions,
+            characterSettingsStore,
+            hotkeySettingsStore,
+            craftActionSequenceListContentViewModel,
+            craftActionSequenceEditorContentViewModel,
+            craftSequenceHotkeySettingsContentViewModel);
 
         NavigationItems = new ObservableCollection<ShellNavigationItemViewModel>(CreateNavigationItems());
         allNavigationItems = FlattenNavigationItems(NavigationItems).ToArray();
@@ -108,13 +125,17 @@ public sealed class MainWindowViewModel : ViewModelBase
             "crafting-sequences",
             "Nav_CraftingSequences",
             "Section_CraftingSequences_Description");
+        ShellNavigationItemViewModel craftingSequenceHotkeys = CreateNavigationItem(
+            "crafting-sequence-hotkeys",
+            "Nav_CraftingSequenceHotkeys",
+            "Section_CraftingSequenceHotkeys_Description");
 
         ShellNavigationItemViewModel crafting = CreateNavigationItem(
             null,
             "Nav_Crafting",
             "Section_Crafting_Description",
             isSelectable: false,
-            children: [craftingSequences]);
+            children: [craftingSequences, craftingSequenceHotkeys]);
 
         return
         [
@@ -214,8 +235,10 @@ public sealed class MainWindowViewModel : ViewModelBase
     private Dictionary<string, ShellContentViewModel> CreateContentMap(
         IOptions<CacheOptions> cacheOptions,
         CharacterSettingsStore characterSettingsStore,
+        HotkeySettingsStore hotkeySettingsStore,
         CraftActionSequenceListContentViewModel craftActionSequenceListContentViewModel,
-        CraftActionSequenceContentViewModel craftActionSequenceEditorContentViewModel)
+        CraftActionSequenceContentViewModel craftActionSequenceEditorContentViewModel,
+        CraftSequenceHotkeySettingsContentViewModel craftSequenceHotkeySettingsContentViewModel)
     {
         return new Dictionary<string, ShellContentViewModel>(StringComparer.OrdinalIgnoreCase)
         {
@@ -248,6 +271,7 @@ public sealed class MainWindowViewModel : ViewModelBase
                 localizationService),
             ["crafting-sequences"] = craftActionSequenceListContentViewModel,
             ["crafting-sequence-editor"] = craftActionSequenceEditorContentViewModel,
+            ["crafting-sequence-hotkeys"] = craftSequenceHotkeySettingsContentViewModel,
             ["icons"] = new PlaceholderContentViewModel(
                 "icons",
                 "Nav_Icons",
@@ -257,7 +281,11 @@ public sealed class MainWindowViewModel : ViewModelBase
                 "Icons_SecondaryTitle",
                 "Icons_SecondaryBody",
                 localizationService),
-            ["settings"] = new SettingsContentViewModel(cacheOptions, characterSettingsStore, localizationService)
+            ["settings"] = new SettingsContentViewModel(
+                cacheOptions,
+                characterSettingsStore,
+                hotkeySettingsStore,
+                localizationService)
         };
     }
 

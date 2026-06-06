@@ -282,4 +282,208 @@
   <data name="CraftingSequence_UpdateButton" xml:space="preserve">
     <value>Update</value>
   </data>
+  <data name="Settings_HotkeyCardTitle" xml:space="preserve">
+    <value>Keybind Settings</value>
+  </data>
+  <data name="Settings_HotkeyCardDescription" xml:space="preserve">
+    <value>Configure the keybinds used for overlay toggle and overlay edit mode toggle.</value>
+  </data>
+  <data name="Settings_ToggleOverlayHotKeyLabel" xml:space="preserve">
+    <value>Overlay toggle</value>
+  </data>
+  <data name="Settings_ToggleOverlayEditHotKeyLabel" xml:space="preserve">
+    <value>Edit mode</value>
+  </data>
+  <data name="Settings_SaveButtonLabel" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="Settings_OpenCacheRootPathLabel" xml:space="preserve">
+    <value>Open cache folder</value>
+  </data>
+  <data name="Settings_HotkeyCapturingLabel" xml:space="preserve">
+    <value>Capturing</value>
+  </data>
+  <data name="Settings_CharacterCardTitle" xml:space="preserve">
+    <value>Character Settings</value>
+  </data>
+  <data name="Settings_CharacterSelectionLabel" xml:space="preserve">
+    <value>Active character</value>
+  </data>
+  <data name="Settings_CharacterCurrentPathLabel" xml:space="preserve">
+    <value>Settings folder path</value>
+  </data>
+  <data name="Settings_Unconfigured" xml:space="preserve">
+    <value>Not configured</value>
+  </data>
+  <data name="Settings_CharacterNameColumnLabel" xml:space="preserve">
+    <value>Character Name</value>
+  </data>
+  <data name="Settings_WorldColumnLabel" xml:space="preserve">
+    <value>World</value>
+  </data>
+  <data name="Settings_EditColumnLabel" xml:space="preserve">
+    <value>Edit</value>
+  </data>
+  <data name="Settings_DeleteColumnLabel" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="Settings_CharacterEditTitle" xml:space="preserve">
+    <value>Edit Character</value>
+  </data>
+  <data name="Settings_CharacterCreateTitle" xml:space="preserve">
+    <value>Create Character</value>
+  </data>
+  <data name="Settings_CharacterNameLabel" xml:space="preserve">
+    <value>Character Name</value>
+  </data>
+  <data name="Settings_WorldNameLabel" xml:space="preserve">
+    <value>World</value>
+  </data>
+  <data name="Settings_CharacterSettingsPathLabel" xml:space="preserve">
+    <value>Settings folder path</value>
+  </data>
+  <data name="Settings_CharacterUpdateButtonLabel" xml:space="preserve">
+    <value>Edit</value>
+  </data>
+  <data name="Settings_CharacterCreateButtonLabel" xml:space="preserve">
+    <value>Create</value>
+  </data>
+  <data name="Settings_CharacterNewButtonLabel" xml:space="preserve">
+    <value>New</value>
+  </data>
+  <data name="Settings_CharacterEmptyMessage" xml:space="preserve">
+    <value>No characters have been registered yet.</value>
+  </data>
+  <data name="CraftingSequence_NameFieldLabel" xml:space="preserve">
+    <value>Craft sequence name</value>
+  </data>
+  <data name="CraftingSequence_SaveCreateLabel" xml:space="preserve">
+    <value>Create</value>
+  </data>
+  <data name="CraftingSequence_SaveUpdateLabel" xml:space="preserve">
+    <value>Edit</value>
+  </data>
+  <data name="CraftingSequence_SequenceTitle" xml:space="preserve">
+    <value>Sequence</value>
+  </data>
+  <data name="Overlay_ModeNormal" xml:space="preserve">
+    <value>Normal mode: input passes through to the window behind</value>
+  </data>
+  <data name="Overlay_ModeEdit" xml:space="preserve">
+    <value>Edit mode: drag at the top / resize from the bottom-right</value>
+  </data>
+  <data name="Overlay_WindowTitle1" xml:space="preserve">
+    <value>Overlay 1</value>
+  </data>
+  <data name="Overlay_WindowTitle2" xml:space="preserve">
+    <value>Overlay 2</value>
+  </data>
+  <data name="Overlay_WindowTitle3" xml:space="preserve">
+    <value>Overlay 3</value>
+  </data>
+  <data name="Nav_CraftingSequenceHotkeys" xml:space="preserve">
+    <value>Sequence Hotkeys</value>
+  </data>
+  <data name="Section_CraftingSequenceHotkeys_Description" xml:space="preserve">
+    <value>Manage fixed hotkeys used to start craft sequences.</value>
+  </data>
+  <data name="CraftingSequenceHotkeys_SaveButton" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="CraftingSequenceHotkeys_EnabledColumn" xml:space="preserve">
+    <value>On</value>
+  </data>
+  <data name="CraftingSequenceHotkeys_HotkeyColumn" xml:space="preserve">
+    <value>Hotkey</value>
+  </data>
+  <data name="CraftingSequenceHotkeys_SequenceColumn" xml:space="preserve">
+    <value>Sequence</value>
+  </data>
+  <data name="CraftingSequenceHotkeys_RepeatColumn" xml:space="preserve">
+    <value>Repeats</value>
+  </data>
+  <data name="CraftingSequenceHotkeys_StatusColumn" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="CraftingSequenceHotkeys_SequenceEmptyOption" xml:space="preserve">
+    <value>None</value>
+  </data>
+  <data name="CraftingSequenceHotkeys_EmptySequences" xml:space="preserve">
+    <value>No saved craft sequences are available.</value>
+  </data>
+  <data name="CraftingSequenceHotkeys_OverlayOnlyNotice" xml:space="preserve">
+    <value>These hotkeys work only while overlay mode is active.</value>
+  </data>
+  <data name="CraftingSequenceHotkeys_LastActivityLabel" xml:space="preserve">
+    <value>Last Event</value>
+  </data>
+  <data name="CraftingSequenceHotkeys_LastActivityEmpty" xml:space="preserve">
+    <value>No events yet.</value>
+  </data>
+  <data name="CraftingSequenceHotkeys_ActivityOverlayInactive" xml:space="preserve">
+    <value>{0}: overlay mode is inactive</value>
+  </data>
+  <data name="CraftingSequenceHotkeys_ActivityEditMode" xml:space="preserve">
+    <value>{0}: overlay edit mode is active</value>
+  </data>
+  <data name="CraftingSequenceHotkeys_ActivityStart" xml:space="preserve">
+    <value>{0}: started "{1}"</value>
+  </data>
+  <data name="CraftingSequenceHotkeys_ActivityStop" xml:space="preserve">
+    <value>{0}: stopped "{1}"</value>
+  </data>
+  <data name="CraftingSequenceHotkeys_StartDialogTitle" xml:space="preserve">
+    <value>Craft Sequence Started</value>
+  </data>
+  <data name="CraftingSequenceHotkeys_StartDialogMessage" xml:space="preserve">
+    <value>Started running "{1}" {2} time(s) from {0}.</value>
+  </data>
+  <data name="CraftingSequenceHotkeys_StopDialogTitle" xml:space="preserve">
+    <value>Craft Sequence Stopped</value>
+  </data>
+  <data name="CraftingSequenceHotkeys_InfoDialogTitle" xml:space="preserve">
+    <value>Craft Sequence Info</value>
+  </data>
+  <data name="CraftingSequenceHotkeys_StopDialogMessage" xml:space="preserve">
+    <value>Stopped "{1}" from {0}. Reason: {2}</value>
+  </data>
+  <data name="CraftingSequenceHotkeys_InfoOverlayInactiveMessage" xml:space="preserve">
+    <value>{0} is available only in overlay mode.</value>
+  </data>
+  <data name="CraftingSequenceHotkeys_InfoEditModeMessage" xml:space="preserve">
+    <value>{0} cannot be used while overlay edit mode is active.</value>
+  </data>
+  <data name="CraftingSequenceHotkeys_InfoDisabledMessage" xml:space="preserve">
+    <value>{0} is disabled.</value>
+  </data>
+  <data name="CraftingSequenceHotkeys_InfoSequenceMissingMessage" xml:space="preserve">
+    <value>No craft sequence is assigned to {0}.</value>
+  </data>
+  <data name="CraftingSequenceHotkeys_InfoSequenceNotFoundMessage" xml:space="preserve">
+    <value>The craft sequence assigned to {0} could not be found.</value>
+  </data>
+  <data name="CraftingSequenceHotkeys_StopReasonSameHotkey" xml:space="preserve">
+    <value>The same hotkey was pressed again</value>
+  </data>
+  <data name="CraftingSequenceHotkeys_StopReasonOtherSequence" xml:space="preserve">
+    <value>Another craft sequence was started</value>
+  </data>
+  <data name="CraftingSequenceHotkeys_StopReasonOverlayClosed" xml:space="preserve">
+    <value>Overlay mode was turned off</value>
+  </data>
+  <data name="CraftingSequenceHotkeys_StopReasonEditMode" xml:space="preserve">
+    <value>Overlay edit mode was enabled</value>
+  </data>
+  <data name="CraftingSequenceHotkeys_StatusPending" xml:space="preserve">
+    <value>Pending</value>
+  </data>
+  <data name="CraftingSequenceHotkeys_StatusNotConfigured" xml:space="preserve">
+    <value>Not set</value>
+  </data>
+  <data name="CraftingSequenceHotkeys_StatusRegistered" xml:space="preserve">
+    <value>Registered</value>
+  </data>
+  <data name="CraftingSequenceHotkeys_StatusRegistrationFailed" xml:space="preserve">
+    <value>Failed</value>
+  </data>
 </root>

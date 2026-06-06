@@ -54,7 +54,7 @@
                                         </ItemsControl.ItemsPanel>
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate>
-                                            <Button Width="104"
+                                                <Button Width="104"
                                                         Margin="0,0,8,8"
                                                         Command="{Binding AddToSequenceCommand}"
                                                         Style="{StaticResource ActionTileButtonStyle}">
@@ -112,7 +112,7 @@
                     <TextBlock FontSize="18"
                                FontWeight="SemiBold"
                                Foreground="{StaticResource AppTextBrush}"
-                               Text="クラフトシーケンス名" />
+                               Text="{Binding NameLabel}" />
 
                     <Grid Margin="0,16,0,0">
                         <Grid.ColumnDefinitions>
@@ -226,8 +226,8 @@
                                                                     <Setter Property="Visibility" Value="Visible" />
                                                                 </DataTrigger>
                                                             </Style.Triggers>
-                                                            </Style>
-                                                        </TextBlock.Style>
+                                                        </Style>
+                                                    </TextBlock.Style>
                                                 </TextBlock>
                                             </Grid>
 

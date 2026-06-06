@@ -2,5 +2,7 @@ namespace FF14Toolkit.App.Models.Configuration;
 
 public sealed class CharacterSettingsOptions
 {
-    public string RootPath { get; set; } = string.Empty;
+    public Guid? SelectedProfileId { get; set; }
+
+    public List<CharacterProfile> Profiles { get; set; } = [];
 }
