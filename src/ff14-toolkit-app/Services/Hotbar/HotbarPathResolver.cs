@@ -1,12 +1,24 @@
 using System;
 using System.IO;
+using FF14Toolkit.App.Services.Configuration;
 
 namespace FF14Toolkit.App.Services.Hotbar;
 
 public sealed class HotbarPathResolver
 {
+    private readonly CharacterSettingsStore characterSettingsStore;
+
+    public HotbarPathResolver(CharacterSettingsStore characterSettingsStore)
+    {
+        this.characterSettingsStore = characterSettingsStore;
+    }
+
     public string Resolve(string path)
     {
+        path = string.IsNullOrWhiteSpace(path)
+            ? characterSettingsStore.RootPath
+            : path;
+
         ArgumentException.ThrowIfNullOrWhiteSpace(path);
 
         if (Directory.Exists(path))

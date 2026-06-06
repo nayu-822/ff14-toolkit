@@ -1,8 +1,11 @@
 using FF14Toolkit.App.Models.Configuration;
+using FF14Toolkit.App.Services.Configuration;
+using FF14Toolkit.App.Services.Crafting;
 using FF14Toolkit.App.Services.GameData;
 using FF14Toolkit.App.Services.Hotbar;
 using FF14Toolkit.App.Services.Keybind;
 using FF14Toolkit.App.Services.Localization;
+using FF14Toolkit.App.Services.Overlay;
 using FF14Toolkit.App.ViewModels;
 using FF14Toolkit.App.Views;
 using Microsoft.Extensions.DependencyInjection;
@@ -17,10 +20,14 @@ public static class ServiceCollectionExtensions
             .BindConfiguration("Localization");
         services.AddOptions<CacheOptions>()
             .BindConfiguration("Cache");
+        services.AddOptions<CharacterSettingsOptions>()
+            .BindConfiguration("CharacterSettings");
         services.AddOptions<LuminaOptions>()
             .BindConfiguration("Lumina");
         services.AddSingleton(LocalizationService.Instance);
         services.AddSingleton<ILocalizationService>(serviceProvider => serviceProvider.GetRequiredService<LocalizationService>());
+        services.AddSingleton<CharacterSettingsStore>();
+        services.AddSingleton<CraftActionSequenceStore>();
         services.AddSingleton<IGameDataService, LuminaGameDataService>();
         services.AddSingleton<HotbarDatParser>();
         services.AddSingleton<HotbarPathResolver>();
@@ -28,6 +35,8 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<KeybindDatParser>();
         services.AddSingleton<KeybindPathResolver>();
         services.AddSingleton<IKeybindDataService, KeybindDataService>();
+        services.AddSingleton<OverlayLayoutStore>();
+        services.AddSingleton<OverlayWorkspaceService>();
         services.AddSingleton<MainWindow>();
         services.AddSingleton<MainWindowViewModel>();
 

@@ -1,7 +1,9 @@
 using FF14Toolkit.App.DependencyInjection;
 using FF14Toolkit.App.Models.Configuration;
 using FF14Toolkit.App.Services.Localization;
+using FF14Toolkit.App.Services.Overlay;
 using FF14Toolkit.App.Views;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
@@ -16,8 +18,16 @@ public partial class App : Application
     protected override async void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
+        ShutdownMode = ShutdownMode.OnMainWindowClose;
 
         host = Host.CreateDefaultBuilder()
+            .ConfigureAppConfiguration((context, configuration) =>
+            {
+                configuration.Sources.Clear();
+                configuration
+                    .SetBasePath(AppContext.BaseDirectory)
+                    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: false);
+            })
             .ConfigureServices((context, services) =>
             {
                 services.AddApplicationServices();
@@ -39,6 +49,7 @@ public partial class App : Application
     {
         if (host is not null)
         {
+            host.Services.GetRequiredService<OverlayWorkspaceService>().Shutdown();
             await host.StopAsync();
             host.Dispose();
         }

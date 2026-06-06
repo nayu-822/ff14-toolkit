@@ -165,4 +165,121 @@
   <data name="Icons_SecondaryBody" xml:space="preserve">
     <value>This side area can show cache counts, last update times, and missing images.</value>
   </data>
+  <data name="CraftingSequence_EditorTitle" xml:space="preserve">
+    <value>Craft Sequence Registration</value>
+  </data>
+  <data name="CraftingSequence_EditorDescription" xml:space="preserve">
+    <value>Register shared crafting steps for all eight Disciple of the Hand jobs. Click an action on the right to append it to the current sequence.</value>
+  </data>
+  <data name="CraftingSequence_NameLabel" xml:space="preserve">
+    <value>Sequence name</value>
+  </data>
+  <data name="CraftingSequence_NamePlaceholder" xml:space="preserve">
+    <value>Example: Basic opener for 35 durability</value>
+  </data>
+  <data name="CraftingSequence_SaveButton" xml:space="preserve">
+    <value>Save sequence</value>
+  </data>
+  <data name="CraftingSequence_NewButton" xml:space="preserve">
+    <value>New draft</value>
+  </data>
+  <data name="CraftingSequence_CurrentStepsTitle" xml:space="preserve">
+    <value>Current steps</value>
+  </data>
+  <data name="CraftingSequence_CurrentStepsDescription" xml:space="preserve">
+    <value>Right-click any step to remove it. Wait time is stored as a fixed value on each action definition.</value>
+  </data>
+  <data name="CraftingSequence_RegisteredTitle" xml:space="preserve">
+    <value>Saved sequences</value>
+  </data>
+  <data name="CraftingSequence_RegisteredDescription" xml:space="preserve">
+    <value>Select a saved sequence to load it back into the editor.</value>
+  </data>
+  <data name="CraftingSequence_ActionCatalogTitle" xml:space="preserve">
+    <value>Crafter actions</value>
+  </data>
+  <data name="CraftingSequence_ActionCatalogDescription" xml:space="preserve">
+    <value>This is the shared action catalog based on the app's internal action IDs. Click an entry to add it.</value>
+  </data>
+  <data name="CraftingSequence_EmptySteps" xml:space="preserve">
+    <value>No steps yet. Pick an action from the catalog to start the sequence.</value>
+  </data>
+  <data name="CraftingSequence_EmptyRegistered" xml:space="preserve">
+    <value>No saved sequences yet.</value>
+  </data>
+  <data name="CraftingSequence_DeleteStep" xml:space="preserve">
+    <value>Remove this step</value>
+  </data>
+  <data name="CraftingSequence_StatusIconsReady" xml:space="preserve">
+    <value>Action icons are available.</value>
+  </data>
+  <data name="CraftingSequence_StatusIconsUnavailable" xml:space="preserve">
+    <value>Game data is unavailable, so icons are shown in fallback mode.</value>
+  </data>
+  <data name="CraftingSequence_CategorySynthesis" xml:space="preserve">
+    <value>Synthesis Actions</value>
+  </data>
+  <data name="CraftingSequence_CategoryTouch" xml:space="preserve">
+    <value>Touch Actions</value>
+  </data>
+  <data name="CraftingSequence_CategoryBuff" xml:space="preserve">
+    <value>Buff Actions</value>
+  </data>
+  <data name="CraftingSequence_CategorySpecialist" xml:space="preserve">
+    <value>Specialist Actions</value>
+  </data>
+  <data name="Nav_CraftingSequences" xml:space="preserve">
+    <value>Craft Sequences</value>
+  </data>
+  <data name="Section_CraftingSequences_Description" xml:space="preserve">
+    <value>Browse saved craft sequences and open them for creation or editing.</value>
+  </data>
+  <data name="CraftingSequence_EditorHeader" xml:space="preserve">
+    <value>Edit Craft Sequence</value>
+  </data>
+  <data name="CraftingSequence_EditorHeaderDescription" xml:space="preserve">
+    <value>Create a new craft sequence or edit an existing one.</value>
+  </data>
+  <data name="CraftingSequence_BackButton" xml:space="preserve">
+    <value>Back to List</value>
+  </data>
+  <data name="CraftingSequenceList_CreateButton" xml:space="preserve">
+    <value>New Sequence</value>
+  </data>
+  <data name="CraftingSequenceList_EditButton" xml:space="preserve">
+    <value>Edit</value>
+  </data>
+  <data name="CraftingSequenceList_DeleteButton" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="CraftingSequenceList_Empty" xml:space="preserve">
+    <value>No craft sequences have been saved yet.</value>
+  </data>
+  <data name="CraftingSequenceList_NameColumn" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="CraftingSequenceList_EditColumn" xml:space="preserve">
+    <value>Edit</value>
+  </data>
+  <data name="CraftingSequenceList_DeleteColumn" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="CraftingSequence_CreateTitle" xml:space="preserve">
+    <value>Create Craft Sequence</value>
+  </data>
+  <data name="CraftingSequence_CreateDescription" xml:space="preserve">
+    <value>Create a new craft sequence.</value>
+  </data>
+  <data name="CraftingSequence_EditTitle" xml:space="preserve">
+    <value>Edit Craft Sequence</value>
+  </data>
+  <data name="CraftingSequence_EditDescription" xml:space="preserve">
+    <value>Edit an existing craft sequence.</value>
+  </data>
+  <data name="CraftingSequence_CreateButton" xml:space="preserve">
+    <value>Create</value>
+  </data>
+  <data name="CraftingSequence_UpdateButton" xml:space="preserve">
+    <value>Update</value>
+  </data>
 </root>

@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using System.Windows.Media.Imaging;
 
 namespace FF14Toolkit.App.Services.GameData;
 
@@ -15,4 +16,6 @@ public interface IGameDataService
     Task<GameDataStatus> CheckAvailabilityAsync();
 
     string? ResolveHotbarCommandName(byte slotTypeId, uint commandId);
+
+    BitmapSource? ResolveIcon(string iconPath);
 }

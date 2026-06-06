@@ -165,4 +165,58 @@
   <data name="Icons_SecondaryBody" xml:space="preserve">
     <value>Hier koennen spaeter Cache-Anzahl, Zeitpunkte der Aktualisierung und fehlende Bilder erscheinen.</value>
   </data>
+  <data name="Nav_CraftingSequences" xml:space="preserve">
+    <value>Craft Sequences</value>
+  </data>
+  <data name="Section_CraftingSequences_Description" xml:space="preserve">
+    <value>Browse saved craft sequences and open them for creation or editing.</value>
+  </data>
+  <data name="CraftingSequence_EditorHeader" xml:space="preserve">
+    <value>Edit Craft Sequence</value>
+  </data>
+  <data name="CraftingSequence_EditorHeaderDescription" xml:space="preserve">
+    <value>Create a new craft sequence or edit an existing one.</value>
+  </data>
+  <data name="CraftingSequence_BackButton" xml:space="preserve">
+    <value>Back to List</value>
+  </data>
+  <data name="CraftingSequenceList_CreateButton" xml:space="preserve">
+    <value>New Sequence</value>
+  </data>
+  <data name="CraftingSequenceList_EditButton" xml:space="preserve">
+    <value>Edit</value>
+  </data>
+  <data name="CraftingSequenceList_DeleteButton" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="CraftingSequenceList_Empty" xml:space="preserve">
+    <value>No craft sequences have been saved yet.</value>
+  </data>
+  <data name="CraftingSequenceList_NameColumn" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="CraftingSequenceList_EditColumn" xml:space="preserve">
+    <value>Edit</value>
+  </data>
+  <data name="CraftingSequenceList_DeleteColumn" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="CraftingSequence_CreateTitle" xml:space="preserve">
+    <value>Create Craft Sequence</value>
+  </data>
+  <data name="CraftingSequence_CreateDescription" xml:space="preserve">
+    <value>Create a new craft sequence.</value>
+  </data>
+  <data name="CraftingSequence_EditTitle" xml:space="preserve">
+    <value>Edit Craft Sequence</value>
+  </data>
+  <data name="CraftingSequence_EditDescription" xml:space="preserve">
+    <value>Edit an existing craft sequence.</value>
+  </data>
+  <data name="CraftingSequence_CreateButton" xml:space="preserve">
+    <value>Create</value>
+  </data>
+  <data name="CraftingSequence_UpdateButton" xml:space="preserve">
+    <value>Update</value>
+  </data>
 </root>

@@ -2,6 +2,7 @@ using FF14Toolkit.App.Models.Configuration;
 using AppLuminaOptions = FF14Toolkit.App.Models.Configuration.LuminaOptions;
 using Lumina;
 using Lumina.Data;
+using Lumina.Data.Files;
 using Lumina.Excel;
 using Lumina.Excel.Sheets;
 using Microsoft.Extensions.Options;
@@ -9,6 +10,8 @@ using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using ActionSheet = Lumina.Excel.Sheets.Action;
 using CraftActionSheet = Lumina.Excel.Sheets.CraftAction;
 
@@ -17,11 +20,19 @@ namespace FF14Toolkit.App.Services.GameData;
 public sealed class LuminaGameDataService : IGameDataService, IDisposable
 {
     private static readonly Language DefaultExcelLanguage = Language.Japanese;
+    private static readonly string[] KnownSqPackPaths =
+    [
+        @"C:\Program Files (x86)\SquareEnix\FINAL FANTASY XIV - A Realm Reborn\game\sqpack",
+        @"C:\Program Files\SquareEnix\FINAL FANTASY XIV - A Realm Reborn\game\sqpack",
+        @"C:\Program Files (x86)\Steam\steamapps\common\FINAL FANTASY XIV Online\game\sqpack",
+        @"C:\Program Files\Steam\steamapps\common\FINAL FANTASY XIV Online\game\sqpack"
+    ];
 
     private readonly SemaphoreSlim initializationLock = new(1, 1);
     private readonly AppLuminaOptions options;
     private Lumina.GameData? gameData;
     private string? errorMessage;
+    private string? resolvedSqPackPath;
     private bool disposed;
 
     public LuminaGameDataService(IOptions<AppLuminaOptions> options)
@@ -33,9 +44,7 @@ public sealed class LuminaGameDataService : IGameDataService, IDisposable
 
     public bool IsAvailable => gameData is not null;
 
-    public string? SqPackPath => string.IsNullOrWhiteSpace(options.SqPackPath)
-        ? null
-        : options.SqPackPath;
+    public string? SqPackPath => resolvedSqPackPath ??= ResolveSqPackPath();
 
     public string? ErrorMessage => errorMessage;
 
@@ -56,6 +65,40 @@ public sealed class LuminaGameDataService : IGameDataService, IDisposable
             10 => GetRowName(gameData.GetExcelSheet<GeneralAction>(ExcelLanguage, null), commandId, row => row.Name.ExtractText()),
             _ => null
         };
+    }
+
+    public BitmapSource? ResolveIcon(string iconPath)
+    {
+        if (gameData is null || string.IsNullOrWhiteSpace(iconPath))
+        {
+            return null;
+        }
+
+        TexFile? texFile = gameData.GetFile<TexFile>(iconPath);
+        if (texFile?.ImageData is not { Length: > 0 } imageData)
+        {
+            return null;
+        }
+
+        int width = texFile.Header.Width;
+        int height = texFile.Header.Height;
+        if (width <= 0 || height <= 0)
+        {
+            return null;
+        }
+
+        BitmapSource bitmap = BitmapSource.Create(
+            width,
+            height,
+            96,
+            96,
+            PixelFormats.Bgra32,
+            null,
+            imageData,
+            width * 4);
+
+        bitmap.Freeze();
+        return bitmap;
     }
 
     public async Task<GameDataStatus> CheckAvailabilityAsync()
@@ -127,6 +170,39 @@ public sealed class LuminaGameDataService : IGameDataService, IDisposable
         {
             LoadMultithreaded = false
         });
+    }
+
+    private string? ResolveSqPackPath()
+    {
+        string? configuredPath = NormalizePath(options.SqPackPath);
+        if (!string.IsNullOrWhiteSpace(configuredPath))
+        {
+            return configuredPath;
+        }
+
+        foreach (string candidate in KnownSqPackPaths)
+        {
+            string normalizedCandidate = NormalizePath(candidate)
+                ?? candidate;
+
+            if (Directory.Exists(normalizedCandidate))
+            {
+                return normalizedCandidate;
+            }
+        }
+
+        return configuredPath;
+    }
+
+    private static string? NormalizePath(string? path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return null;
+        }
+
+        string expandedPath = Environment.ExpandEnvironmentVariables(path.Trim());
+        return Path.GetFullPath(expandedPath);
     }
 
     private GameDataStatus CreateStatus(GameDataAvailabilityState state)

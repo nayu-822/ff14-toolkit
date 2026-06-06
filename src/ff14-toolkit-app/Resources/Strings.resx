@@ -165,4 +165,121 @@
   <data name="Icons_SecondaryBody" xml:space="preserve">
     <value>キャッシュ件数、最終更新、未生成画像の情報などを置く余地として使えます。</value>
   </data>
+  <data name="CraftingSequence_EditorTitle" xml:space="preserve">
+    <value>クラフトシーケンス登録</value>
+  </data>
+  <data name="CraftingSequence_EditorDescription" xml:space="preserve">
+    <value>クラフター 8 職共通で使える手順をここで登録します。右側のアクションをクリックすると現在のシーケンスへ追加されます。</value>
+  </data>
+  <data name="CraftingSequence_NameLabel" xml:space="preserve">
+    <value>シーケンス名</value>
+  </data>
+  <data name="CraftingSequence_NamePlaceholder" xml:space="preserve">
+    <value>例: 耐久 35 用の基本手順</value>
+  </data>
+  <data name="CraftingSequence_SaveButton" xml:space="preserve">
+    <value>登録する</value>
+  </data>
+  <data name="CraftingSequence_NewButton" xml:space="preserve">
+    <value>新規作成</value>
+  </data>
+  <data name="CraftingSequence_CurrentStepsTitle" xml:space="preserve">
+    <value>編集中の手順</value>
+  </data>
+  <data name="CraftingSequence_CurrentStepsDescription" xml:space="preserve">
+    <value>右クリックで個別に削除できます。待機時間はアクション定義に紐づく固定値です。</value>
+  </data>
+  <data name="CraftingSequence_RegisteredTitle" xml:space="preserve">
+    <value>登録済みシーケンス</value>
+  </data>
+  <data name="CraftingSequence_RegisteredDescription" xml:space="preserve">
+    <value>保存済みのシーケンスを選ぶと、その内容を再編集できます。</value>
+  </data>
+  <data name="CraftingSequence_ActionCatalogTitle" xml:space="preserve">
+    <value>クラフターアクション一覧</value>
+  </data>
+  <data name="CraftingSequence_ActionCatalogDescription" xml:space="preserve">
+    <value>アクション ID ベースの共通一覧です。クリックすると編集中のシーケンスへ追加します。</value>
+  </data>
+  <data name="CraftingSequence_EmptySteps" xml:space="preserve">
+    <value>まだ手順がありません。右側のアクションを選んで追加してください。</value>
+  </data>
+  <data name="CraftingSequence_EmptyRegistered" xml:space="preserve">
+    <value>まだ登録済みシーケンスはありません。</value>
+  </data>
+  <data name="CraftingSequence_DeleteStep" xml:space="preserve">
+    <value>この手順を削除</value>
+  </data>
+  <data name="CraftingSequence_StatusIconsReady" xml:space="preserve">
+    <value>アクションアイコンを表示しています。</value>
+  </data>
+  <data name="CraftingSequence_StatusIconsUnavailable" xml:space="preserve">
+    <value>Lumina のゲームデータが利用できないため、アイコンは簡易表示です。</value>
+  </data>
+  <data name="CraftingSequence_CategorySynthesis" xml:space="preserve">
+    <value>作業系アクション</value>
+  </data>
+  <data name="CraftingSequence_CategoryTouch" xml:space="preserve">
+    <value>加工系アクション</value>
+  </data>
+  <data name="CraftingSequence_CategoryBuff" xml:space="preserve">
+    <value>バフ系アクション</value>
+  </data>
+  <data name="CraftingSequence_CategorySpecialist" xml:space="preserve">
+    <value>マイスター系アクション</value>
+  </data>
+  <data name="Nav_CraftingSequences" xml:space="preserve">
+    <value>クラフトシーケンス一覧</value>
+  </data>
+  <data name="Section_CraftingSequences_Description" xml:space="preserve">
+    <value>登録済みのクラフトシーケンスを一覧し、新規作成や編集を行います。</value>
+  </data>
+  <data name="CraftingSequence_EditorHeader" xml:space="preserve">
+    <value>クラフトシーケンス編集</value>
+  </data>
+  <data name="CraftingSequence_EditorHeaderDescription" xml:space="preserve">
+    <value>クラフトシーケンスを新規作成または編集します。</value>
+  </data>
+  <data name="CraftingSequence_BackButton" xml:space="preserve">
+    <value>一覧へ戻る</value>
+  </data>
+  <data name="CraftingSequenceList_CreateButton" xml:space="preserve">
+    <value>新規作成</value>
+  </data>
+  <data name="CraftingSequenceList_EditButton" xml:space="preserve">
+    <value>編集</value>
+  </data>
+  <data name="CraftingSequenceList_DeleteButton" xml:space="preserve">
+    <value>削除</value>
+  </data>
+  <data name="CraftingSequenceList_Empty" xml:space="preserve">
+    <value>登録済みのクラフトシーケンスはありません。</value>
+  </data>
+  <data name="CraftingSequenceList_NameColumn" xml:space="preserve">
+    <value>名前</value>
+  </data>
+  <data name="CraftingSequenceList_EditColumn" xml:space="preserve">
+    <value>編集</value>
+  </data>
+  <data name="CraftingSequenceList_DeleteColumn" xml:space="preserve">
+    <value>削除</value>
+  </data>
+  <data name="CraftingSequence_CreateTitle" xml:space="preserve">
+    <value>クラフトシーケンス新規作成</value>
+  </data>
+  <data name="CraftingSequence_CreateDescription" xml:space="preserve">
+    <value>新しいクラフトシーケンスを作成します。</value>
+  </data>
+  <data name="CraftingSequence_EditTitle" xml:space="preserve">
+    <value>クラフトシーケンス編集</value>
+  </data>
+  <data name="CraftingSequence_EditDescription" xml:space="preserve">
+    <value>登録済みのクラフトシーケンスを編集します。</value>
+  </data>
+  <data name="CraftingSequence_CreateButton" xml:space="preserve">
+    <value>登録する</value>
+  </data>
+  <data name="CraftingSequence_UpdateButton" xml:space="preserve">
+    <value>更新する</value>
+  </data>
 </root>

@@ -26,11 +26,11 @@ public abstract class ShellContentViewModel : ViewModelBase
 
     protected string DescriptionKey { get; }
 
-    public string DisplayName => localizationService[TitleKey];
+    public virtual string DisplayName => localizationService[TitleKey];
 
-    public string Description => localizationService[DescriptionKey];
+    public virtual string Description => localizationService[DescriptionKey];
 
-    public string Badge => localizationService[$"SectionBadge_{SectionKey}"];
+    public virtual string Badge => localizationService[$"SectionBadge_{SectionKey}"];
 
     private void OnLocalizationPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {

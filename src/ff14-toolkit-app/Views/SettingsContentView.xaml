@@ -12,17 +12,14 @@
         </Grid.ColumnDefinitions>
 
         <Border Padding="24"
-                Background="#FFFDF8"
-                BorderBrush="#D5D2C7"
-                BorderThickness="1"
-                CornerRadius="24">
+                Style="{StaticResource SurfaceCardStyle}">
             <StackPanel>
                 <TextBlock FontSize="18"
                            FontWeight="SemiBold"
-                           Foreground="#233D2E"
+                           Foreground="{StaticResource AppTextBrush}"
                            Text="{Binding LanguageCardTitle}" />
                 <TextBlock Margin="0,12,0,0"
-                           Foreground="#5D675F"
+                           Foreground="{StaticResource AppMutedTextBrush}"
                            TextWrapping="Wrap"
                            Text="{Binding LanguageCardDescription}" />
             </StackPanel>
@@ -30,27 +27,57 @@
 
         <Border Grid.Column="2"
                 Padding="20"
-                Background="#FFFDF8"
-                BorderBrush="#D5D2C7"
-                BorderThickness="1"
-                CornerRadius="24">
+                Style="{StaticResource SurfaceCardStyle}">
             <StackPanel>
                 <TextBlock FontSize="18"
                            FontWeight="SemiBold"
-                           Foreground="#233D2E"
+                           Foreground="{StaticResource AppTextBrush}"
+                           Text="{Binding CharacterSettingsCardTitle}" />
+                <TextBlock Margin="0,12,0,0"
+                           Foreground="{StaticResource AppMutedTextBrush}"
+                           TextWrapping="Wrap"
+                           Text="{Binding CharacterSettingsCardDescription}" />
+                <TextBlock Margin="0,12,0,0"
+                           FontFamily="Consolas"
+                           Foreground="{StaticResource AppAccentBrush}"
+                           TextWrapping="Wrap"
+                           Text="{Binding CharacterSettingsCurrentPath}" />
+                <Grid Margin="0,12,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="10" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <TextBox Grid.Column="0"
+                             Text="{Binding CharacterSettingsPath, UpdateSourceTrigger=PropertyChanged}"
+                             Style="{StaticResource ToolkitTextBoxStyle}" />
+
+                    <Button Grid.Column="2"
+                            MinWidth="96"
+                            Padding="16,8"
+                            Command="{Binding SaveCharacterSettingsCommand}"
+                            Content="{Binding CharacterSettingsSaveButtonLabel}"
+                            Style="{StaticResource PrimaryButtonStyle}" />
+                </Grid>
+
+                <TextBlock FontSize="18"
+                           Margin="0,20,0,0"
+                           FontWeight="SemiBold"
+                           Foreground="{StaticResource AppTextBrush}"
                            Text="{Binding CachePathTitle}" />
                 <TextBlock Margin="0,12,0,0"
-                           Foreground="#5D675F"
+                           Foreground="{StaticResource AppMutedTextBrush}"
                            TextWrapping="Wrap"
                            Text="{Binding CachePathDescription}" />
                 <TextBlock Margin="0,12,0,0"
                            FontFamily="Consolas"
-                           Foreground="#274936"
+                           Foreground="{StaticResource AppAccentBrush}"
                            TextWrapping="Wrap"
                            Text="{Binding CacheRootPath}" />
                 <TextBlock Margin="0,8,0,0"
                            FontFamily="Consolas"
-                           Foreground="#274936"
+                           Foreground="{StaticResource AppAccentBrush}"
                            TextWrapping="Wrap"
                            Text="{Binding CacheIconsPath}" />
             </StackPanel>

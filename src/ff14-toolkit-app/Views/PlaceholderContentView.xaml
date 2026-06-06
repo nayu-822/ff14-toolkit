@@ -12,17 +12,14 @@
         </Grid.ColumnDefinitions>
 
         <Border Padding="24"
-                Background="#FFFDF8"
-                BorderBrush="#D5D2C7"
-                BorderThickness="1"
-                CornerRadius="24">
+                Style="{StaticResource SurfaceCardStyle}">
             <StackPanel>
                 <TextBlock FontSize="18"
                            FontWeight="SemiBold"
-                           Foreground="#233D2E"
+                           Foreground="{StaticResource AppTextBrush}"
                            Text="{Binding PrimaryTitle}" />
                 <TextBlock Margin="0,12,0,0"
-                           Foreground="#5D675F"
+                           Foreground="{StaticResource AppMutedTextBrush}"
                            TextWrapping="Wrap"
                            Text="{Binding PrimaryBody}" />
             </StackPanel>
@@ -30,17 +27,14 @@
 
         <Border Grid.Column="2"
                 Padding="20"
-                Background="#FFFDF8"
-                BorderBrush="#D5D2C7"
-                BorderThickness="1"
-                CornerRadius="24">
+                Style="{StaticResource SurfaceCardStyle}">
             <StackPanel>
                 <TextBlock FontSize="18"
                            FontWeight="SemiBold"
-                           Foreground="#233D2E"
+                           Foreground="{StaticResource AppTextBrush}"
                            Text="{Binding SecondaryTitle}" />
                 <TextBlock Margin="0,12,0,0"
-                           Foreground="#5D675F"
+                           Foreground="{StaticResource AppMutedTextBrush}"
                            TextWrapping="Wrap"
                            Text="{Binding SecondaryBody}" />
             </StackPanel>
