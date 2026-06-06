@@ -1,0 +1,170 @@
+<Window x:Class="FF14Toolkit.App.Views.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:markup="clr-namespace:FF14Toolkit.App.Markup"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:viewModels="clr-namespace:FF14Toolkit.App.ViewModels"
+        xmlns:views="clr-namespace:FF14Toolkit.App.Views"
+        mc:Ignorable="d"
+        Title="{markup:Localize App_Title}"
+        Height="760"
+        Width="1320"
+        MinHeight="640"
+        MinWidth="1080"
+        Background="#F3EFE6">
+    <Window.Resources>
+        <DataTemplate DataType="{x:Type viewModels:ShellNavigationItemViewModel}">
+            <TextBlock Text="{Binding DisplayName}" />
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type viewModels:PlaceholderContentViewModel}">
+            <views:PlaceholderContentView />
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type viewModels:SettingsContentViewModel}">
+            <views:SettingsContentView />
+        </DataTemplate>
+
+        <Style x:Key="SidebarListBoxItemStyle" TargetType="ListBoxItem">
+            <Setter Property="Padding" Value="14,10" />
+            <Setter Property="Margin" Value="0,0,0,8" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="Foreground" Value="#264132" />
+            <Setter Property="FontSize" Value="15" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <Border x:Name="Border"
+                                Background="Transparent"
+                                BorderBrush="Transparent"
+                                BorderThickness="1"
+                                CornerRadius="14">
+                            <ContentPresenter />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Border" Property="Background" Value="#F3F8F4" />
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="Border" Property="Background" Value="#D6E6D6" />
+                                <Setter TargetName="Border" Property="BorderBrush" Value="#8FB38F" />
+                                <Setter Property="FontWeight" Value="SemiBold" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+    <Grid Margin="18">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="280" />
+            <ColumnDefinition Width="20" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <Border Grid.Column="0"
+                Padding="18"
+                Background="#FFFDF8"
+                BorderBrush="#D5D2C7"
+                BorderThickness="1"
+                CornerRadius="28">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="24" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <StackPanel>
+                    <TextBlock FontSize="28"
+                               FontWeight="SemiBold"
+                               Foreground="#203C2C"
+                               Text="{markup:Localize App_Title}" />
+                    <TextBlock Margin="0,10,0,0"
+                               Foreground="#55685C"
+                               TextWrapping="Wrap"
+                               Text="{markup:Localize MainWindow_Description}" />
+                </StackPanel>
+
+                <ListBox Grid.Row="2"
+                         ItemsSource="{Binding NavigationItems}"
+                         SelectedItem="{Binding SelectedNavigationItem, Mode=TwoWay}"
+                         Background="Transparent"
+                         BorderThickness="0"
+                         ItemContainerStyle="{StaticResource SidebarListBoxItemStyle}" />
+
+                <StackPanel Grid.Row="3">
+                    <Border Padding="14"
+                            Background="#F5F1E7"
+                            CornerRadius="18">
+                        <StackPanel>
+                            <TextBlock FontWeight="SemiBold"
+                                       Foreground="#34513E"
+                                       Text="{markup:Localize Settings_LanguageLabel}" />
+                            <ComboBox Margin="0,10,0,0"
+                                      ItemsSource="{Binding SupportedLanguages}"
+                                      SelectedItem="{Binding SelectedLanguage, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                      DisplayMemberPath="DisplayName" />
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <Grid Grid.Column="2">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="16" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <Border Padding="26"
+                    Background="#DDE8DD"
+                    CornerRadius="28">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel>
+                        <TextBlock FontSize="13"
+                                   FontWeight="Bold"
+                                   Foreground="#4E6658"
+                                   Text="{Binding CurrentContentViewModel.Badge}" />
+                        <TextBlock Margin="0,8,0,0"
+                                   FontSize="32"
+                                   FontWeight="SemiBold"
+                                   Foreground="#1B3427"
+                                   Text="{Binding CurrentContentViewModel.DisplayName}" />
+                        <TextBlock Margin="0,12,0,0"
+                                   Foreground="#435D4E"
+                                   TextWrapping="Wrap"
+                                   Text="{Binding CurrentContentViewModel.Description}" />
+                    </StackPanel>
+
+                    <Border Grid.Column="1"
+                            MinWidth="170"
+                            Padding="16,12"
+                            Background="#F8FBF7"
+                            CornerRadius="18">
+                        <StackPanel>
+                            <TextBlock FontSize="12"
+                                       FontWeight="Bold"
+                                       Foreground="#56715F"
+                                       Text="{markup:Localize Shell_StatusLabel}" />
+                            <TextBlock Margin="0,8,0,0"
+                                       Foreground="#1F372A"
+                                       Text="{markup:Localize Shell_StatusReady}" />
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </Border>
+
+            <ContentControl Grid.Row="2"
+                            Content="{Binding CurrentContentViewModel}" />
+        </Grid>
+    </Grid>
+</Window>

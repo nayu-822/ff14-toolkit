@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="App_Title" xml:space="preserve">
+    <value>FF14 Toolkit</value>
+  </data>
+  <data name="MainWindow_Description" xml:space="preserve">
+    <value>Voici l'ecran de base pour reunir plusieurs outils FF14 dans une seule application.</value>
+  </data>
+  <data name="Nav_Overview" xml:space="preserve">
+    <value>Vue d'ensemble</value>
+  </data>
+  <data name="Nav_Hotbar" xml:space="preserve">
+    <value>Barre d'actions</value>
+  </data>
+  <data name="Nav_Keybind" xml:space="preserve">
+    <value>Raccourcis</value>
+  </data>
+  <data name="Nav_Crafting" xml:space="preserve">
+    <value>Artisanat</value>
+  </data>
+  <data name="Nav_Icons" xml:space="preserve">
+    <value>Icones</value>
+  </data>
+  <data name="Nav_Settings" xml:space="preserve">
+    <value>Parametres</value>
+  </data>
+  <data name="Section_Overview_Description" xml:space="preserve">
+    <value>Cette zone affichera plus tard un resume des outils et leur etat recent.</value>
+  </data>
+  <data name="Section_Hotbar_Description" xml:space="preserve">
+    <value>Cette zone affichera plus tard l'analyse des barres d'actions, les groupes et les actions resolues.</value>
+  </data>
+  <data name="Section_Keybind_Description" xml:space="preserve">
+    <value>Cette zone affichera plus tard l'analyse des raccourcis et les listes de commandes.</value>
+  </data>
+  <data name="Section_Crafting_Description" xml:space="preserve">
+    <value>Cette zone affichera plus tard les actions d'artisanat, les correspondances de jobs et les donnees associees.</value>
+  </data>
+  <data name="Section_Icons_Description" xml:space="preserve">
+    <value>Cette zone gerera plus tard la generation d'icones via Lumina et l'etat du cache.</value>
+  </data>
+  <data name="Section_Settings_Description" xml:space="preserve">
+    <value>Cette zone gerera plus tard la langue, les chemins du cache et les autres parametres.</value>
+  </data>
+  <data name="SectionBadge_overview" xml:space="preserve">
+    <value>OVERVIEW</value>
+  </data>
+  <data name="SectionBadge_hotbar" xml:space="preserve">
+    <value>HOTBAR</value>
+  </data>
+  <data name="SectionBadge_keybind" xml:space="preserve">
+    <value>KEYBIND</value>
+  </data>
+  <data name="SectionBadge_crafting" xml:space="preserve">
+    <value>CRAFTING</value>
+  </data>
+  <data name="SectionBadge_icons" xml:space="preserve">
+    <value>ICONS</value>
+  </data>
+  <data name="SectionBadge_settings" xml:space="preserve">
+    <value>SETTINGS</value>
+  </data>
+  <data name="Settings_LanguageLabel" xml:space="preserve">
+    <value>Langue d'affichage</value>
+  </data>
+  <data name="Shell_StatusLabel" xml:space="preserve">
+    <value>Etat</value>
+  </data>
+  <data name="Shell_StatusReady" xml:space="preserve">
+    <value>L'interface de base est prete</value>
+  </data>
+  <data name="Shell_PrimaryPlaceholderTitle" xml:space="preserve">
+    <value>Zone principale</value>
+  </data>
+  <data name="Shell_PrimaryPlaceholderBody" xml:space="preserve">
+    <value>Cette zone accueillera plus tard la liste, le detail et les actions de l'outil selectionne. Elle reste volontairement large pour les vues comme les barres d'actions ou les raccourcis.</value>
+  </data>
+  <data name="Shell_SecondaryPlaceholderTitle" xml:space="preserve">
+    <value>Panneau secondaire</value>
+  </data>
+  <data name="Shell_SecondaryPlaceholderBody" xml:space="preserve">
+    <value>Cette zone pourra accueillir plus tard du contexte, des raccourcis, des onglets supplementaires ou d'autres details.</value>
+  </data>
+  <data name="Settings_CachePathTitle" xml:space="preserve">
+    <value>Cache des icones</value>
+  </data>
+  <data name="Settings_CachePathDescription" xml:space="preserve">
+    <value>Ce chemin servira plus tard a ouvrir le dossier du cache depuis l'application.</value>
+  </data>
+  <data name="Settings_LanguageCardTitle" xml:space="preserve">
+    <value>Parametres d'affichage</value>
+  </data>
+  <data name="Settings_LanguageCardDescription" xml:space="preserve">
+    <value>Cette carte accueillera plus tard des indications sur la langue et les reglages communs.</value>
+  </data>
+  <data name="Overview_PrimaryTitle" xml:space="preserve">
+    <value>Vue d'ensemble</value>
+  </data>
+  <data name="Overview_PrimaryBody" xml:space="preserve">
+    <value>Cette page pourra plus tard reunir les resumes des outils, les fonctions recentes et l'etat de chargement.</value>
+  </data>
+  <data name="Overview_SecondaryTitle" xml:space="preserve">
+    <value>Etapes suivantes</value>
+  </data>
+  <data name="Overview_SecondaryBody" xml:space="preserve">
+    <value>Cette zone pourra orienter l'utilisateur vers les outils principaux comme la barre d'actions et les raccourcis.</value>
+  </data>
+  <data name="Hotbar_PrimaryTitle" xml:space="preserve">
+    <value>Page des barres d'actions</value>
+  </data>
+  <data name="Hotbar_PrimaryBody" xml:space="preserve">
+    <value>Cette page affichera plus tard les listes de barres d'actions, les groupes et les noms resolus via Lumina.</value>
+  </data>
+  <data name="Hotbar_SecondaryTitle" xml:space="preserve">
+    <value>Informations annexes</value>
+  </data>
+  <data name="Hotbar_SecondaryBody" xml:space="preserve">
+    <value>Cette zone pourra accueillir la selection du personnage, les chemins de fichiers, les filtres et les actions d'export.</value>
+  </data>
+  <data name="Keybind_PrimaryTitle" xml:space="preserve">
+    <value>Page des raccourcis</value>
+  </data>
+  <data name="Keybind_PrimaryBody" xml:space="preserve">
+    <value>Cette page affichera plus tard les listes de commandes, l'etat des affectations et les regroupements par prefixe.</value>
+  </data>
+  <data name="Keybind_SecondaryTitle" xml:space="preserve">
+    <value>Options d'affichage</value>
+  </data>
+  <data name="Keybind_SecondaryBody" xml:space="preserve">
+    <value>Cette zone pourra accueillir la recherche, les filtres et les aides de verification.</value>
+  </data>
+  <data name="Crafting_PrimaryTitle" xml:space="preserve">
+    <value>Page d'artisanat</value>
+  </data>
+  <data name="Crafting_PrimaryBody" xml:space="preserve">
+    <value>Cette page affichera plus tard les actions d'artisanat, les correspondances de jobs, les noms localises et les icones.</value>
+  </data>
+  <data name="Crafting_SecondaryTitle" xml:space="preserve">
+    <value>Donnees associees</value>
+  </data>
+  <data name="Crafting_SecondaryBody" xml:space="preserve">
+    <value>Cette zone pourra montrer plus tard des comparaisons entre jobs et d'autres informations associees.</value>
+  </data>
+  <data name="Icons_PrimaryTitle" xml:space="preserve">
+    <value>Page des icones</value>
+  </data>
+  <data name="Icons_PrimaryBody" xml:space="preserve">
+    <value>Cette page gerera plus tard les icones converties depuis Lumina, leur etat de generation et les actions de mise a jour.</value>
+  </data>
+  <data name="Icons_SecondaryTitle" xml:space="preserve">
+    <value>Etat du cache</value>
+  </data>
+  <data name="Icons_SecondaryBody" xml:space="preserve">
+    <value>Cette zone pourra afficher plus tard le nombre d'elements en cache, les dates de mise a jour et les images manquantes.</value>
+  </data>
+</root>

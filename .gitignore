@@ -1,0 +1,52 @@
+# Build outputs
+[Bb]in/
+[Oo]bj/
+
+# Test and coverage outputs
+TestResults/
+coverage/
+coverage*/
+*.coverage
+*.coveragexml
+
+# Visual Studio / JetBrains / VS Code
+.vs/
+.idea/
+.vscode/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# NuGet and .NET local tooling
+.nuget/
+.dotnet/
+.templateengine/
+packages/
+
+# Logs and transient files
+*.log
+*.tmp
+*.cache
+*.bak
+*.swp
+*.orig
+
+# OS files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# WPF / generated designer files
+*.g.cs
+*.g.i.cs
+*.Designer.cs
+GeneratedInternalTypeHelper.g.cs
+
+# Local app/runtime caches
+cache/
+Cache/
+
+# Workspace helper artifacts
+artifacts/**/[Bb]in/
+artifacts/**/[Oo]bj/

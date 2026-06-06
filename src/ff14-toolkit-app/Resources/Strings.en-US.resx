@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="App_Title" xml:space="preserve">
+    <value>FF14 Toolkit</value>
+  </data>
+  <data name="MainWindow_Description" xml:space="preserve">
+    <value>This is the base screen for collecting multiple FF14 tools into a single app.</value>
+  </data>
+  <data name="Nav_Overview" xml:space="preserve">
+    <value>Overview</value>
+  </data>
+  <data name="Nav_Hotbar" xml:space="preserve">
+    <value>Hotbar</value>
+  </data>
+  <data name="Nav_Keybind" xml:space="preserve">
+    <value>Keybind</value>
+  </data>
+  <data name="Nav_Crafting" xml:space="preserve">
+    <value>Crafting</value>
+  </data>
+  <data name="Nav_Icons" xml:space="preserve">
+    <value>Icons</value>
+  </data>
+  <data name="Nav_Settings" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="Section_Overview_Description" xml:space="preserve">
+    <value>This area will show an overview of each tool and recent status.</value>
+  </data>
+  <data name="Section_Hotbar_Description" xml:space="preserve">
+    <value>This area will show hotbar analysis, group checks, and resolved actions.</value>
+  </data>
+  <data name="Section_Keybind_Description" xml:space="preserve">
+    <value>This area will show keybind analysis and command lists.</value>
+  </data>
+  <data name="Section_Crafting_Description" xml:space="preserve">
+    <value>This area will show crafter action definitions, job mappings, and related data.</value>
+  </data>
+  <data name="Section_Icons_Description" xml:space="preserve">
+    <value>This area will handle Lumina-based icon generation and cache status.</value>
+  </data>
+  <data name="Section_Settings_Description" xml:space="preserve">
+    <value>This area will manage display language, cache locations, and other settings.</value>
+  </data>
+  <data name="SectionBadge_overview" xml:space="preserve">
+    <value>OVERVIEW</value>
+  </data>
+  <data name="SectionBadge_hotbar" xml:space="preserve">
+    <value>HOTBAR</value>
+  </data>
+  <data name="SectionBadge_keybind" xml:space="preserve">
+    <value>KEYBIND</value>
+  </data>
+  <data name="SectionBadge_crafting" xml:space="preserve">
+    <value>CRAFTING</value>
+  </data>
+  <data name="SectionBadge_icons" xml:space="preserve">
+    <value>ICONS</value>
+  </data>
+  <data name="SectionBadge_settings" xml:space="preserve">
+    <value>SETTINGS</value>
+  </data>
+  <data name="Settings_LanguageLabel" xml:space="preserve">
+    <value>Display language</value>
+  </data>
+  <data name="Shell_StatusLabel" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="Shell_StatusReady" xml:space="preserve">
+    <value>Base UI is ready to use</value>
+  </data>
+  <data name="Shell_PrimaryPlaceholderTitle" xml:space="preserve">
+    <value>Main content area</value>
+  </data>
+  <data name="Shell_PrimaryPlaceholderBody" xml:space="preserve">
+    <value>The selected tool's list, details, and actions will live here. The layout is intended to stay roomy for wide views such as hotbar and keybind tools.</value>
+  </data>
+  <data name="Shell_SecondaryPlaceholderTitle" xml:space="preserve">
+    <value>Support panel</value>
+  </data>
+  <data name="Shell_SecondaryPlaceholderBody" xml:space="preserve">
+    <value>This area can hold context, shortcuts, future tabs, or secondary details for the selected feature.</value>
+  </data>
+  <data name="Settings_CachePathTitle" xml:space="preserve">
+    <value>Icon cache</value>
+  </data>
+  <data name="Settings_CachePathDescription" xml:space="preserve">
+    <value>This path will later be used for opening the cache folder from the app.</value>
+  </data>
+  <data name="Settings_LanguageCardTitle" xml:space="preserve">
+    <value>Display settings</value>
+  </data>
+  <data name="Settings_LanguageCardDescription" xml:space="preserve">
+    <value>This card will later hold display language and shared settings guidance.</value>
+  </data>
+  <data name="Overview_PrimaryTitle" xml:space="preserve">
+    <value>Overall overview</value>
+  </data>
+  <data name="Overview_PrimaryBody" xml:space="preserve">
+    <value>This page can later collect tool summaries, recently used features, and current loading state.</value>
+  </data>
+  <data name="Overview_SecondaryTitle" xml:space="preserve">
+    <value>Next steps</value>
+  </data>
+  <data name="Overview_SecondaryBody" xml:space="preserve">
+    <value>This side area can point people toward major tools such as Hotbar and Keybind.</value>
+  </data>
+  <data name="Hotbar_PrimaryTitle" xml:space="preserve">
+    <value>Hotbar page</value>
+  </data>
+  <data name="Hotbar_PrimaryBody" xml:space="preserve">
+    <value>This page will later show hotbar lists, grouped slots, and Lumina-based resolved action names.</value>
+  </data>
+  <data name="Hotbar_SecondaryTitle" xml:space="preserve">
+    <value>Supporting details</value>
+  </data>
+  <data name="Hotbar_SecondaryBody" xml:space="preserve">
+    <value>This side area can hold character selection, file paths, filters, and export actions.</value>
+  </data>
+  <data name="Keybind_PrimaryTitle" xml:space="preserve">
+    <value>Keybind page</value>
+  </data>
+  <data name="Keybind_PrimaryBody" xml:space="preserve">
+    <value>This page will later show command lists, assignment states, and prefix summaries.</value>
+  </data>
+  <data name="Keybind_SecondaryTitle" xml:space="preserve">
+    <value>View options</value>
+  </data>
+  <data name="Keybind_SecondaryBody" xml:space="preserve">
+    <value>This side area can hold search, filters, and duplicate-check helpers.</value>
+  </data>
+  <data name="Crafting_PrimaryTitle" xml:space="preserve">
+    <value>Crafting page</value>
+  </data>
+  <data name="Crafting_PrimaryBody" xml:space="preserve">
+    <value>This page will later show crafter action definitions, job mappings, localized names, and icon links.</value>
+  </data>
+  <data name="Crafting_SecondaryTitle" xml:space="preserve">
+    <value>Related data</value>
+  </data>
+  <data name="Crafting_SecondaryBody" xml:space="preserve">
+    <value>This side area can hold comparisons between jobs and other related details.</value>
+  </data>
+  <data name="Icons_PrimaryTitle" xml:space="preserve">
+    <value>Icon page</value>
+  </data>
+  <data name="Icons_PrimaryBody" xml:space="preserve">
+    <value>This page will later handle converted Lumina icons, generation state, and refresh actions.</value>
+  </data>
+  <data name="Icons_SecondaryTitle" xml:space="preserve">
+    <value>Cache state</value>
+  </data>
+  <data name="Icons_SecondaryBody" xml:space="preserve">
+    <value>This side area can show cache counts, last update times, and missing images.</value>
+  </data>
+</root>

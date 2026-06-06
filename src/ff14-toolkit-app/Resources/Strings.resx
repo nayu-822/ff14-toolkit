@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="App_Title" xml:space="preserve">
+    <value>FF14 Toolkit</value>
+  </data>
+  <data name="MainWindow_Description" xml:space="preserve">
+    <value>複数の FF14 ツールを 1 つのアプリにまとめるためのベース画面です。</value>
+  </data>
+  <data name="Nav_Overview" xml:space="preserve">
+    <value>概要</value>
+  </data>
+  <data name="Nav_Hotbar" xml:space="preserve">
+    <value>ホットバー</value>
+  </data>
+  <data name="Nav_Keybind" xml:space="preserve">
+    <value>キーバインド</value>
+  </data>
+  <data name="Nav_Crafting" xml:space="preserve">
+    <value>クラフター</value>
+  </data>
+  <data name="Nav_Icons" xml:space="preserve">
+    <value>アイコン</value>
+  </data>
+  <data name="Nav_Settings" xml:space="preserve">
+    <value>設定</value>
+  </data>
+  <data name="Section_Overview_Description" xml:space="preserve">
+    <value>各機能の概要や最近の状態を表示する予定です。</value>
+  </data>
+  <data name="Section_Hotbar_Description" xml:space="preserve">
+    <value>ホットバー解析、グループ確認、アクション解決結果を表示する予定です。</value>
+  </data>
+  <data name="Section_Keybind_Description" xml:space="preserve">
+    <value>キーバインド解析とコマンド一覧を表示する予定です。</value>
+  </data>
+  <data name="Section_Crafting_Description" xml:space="preserve">
+    <value>クラフターアクション定義、ジョブ別対応、関連情報を表示する予定です。</value>
+  </data>
+  <data name="Section_Icons_Description" xml:space="preserve">
+    <value>Lumina 由来のアイコン生成とキャッシュ状態を扱う予定です。</value>
+  </data>
+  <data name="Section_Settings_Description" xml:space="preserve">
+    <value>表示言語、キャッシュ場所、各種設定を管理する予定です。</value>
+  </data>
+  <data name="SectionBadge_overview" xml:space="preserve">
+    <value>OVERVIEW</value>
+  </data>
+  <data name="SectionBadge_hotbar" xml:space="preserve">
+    <value>HOTBAR</value>
+  </data>
+  <data name="SectionBadge_keybind" xml:space="preserve">
+    <value>KEYBIND</value>
+  </data>
+  <data name="SectionBadge_crafting" xml:space="preserve">
+    <value>CRAFTING</value>
+  </data>
+  <data name="SectionBadge_icons" xml:space="preserve">
+    <value>ICONS</value>
+  </data>
+  <data name="SectionBadge_settings" xml:space="preserve">
+    <value>SETTINGS</value>
+  </data>
+  <data name="Settings_LanguageLabel" xml:space="preserve">
+    <value>表示言語</value>
+  </data>
+  <data name="Shell_StatusLabel" xml:space="preserve">
+    <value>状態</value>
+  </data>
+  <data name="Shell_StatusReady" xml:space="preserve">
+    <value>ベース UI を利用できます</value>
+  </data>
+  <data name="Shell_PrimaryPlaceholderTitle" xml:space="preserve">
+    <value>メインコンテンツ領域</value>
+  </data>
+  <data name="Shell_PrimaryPlaceholderBody" xml:space="preserve">
+    <value>選択した機能の一覧、詳細、操作パネルをここへ配置します。ホットバーやキーバインドのように横幅を使う機能でも広めに使える前提です。</value>
+  </data>
+  <data name="Shell_SecondaryPlaceholderTitle" xml:space="preserve">
+    <value>補助パネル</value>
+  </data>
+  <data name="Shell_SecondaryPlaceholderBody" xml:space="preserve">
+    <value>選択中項目の補足説明、履歴、ショートカット、将来のタブなどをここへ配置できます。</value>
+  </data>
+  <data name="Settings_CachePathTitle" xml:space="preserve">
+    <value>アイコンキャッシュ</value>
+  </data>
+  <data name="Settings_CachePathDescription" xml:space="preserve">
+    <value>将来はこのパスを利用してキャッシュフォルダを開けるようにします。</value>
+  </data>
+  <data name="Settings_LanguageCardTitle" xml:space="preserve">
+    <value>表示設定</value>
+  </data>
+  <data name="Settings_LanguageCardDescription" xml:space="preserve">
+    <value>将来はここに表示言語や共通設定の説明を配置します。</value>
+  </data>
+  <data name="Overview_PrimaryTitle" xml:space="preserve">
+    <value>全体の概要</value>
+  </data>
+  <data name="Overview_PrimaryBody" xml:space="preserve">
+    <value>この画面では、今後各ツールのサマリー、最近使った機能、ロード状態などをまとめて表示できます。</value>
+  </data>
+  <data name="Overview_SecondaryTitle" xml:space="preserve">
+    <value>次の候補</value>
+  </data>
+  <data name="Overview_SecondaryBody" xml:space="preserve">
+    <value>ホットバーやキーバインドなど、主要な機能への導線を置く想定です。</value>
+  </data>
+  <data name="Hotbar_PrimaryTitle" xml:space="preserve">
+    <value>ホットバー画面</value>
+  </data>
+  <data name="Hotbar_PrimaryBody" xml:space="preserve">
+    <value>ここにホットバー一覧、グループ別のスロット、Lumina による名前解決結果を表示していく予定です。</value>
+  </data>
+  <data name="Hotbar_SecondaryTitle" xml:space="preserve">
+    <value>補助情報</value>
+  </data>
+  <data name="Hotbar_SecondaryBody" xml:space="preserve">
+    <value>キャラクター選択、ファイルパス、絞り込み、JSON 出力などを配置しやすい余白として確保しています。</value>
+  </data>
+  <data name="Keybind_PrimaryTitle" xml:space="preserve">
+    <value>キーバインド画面</value>
+  </data>
+  <data name="Keybind_PrimaryBody" xml:space="preserve">
+    <value>ここにコマンド一覧、割り当て状況、プレフィックス別の集計などを表示する予定です。</value>
+  </data>
+  <data name="Keybind_SecondaryTitle" xml:space="preserve">
+    <value>表示オプション</value>
+  </data>
+  <data name="Keybind_SecondaryBody" xml:space="preserve">
+    <value>検索、絞り込み、重複確認などの補助機能をここへまとめられます。</value>
+  </data>
+  <data name="Crafting_PrimaryTitle" xml:space="preserve">
+    <value>クラフター画面</value>
+  </data>
+  <data name="Crafting_PrimaryBody" xml:space="preserve">
+    <value>クラフターアクション定義、各職の Lumina アクション ID、名称やアイコン対応をここへ表示する想定です。</value>
+  </data>
+  <data name="Crafting_SecondaryTitle" xml:space="preserve">
+    <value>関連データ</value>
+  </data>
+  <data name="Crafting_SecondaryBody" xml:space="preserve">
+    <value>ジョブ別比較やアイコンキャッシュの状態など、周辺情報を分けて見せる領域にできます。</value>
+  </data>
+  <data name="Icons_PrimaryTitle" xml:space="preserve">
+    <value>アイコン画面</value>
+  </data>
+  <data name="Icons_PrimaryBody" xml:space="preserve">
+    <value>ここでは Lumina から変換したアイコン、生成状態、再生成操作などを扱う予定です。</value>
+  </data>
+  <data name="Icons_SecondaryTitle" xml:space="preserve">
+    <value>キャッシュ状態</value>
+  </data>
+  <data name="Icons_SecondaryBody" xml:space="preserve">
+    <value>キャッシュ件数、最終更新、未生成画像の情報などを置く余地として使えます。</value>
+  </data>
+</root>

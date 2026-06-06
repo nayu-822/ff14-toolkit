@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="App_Title" xml:space="preserve">
+    <value>FF14 Toolkit</value>
+  </data>
+  <data name="MainWindow_Description" xml:space="preserve">
+    <value>Dies ist die Grundansicht, um mehrere FF14-Werkzeuge in einer einzigen App zu sammeln.</value>
+  </data>
+  <data name="Nav_Overview" xml:space="preserve">
+    <value>Uebersicht</value>
+  </data>
+  <data name="Nav_Hotbar" xml:space="preserve">
+    <value>Hotbar</value>
+  </data>
+  <data name="Nav_Keybind" xml:space="preserve">
+    <value>Tastenbelegung</value>
+  </data>
+  <data name="Nav_Crafting" xml:space="preserve">
+    <value>Handwerk</value>
+  </data>
+  <data name="Nav_Icons" xml:space="preserve">
+    <value>Symbole</value>
+  </data>
+  <data name="Nav_Settings" xml:space="preserve">
+    <value>Einstellungen</value>
+  </data>
+  <data name="Section_Overview_Description" xml:space="preserve">
+    <value>Hier sollen spaeter die Uebersicht der Werkzeuge und der aktuelle Status erscheinen.</value>
+  </data>
+  <data name="Section_Hotbar_Description" xml:space="preserve">
+    <value>Hier sollen spaeter Hotbar-Analyse, Gruppenkontrolle und aufgeloeste Aktionen erscheinen.</value>
+  </data>
+  <data name="Section_Keybind_Description" xml:space="preserve">
+    <value>Hier sollen spaeter Tastenbelegungsanalyse und Befehlslisten erscheinen.</value>
+  </data>
+  <data name="Section_Crafting_Description" xml:space="preserve">
+    <value>Hier sollen spaeter Handwerkeraktionen, Job-Zuordnungen und verwandte Daten erscheinen.</value>
+  </data>
+  <data name="Section_Icons_Description" xml:space="preserve">
+    <value>Hier sollen spaeter Lumina-basierte Symbolerzeugung und Cache-Status erscheinen.</value>
+  </data>
+  <data name="Section_Settings_Description" xml:space="preserve">
+    <value>Hier sollen spaeter Anzeigesprache, Cache-Pfade und weitere Einstellungen verwaltet werden.</value>
+  </data>
+  <data name="SectionBadge_overview" xml:space="preserve">
+    <value>OVERVIEW</value>
+  </data>
+  <data name="SectionBadge_hotbar" xml:space="preserve">
+    <value>HOTBAR</value>
+  </data>
+  <data name="SectionBadge_keybind" xml:space="preserve">
+    <value>KEYBIND</value>
+  </data>
+  <data name="SectionBadge_crafting" xml:space="preserve">
+    <value>CRAFTING</value>
+  </data>
+  <data name="SectionBadge_icons" xml:space="preserve">
+    <value>ICONS</value>
+  </data>
+  <data name="SectionBadge_settings" xml:space="preserve">
+    <value>SETTINGS</value>
+  </data>
+  <data name="Settings_LanguageLabel" xml:space="preserve">
+    <value>Anzeigesprache</value>
+  </data>
+  <data name="Shell_StatusLabel" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="Shell_StatusReady" xml:space="preserve">
+    <value>Basis-UI ist bereit</value>
+  </data>
+  <data name="Shell_PrimaryPlaceholderTitle" xml:space="preserve">
+    <value>Hauptbereich</value>
+  </data>
+  <data name="Shell_PrimaryPlaceholderBody" xml:space="preserve">
+    <value>Hier kommen spaeter Listen, Details und Aktionen des gewaehlten Werkzeugs hin. Der Bereich ist bewusst breit fuer Hotbar- oder Keybind-Ansichten.</value>
+  </data>
+  <data name="Shell_SecondaryPlaceholderTitle" xml:space="preserve">
+    <value>Nebenbereich</value>
+  </data>
+  <data name="Shell_SecondaryPlaceholderBody" xml:space="preserve">
+    <value>Hier koennen spaeter Hinweise, Schnellzugriffe, zusaetzliche Tabs oder weitere Details erscheinen.</value>
+  </data>
+  <data name="Settings_CachePathTitle" xml:space="preserve">
+    <value>Symbol-Cache</value>
+  </data>
+  <data name="Settings_CachePathDescription" xml:space="preserve">
+    <value>Dieser Pfad wird spaeter verwendet, um den Cache-Ordner aus der App zu oeffnen.</value>
+  </data>
+  <data name="Settings_LanguageCardTitle" xml:space="preserve">
+    <value>Anzeigeeinstellungen</value>
+  </data>
+  <data name="Settings_LanguageCardDescription" xml:space="preserve">
+    <value>Hier koennen spaeter Hinweise zur Sprache und zu gemeinsamen Einstellungen erscheinen.</value>
+  </data>
+  <data name="Overview_PrimaryTitle" xml:space="preserve">
+    <value>Gesamtuebersicht</value>
+  </data>
+  <data name="Overview_PrimaryBody" xml:space="preserve">
+    <value>Hier koennen spaeter Zusammenfassungen der Werkzeuge, zuletzt genutzte Funktionen und Ladezustaende erscheinen.</value>
+  </data>
+  <data name="Overview_SecondaryTitle" xml:space="preserve">
+    <value>Naechste Schritte</value>
+  </data>
+  <data name="Overview_SecondaryBody" xml:space="preserve">
+    <value>Diese Seite kann spaeter Schnellzugriffe zu wichtigen Werkzeugen wie Hotbar und Tastenbelegung zeigen.</value>
+  </data>
+  <data name="Hotbar_PrimaryTitle" xml:space="preserve">
+    <value>Hotbar-Seite</value>
+  </data>
+  <data name="Hotbar_PrimaryBody" xml:space="preserve">
+    <value>Hier sollen spaeter Hotbar-Listen, Gruppierungen und ueber Lumina aufgeloeste Aktionsnamen erscheinen.</value>
+  </data>
+  <data name="Hotbar_SecondaryTitle" xml:space="preserve">
+    <value>Zusatzinformationen</value>
+  </data>
+  <data name="Hotbar_SecondaryBody" xml:space="preserve">
+    <value>Hier lassen sich spaeter Charakterwahl, Dateipfade, Filter und Exportaktionen unterbringen.</value>
+  </data>
+  <data name="Keybind_PrimaryTitle" xml:space="preserve">
+    <value>Tastenbelegungsseite</value>
+  </data>
+  <data name="Keybind_PrimaryBody" xml:space="preserve">
+    <value>Hier sollen spaeter Befehlslisten, Belegungszustaende und Praefix-Zusammenfassungen erscheinen.</value>
+  </data>
+  <data name="Keybind_SecondaryTitle" xml:space="preserve">
+    <value>Ansichtsoptionen</value>
+  </data>
+  <data name="Keybind_SecondaryBody" xml:space="preserve">
+    <value>Hier koennen spaeter Suche, Filter und Hilfen fuer doppelte Belegungen erscheinen.</value>
+  </data>
+  <data name="Crafting_PrimaryTitle" xml:space="preserve">
+    <value>Handwerksseite</value>
+  </data>
+  <data name="Crafting_PrimaryBody" xml:space="preserve">
+    <value>Hier sollen spaeter Handwerkeraktionen, Job-Zuordnungen, lokalisierte Namen und Symbolreferenzen erscheinen.</value>
+  </data>
+  <data name="Crafting_SecondaryTitle" xml:space="preserve">
+    <value>Verwandte Daten</value>
+  </data>
+  <data name="Crafting_SecondaryBody" xml:space="preserve">
+    <value>Dieser Bereich kann spaeter Vergleiche zwischen Jobs und weitere Begleitinformationen zeigen.</value>
+  </data>
+  <data name="Icons_PrimaryTitle" xml:space="preserve">
+    <value>Symbolseite</value>
+  </data>
+  <data name="Icons_PrimaryBody" xml:space="preserve">
+    <value>Hier sollen spaeter konvertierte Lumina-Symbole, ihr Erzeugungsstatus und Aktualisierungsaktionen erscheinen.</value>
+  </data>
+  <data name="Icons_SecondaryTitle" xml:space="preserve">
+    <value>Cache-Zustand</value>
+  </data>
+  <data name="Icons_SecondaryBody" xml:space="preserve">
+    <value>Hier koennen spaeter Cache-Anzahl, Zeitpunkte der Aktualisierung und fehlende Bilder erscheinen.</value>
+  </data>
+</root>
