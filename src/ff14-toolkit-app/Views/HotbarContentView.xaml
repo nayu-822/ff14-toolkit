@@ -1,0 +1,202 @@
+<UserControl x:Class="FF14Toolkit.App.Views.HotbarContentView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d">
+    <Border Padding="20"
+            Style="{StaticResource SurfaceCardStyle}">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="18" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="20" />
+                    <ColumnDefinition Width="320" />
+                </Grid.ColumnDefinitions>
+
+                <StackPanel>
+                    <TextBlock FontSize="13"
+                               FontWeight="SemiBold"
+                               Foreground="{StaticResource AppMutedTextBrush}"
+                               Text="{Binding CharacterLabel}" />
+                    <TextBlock Margin="0,6,0,0"
+                               FontSize="16"
+                               FontWeight="SemiBold"
+                               Foreground="{StaticResource AppTextBrush}"
+                               Text="{Binding SelectedCharacterDisplay}" />
+                </StackPanel>
+
+                <StackPanel Grid.Column="2">
+                    <TextBlock FontSize="13"
+                               FontWeight="SemiBold"
+                               Foreground="{StaticResource AppMutedTextBrush}"
+                               Text="{Binding JobLabel}" />
+                    <ComboBox Margin="0,6,0,0"
+                              ItemsSource="{Binding AvailableJobs}"
+                              SelectedItem="{Binding SelectedJob, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                              DisplayMemberPath="DisplayName"
+                              Style="{StaticResource ToolkitComboBoxStyle}" />
+                </StackPanel>
+            </Grid>
+
+            <Grid Grid.Row="2">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <ItemsControl ItemsSource="{Binding HotbarRows}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel HorizontalAlignment="Left" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Margin="0,0,0,10"
+                                        Padding="10,8"
+                                        HorizontalAlignment="Left"
+                                        Background="{StaticResource AppMutedSurfaceBrush}"
+                                        BorderBrush="{StaticResource AppBorderBrush}"
+                                        BorderThickness="1"
+                                        CornerRadius="14">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="34" />
+                                            <ColumnDefinition Width="12" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+
+                                        <TextBlock VerticalAlignment="Center"
+                                                   FontSize="13"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="{StaticResource AppMutedTextBrush}"
+                                                   TextAlignment="Center"
+                                                   Text="{Binding Label}" />
+
+                                        <ItemsControl Grid.Column="2"
+                                                      ItemsSource="{Binding Slots}">
+                                            <ItemsControl.ItemsPanel>
+                                                <ItemsPanelTemplate>
+                                                    <StackPanel Orientation="Horizontal" />
+                                                </ItemsPanelTemplate>
+                                            </ItemsControl.ItemsPanel>
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <StackPanel Width="68"
+                                                                Margin="0,0,6,0"
+                                                                ToolTip="{Binding ToolTipText}">
+                                                        <Border Width="48"
+                                                                Height="48"
+                                                                HorizontalAlignment="Center">
+                                                            <Border.Style>
+                                                                <Style TargetType="Border">
+                                                                    <Setter Property="Background" Value="{StaticResource AppAccentSoftBrush}" />
+                                                                    <Setter Property="CornerRadius" Value="{StaticResource AppInsetCornerRadius}" />
+                                                                    <Setter Property="BorderBrush" Value="#C9D6CC" />
+                                                                    <Setter Property="BorderThickness" Value="1" />
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding IsEmpty}" Value="True">
+                                                                            <Setter Property="Background" Value="#F7F1E6" />
+                                                                            <Setter Property="BorderBrush" Value="#DDD2BE" />
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </Border.Style>
+                                                            <Grid>
+                                                                <Image Margin="2"
+                                                                       Source="{Binding IconSource}"
+                                                                       Stretch="Uniform" />
+                                                                <TextBlock HorizontalAlignment="Center"
+                                                                           VerticalAlignment="Center"
+                                                                           FontSize="13"
+                                                                           FontWeight="Bold"
+                                                                           Foreground="{StaticResource AppAccentBrush}"
+                                                                           Text="{Binding FallbackText}">
+                                                                    <TextBlock.Style>
+                                                                        <Style TargetType="TextBlock">
+                                                                            <Setter Property="Visibility" Value="Collapsed" />
+                                                                            <Style.Triggers>
+                                                                                <MultiDataTrigger>
+                                                                                    <MultiDataTrigger.Conditions>
+                                                                                        <Condition Binding="{Binding HasIcon}" Value="False" />
+                                                                                        <Condition Binding="{Binding IsEmpty}" Value="False" />
+                                                                                    </MultiDataTrigger.Conditions>
+                                                                                    <Setter Property="Visibility" Value="Visible" />
+                                                                                </MultiDataTrigger>
+                                                                            </Style.Triggers>
+                                                                        </Style>
+                                                                    </TextBlock.Style>
+                                                                </TextBlock>
+                                                            </Grid>
+                                                        </Border>
+
+                                                        <TextBlock Margin="0,4,0,0"
+                                                                   HorizontalAlignment="Center"
+                                                                   TextAlignment="Center"
+                                                                   Text="{Binding DisplayName}">
+                                                            <TextBlock.Style>
+                                                                <Style TargetType="TextBlock" BasedOn="{StaticResource CraftActionNameTextStyle}">
+                                                                    <Setter Property="FontSize" Value="11" />
+                                                                    <Setter Property="MaxWidth" Value="68" />
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding IsEmpty}" Value="True">
+                                                                            <Setter Property="Visibility" Value="Collapsed" />
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </TextBlock.Style>
+                                                        </TextBlock>
+
+                                                        <TextBlock Margin="0,2,0,0"
+                                                                   HorizontalAlignment="Center"
+                                                                   TextAlignment="Center"
+                                                                   Foreground="{StaticResource AppMutedTextBrush}"
+                                                                   Text="{Binding KeybindText}">
+                                                            <TextBlock.Style>
+                                                                <Style TargetType="TextBlock">
+                                                                    <Setter Property="FontSize" Value="10" />
+                                                                    <Setter Property="TextWrapping" Value="NoWrap" />
+                                                                    <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+                                                                    <Setter Property="MaxWidth" Value="68" />
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding IsEmpty}" Value="True">
+                                                                            <Setter Property="Visibility" Value="Collapsed" />
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </TextBlock.Style>
+                                                        </TextBlock>
+                                                    </StackPanel>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+
+                <TextBlock HorizontalAlignment="Center"
+                           VerticalAlignment="Center"
+                           FontSize="14"
+                           Foreground="{StaticResource AppMutedTextBrush}"
+                           Text="{Binding StatusMessage}">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding HasStatusMessage}" Value="True">
+                                    <Setter Property="Visibility" Value="Visible" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
+            </Grid>
+        </Grid>
+    </Border>
+</UserControl>

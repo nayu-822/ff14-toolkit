@@ -15,6 +15,9 @@
     <None Update="appsettings.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <Content Include="Assets\Templates\Crafting\*.ppm">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
   <ItemGroup>
@@ -22,5 +25,12 @@
     <PackageReference Include="Lumina.Excel" Version="7.4.3" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.8" />
   </ItemGroup>
+
+  <Target Name="CopyCraftTemplates" AfterTargets="Build">
+    <MakeDir Directories="$(OutDir)Assets\Templates\Crafting" />
+    <Copy SourceFiles="Assets\Templates\Crafting\craft-start-button.ppm;Assets\Templates\Crafting\craft-window-anchor.ppm"
+          DestinationFolder="$(OutDir)Assets\Templates\Crafting"
+          SkipUnchangedFiles="true" />
+  </Target>
 
 </Project>

@@ -423,4 +423,106 @@
   <data name="CraftingSequenceHotkeys_StatusRegistrationFailed" xml:space="preserve">
     <value>Fehler</value>
   </data>
+  <data name="Nav_Development" xml:space="preserve">
+    <value>Entwicklung</value>
+  </data>
+  <data name="Section_Development_Description" xml:space="preserve">
+    <value>Entwicklerwerkzeuge und Diagnose.</value>
+  </data>
+  <data name="Nav_DevelopmentOverlayPluginWSServer" xml:space="preserve">
+    <value>OverlayPlugin WSServer</value>
+  </data>
+  <data name="Section_DevelopmentOverlayPluginWSServer_Description" xml:space="preserve">
+    <value>OverlayPlugin-WebSocket-Anfragen und Antworten testen.</value>
+  </data>
+  <data name="Development_OverlayPluginWSServer_ConnectionCardTitle" xml:space="preserve">
+    <value>WebSocket-Verbindung</value>
+  </data>
+  <data name="Development_OverlayPluginWSServer_ConnectionStateLabel" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="Development_OverlayPluginWSServer_Connected" xml:space="preserve">
+    <value>Verbunden</value>
+  </data>
+  <data name="Development_OverlayPluginWSServer_Disconnected" xml:space="preserve">
+    <value>Beendet</value>
+  </data>
+  <data name="Development_OverlayPluginWSServer_StartButton" xml:space="preserve">
+    <value>Start</value>
+  </data>
+  <data name="Development_OverlayPluginWSServer_StopButton" xml:space="preserve">
+    <value>Stopp</value>
+  </data>
+  <data name="Development_OverlayPluginWSServer_RequestCardTitle" xml:space="preserve">
+    <value>Anfragen</value>
+  </data>
+  <data name="Development_OverlayPluginWSServer_RequestSectionLabel" xml:space="preserve">
+    <value>Unterstuetzte Calls bei aktiver WebSocket-Verbindung senden.</value>
+  </data>
+  <data name="Development_OverlayPluginWSServer_ResponseCardTitle" xml:space="preserve">
+    <value>Empfangene Daten</value>
+  </data>
+  <data name="Development_OverlayPluginWSServer_EmptyLogMessage" xml:space="preserve">
+    <value>Noch keine Antworten.</value>
+  </data>
+  <data name="Nav_DevelopmentInfo" xml:space="preserve">
+    <value>Info</value>
+  </data>
+  <data name="Section_DevelopmentInfo_Description" xml:space="preserve">
+    <value>Nach dem Start erfasste Charakter- und Ortsdaten anzeigen.</value>
+  </data>
+  <data name="Development_Info_CharacterSectionTitle" xml:space="preserve"><value>Charakter</value></data>
+  <data name="Development_Info_StatusSectionTitle" xml:space="preserve"><value>Status</value></data>
+  <data name="Development_Info_LocationSectionTitle" xml:space="preserve"><value>Ort</value></data>
+  <data name="Development_Info_CharacterNameLabel" xml:space="preserve"><value>Name</value></data>
+  <data name="Development_Info_WorldLabel" xml:space="preserve"><value>Welt</value></data>
+  <data name="Development_Info_JobIdLabel" xml:space="preserve"><value>Job-ID</value></data>
+  <data name="Development_Info_JobNameLabel" xml:space="preserve"><value>Job</value></data>
+  <data name="Development_Info_LevelLabel" xml:space="preserve"><value>Stufe</value></data>
+  <data name="Development_Info_HpLabel" xml:space="preserve"><value>HP</value></data>
+  <data name="Development_Info_MpLabel" xml:space="preserve"><value>MP</value></data>
+  <data name="Development_Info_GpLabel" xml:space="preserve"><value>GP</value></data>
+  <data name="Development_Info_CpLabel" xml:space="preserve"><value>CP</value></data>
+  <data name="Development_Info_TerritoryTypeIdLabel" xml:space="preserve"><value>Zonen-ID</value></data>
+  <data name="Development_Info_MapIdLabel" xml:space="preserve"><value>Map-ID</value></data>
+  <data name="Development_Info_MapNameLabel" xml:space="preserve"><value>Karte</value></data>
+  <data name="Development_Info_RawCoordinatesLabel" xml:space="preserve"><value>Rohkoordinaten</value></data>
+  <data name="Development_Info_ConvertedCoordinatesLabel" xml:space="preserve"><value>Umgerechnete Koordinaten</value></data>
+  <data name="Development_Info_HeadingLabel" xml:space="preserve"><value>Richtung</value></data>
+  <data name="Development_Map_RegionLabel" xml:space="preserve">
+    <value>Region</value>
+  </data>
+  <data name="Development_Map_MapLabel" xml:space="preserve">
+    <value>Karte</value>
+  </data>
+  <data name="Development_Map_MapIdLabel" xml:space="preserve">
+    <value>Map-ID</value>
+  </data>
+  <data name="Development_Map_TerritoryTypeIdLabel" xml:space="preserve">
+    <value>Zonen-ID</value>
+  </data>
+  <data name="Development_Map_EmptyImageMessage" xml:space="preserve">
+    <value>Kein Kartenbild.</value>
+  </data>
+  <data name="Development_Map_NameCandidatesLabel" xml:space="preserve">
+    <value>Namenskandidaten</value>
+  </data>
+  <data name="Hotbar_CharacterLabel" xml:space="preserve">
+    <value>Charakter</value>
+  </data>
+  <data name="Hotbar_JobLabel" xml:space="preserve">
+    <value>Job</value>
+  </data>
+  <data name="Hotbar_NoCharacterSelected" xml:space="preserve">
+    <value>Waehle zuerst in den Einstellungen einen Charakter aus.</value>
+  </data>
+  <data name="Hotbar_NoJobAvailable" xml:space="preserve">
+    <value>Es sind keine anzeigbaren Hotbar-Daten vorhanden.</value>
+  </data>
+  <data name="Hotbar_NoSlots" xml:space="preserve">
+    <value>Fuer den gewaehlten Job gibt es keine Hotbar-Inhalte.</value>
+  </data>
+  <data name="Hotbar_LoadFailed" xml:space="preserve">
+    <value>Hotbar-Daten konnten nicht geladen werden: {0}</value>
+  </data>
 </root>

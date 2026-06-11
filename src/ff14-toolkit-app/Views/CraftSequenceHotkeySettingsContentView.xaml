@@ -3,13 +3,12 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             mc:Ignorable="d">
+             mc:Ignorable="d"
+             PreviewMouseLeftButtonDown="OnRootPreviewMouseLeftButtonDown">
     <Border Padding="24"
             Style="{StaticResource SurfaceCardStyle}">
         <Grid>
             <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="12" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="12" />
                 <RowDefinition Height="Auto" />
@@ -30,10 +29,9 @@
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="88" />
-                        <ColumnDefinition Width="120" />
+                        <ColumnDefinition Width="158" />
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="120" />
-                        <ColumnDefinition Width="110" />
                     </Grid.ColumnDefinitions>
 
                     <TextBlock HorizontalAlignment="Center"
@@ -55,32 +53,10 @@
                                FontWeight="SemiBold"
                                Foreground="{StaticResource AppMutedTextBrush}"
                                Text="{Binding RepeatColumnLabel}" />
-                    <TextBlock Grid.Column="4"
-                               HorizontalAlignment="Center"
-                               FontWeight="SemiBold"
-                               Foreground="{StaticResource AppMutedTextBrush}"
-                               Text="{Binding StatusColumnLabel}" />
                 </Grid>
             </Border>
 
             <Grid Grid.Row="4">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="110" />
-                    <ColumnDefinition Width="12" />
-                    <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
-
-                <TextBlock VerticalAlignment="Top"
-                           FontWeight="SemiBold"
-                           Foreground="{StaticResource AppTextBrush}"
-                           Text="{Binding LastActivityLabel}" />
-                <TextBlock Grid.Column="2"
-                           Foreground="{StaticResource AppMutedTextBrush}"
-                           TextWrapping="Wrap"
-                           Text="{Binding LastActivity}" />
-            </Grid>
-
-            <Grid Grid.Row="6">
                 <ScrollViewer VerticalScrollBarVisibility="Auto"
                               HorizontalScrollBarVisibility="Disabled">
                     <ItemsControl ItemsSource="{Binding HotkeySlots}">
@@ -92,22 +68,36 @@
                                     <Grid>
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="88" />
-                                            <ColumnDefinition Width="120" />
+                                            <ColumnDefinition Width="158" />
                                             <ColumnDefinition Width="*" />
                                             <ColumnDefinition Width="120" />
-                                            <ColumnDefinition Width="110" />
                                         </Grid.ColumnDefinitions>
 
                                         <CheckBox HorizontalAlignment="Center"
                                                   VerticalAlignment="Center"
                                                   IsChecked="{Binding IsEnabled, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
 
-                                        <TextBlock Grid.Column="1"
-                                                   VerticalAlignment="Center"
-                                                   HorizontalAlignment="Center"
-                                                   FontWeight="SemiBold"
-                                                   Foreground="{StaticResource AppTextBrush}"
-                                                   Text="{Binding HotkeyText}" />
+                                        <TextBox Grid.Column="1"
+                                                 Margin="0,0,8,0"
+                                                 MinHeight="36"
+                                                 VerticalContentAlignment="Center"
+                                                 PreviewMouseLeftButtonDown="OnHotKeyTextBoxPreviewMouseLeftButtonDown"
+                                                 GotKeyboardFocus="OnHotKeyTextBoxGotKeyboardFocus"
+                                                 LostKeyboardFocus="OnHotKeyTextBoxLostKeyboardFocus"
+                                                 PreviewKeyDown="OnHotKeyTextBoxPreviewKeyDown"
+                                                 PreviewTextInput="OnHotKeyTextBoxPreviewTextInput"
+                                                 Text="{Binding HotkeyText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                                            <TextBox.Style>
+                                                <Style TargetType="TextBox" BasedOn="{StaticResource ToolkitTextBoxStyle}">
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsCapturingHotkey}" Value="True">
+                                                            <Setter Property="BorderBrush" Value="#2F7A57" />
+                                                            <Setter Property="BorderThickness" Value="2" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBox.Style>
+                                        </TextBox>
 
                                         <ComboBox Grid.Column="2"
                                                   Margin="8,0,8,0"
@@ -122,12 +112,6 @@
                                                  HorizontalAlignment="Center"
                                                  Text="{Binding RepeatCountText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                                  Style="{StaticResource ToolkitTextBoxStyle}" />
-
-                                        <TextBlock Grid.Column="4"
-                                                   VerticalAlignment="Center"
-                                                   HorizontalAlignment="Center"
-                                                   Foreground="{StaticResource AppMutedTextBrush}"
-                                                   Text="{Binding RegistrationStatusText}" />
                                     </Grid>
                                 </Border>
                             </DataTemplate>
@@ -152,7 +136,7 @@
                 </TextBlock>
             </Grid>
 
-            <Button Grid.Row="8"
+            <Button Grid.Row="6"
                     HorizontalAlignment="Left"
                     MinWidth="88"
                     Padding="16,8"

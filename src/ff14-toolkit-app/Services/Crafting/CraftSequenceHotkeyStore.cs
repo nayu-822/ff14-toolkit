@@ -106,10 +106,14 @@ public sealed class CraftSequenceHotkeyStore
     private static CraftSequenceHotkeyBinding NormalizeBinding(CraftSequenceHotkeyBinding binding)
     {
         int slotNumber = Math.Clamp(binding.SlotNumber, 1, 5);
+        string hotkeyText = string.IsNullOrWhiteSpace(binding.HotkeyText)
+            ? GetDefaultHotkeyText(slotNumber)
+            : binding.HotkeyText.Trim();
+
         return new CraftSequenceHotkeyBinding
         {
             SlotNumber = slotNumber,
-            HotkeyText = GetFixedHotkeyText(slotNumber),
+            HotkeyText = hotkeyText,
             IsEnabled = binding.IsEnabled,
             SequenceId = binding.SequenceId,
             RepeatCount = Math.Max(1, binding.RepeatCount)
@@ -133,14 +137,14 @@ public sealed class CraftSequenceHotkeyStore
         return new CraftSequenceHotkeyBinding
         {
             SlotNumber = slotNumber,
-            HotkeyText = GetFixedHotkeyText(slotNumber),
+            HotkeyText = GetDefaultHotkeyText(slotNumber),
             IsEnabled = false,
             SequenceId = null,
             RepeatCount = 1
         };
     }
 
-    private static string GetFixedHotkeyText(int slotNumber)
+    private static string GetDefaultHotkeyText(int slotNumber)
     {
         return $"Ctrl+Shift+{slotNumber}";
     }

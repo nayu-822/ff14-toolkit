@@ -1,8 +1,9 @@
 using FF14Toolkit.App.Services.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using System.Text;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
 using System.Windows.Threading;
 
 namespace FF14Toolkit.App.Views;
@@ -34,23 +35,18 @@ public partial class SettingsContentView : UserControl
     private void OnHotKeyTextBoxGotKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e)
     {
         hotkeyCaptureState?.BeginCapture();
-        UpdateCaptureIndicators(sender as TextBox);
     }
 
     private void OnHotKeyTextBoxLostKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e)
     {
         Dispatcher.BeginInvoke(() =>
         {
-            bool stillCapturing = ToggleOverlayHotKeyTextBox.IsKeyboardFocusWithin
-                || ToggleOverlayEditHotKeyTextBox.IsKeyboardFocusWithin;
-
-            if (stillCapturing)
+            if (sender is TextBox textBox && textBox.IsKeyboardFocusWithin)
             {
                 return;
             }
 
             hotkeyCaptureState?.EndCapture();
-            UpdateCaptureIndicators(null);
         }, DispatcherPriority.Input);
     }
 
@@ -75,13 +71,13 @@ public partial class SettingsContentView : UserControl
             return;
         }
 
-        if (IsModifierKey(key))
+        if (HotkeyTextUtility.IsModifierKey(key))
         {
             return;
         }
 
         ModifierKeys modifiers = Keyboard.Modifiers;
-        string hotKeyText = FormatHotKeyText(modifiers, key);
+        string hotKeyText = HotkeyTextUtility.FormatHotKeyText(modifiers, key);
         if (string.IsNullOrWhiteSpace(hotKeyText))
         {
             return;
@@ -97,104 +93,29 @@ public partial class SettingsContentView : UserControl
         e.Handled = true;
     }
 
-    private static string FormatHotKeyText(ModifierKeys modifiers, Key key)
+    private void OnRootPreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
-        StringBuilder builder = new();
-
-        if (modifiers.HasFlag(ModifierKeys.Control))
+        if (e.OriginalSource is DependencyObject dependencyObject && FindAncestor<TextBox>(dependencyObject) is not null)
         {
-            builder.Append("Ctrl+");
+            return;
         }
 
-        if (modifiers.HasFlag(ModifierKeys.Shift))
-        {
-            builder.Append("Shift+");
-        }
-
-        if (modifiers.HasFlag(ModifierKeys.Alt))
-        {
-            builder.Append("Alt+");
-        }
-
-        if (modifiers.HasFlag(ModifierKeys.Windows))
-        {
-            builder.Append("Win+");
-        }
-
-        string keyText = GetKeyText(key);
-        if (string.IsNullOrWhiteSpace(keyText))
-        {
-            return string.Empty;
-        }
-
-        builder.Append(keyText);
-        return builder.ToString();
+        Keyboard.ClearFocus();
     }
 
-    private static bool IsModifierKey(Key key)
+    private static T? FindAncestor<T>(DependencyObject? dependencyObject)
+        where T : DependencyObject
     {
-        return key is Key.LeftCtrl
-            or Key.RightCtrl
-            or Key.LeftShift
-            or Key.RightShift
-            or Key.LeftAlt
-            or Key.RightAlt
-            or Key.LWin
-            or Key.RWin;
-    }
-
-    private static string GetKeyText(Key key)
-    {
-        return key switch
+        while (dependencyObject is not null)
         {
-            >= Key.D0 and <= Key.D9 => key.ToString()[1..],
-            >= Key.NumPad0 and <= Key.NumPad9 => key.ToString(),
-            >= Key.A and <= Key.Z => key.ToString(),
-            >= Key.F1 and <= Key.F24 => key.ToString(),
-            Key.Escape => "Escape",
-            Key.Space => "Space",
-            Key.Return => "Enter",
-            Key.Prior => "PageUp",
-            Key.Next => "PageDown",
-            Key.Insert => "Insert",
-            Key.Delete => "Delete",
-            Key.Home => "Home",
-            Key.End => "End",
-            Key.Up => "Up",
-            Key.Down => "Down",
-            Key.Left => "Left",
-            Key.Right => "Right",
-            Key.OemPlus => "OemPlus",
-            Key.OemMinus => "OemMinus",
-            Key.OemComma => "OemComma",
-            Key.OemPeriod => "OemPeriod",
-            Key.OemQuestion => "OemQuestion",
-            Key.OemSemicolon => "OemSemicolon",
-            Key.OemQuotes => "OemQuotes",
-            Key.OemOpenBrackets => "OemOpenBrackets",
-            Key.OemCloseBrackets => "OemCloseBrackets",
-            Key.OemPipe => "OemPipe",
-            Key.OemTilde => "OemTilde",
-            Key.OemBackslash => "OemBackslash",
-            Key.Multiply => "Multiply",
-            Key.Add => "Add",
-            Key.Subtract => "Subtract",
-            Key.Decimal => "Decimal",
-            Key.Divide => "Divide",
-            _ => key.ToString()
-        };
-    }
+            if (dependencyObject is T typedObject)
+            {
+                return typedObject;
+            }
 
-    private void UpdateCaptureIndicators(TextBox? activeTextBox)
-    {
-        ToggleOverlayHotKeyCaptureStateTextBlock.Visibility =
-            ReferenceEquals(activeTextBox, ToggleOverlayHotKeyTextBox)
-                ? System.Windows.Visibility.Visible
-                : System.Windows.Visibility.Hidden;
+            dependencyObject = VisualTreeHelper.GetParent(dependencyObject);
+        }
 
-        ToggleOverlayEditHotKeyCaptureStateTextBlock.Visibility =
-            ReferenceEquals(activeTextBox, ToggleOverlayEditHotKeyTextBox)
-                ? System.Windows.Visibility.Visible
-                : System.Windows.Visibility.Hidden;
+        return null;
     }
 }

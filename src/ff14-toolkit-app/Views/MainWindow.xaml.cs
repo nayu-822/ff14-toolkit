@@ -1,12 +1,11 @@
+using FF14Toolkit.App.Models.Crafting;
 using FF14Toolkit.App.Services.Configuration;
 using FF14Toolkit.App.Services.Crafting;
 using FF14Toolkit.App.Services.Overlay;
 using FF14Toolkit.App.ViewModels;
-using FF14Toolkit.App.Models.Crafting;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
 using System.Windows;
-using System.Windows.Input;
 using System.Windows.Interop;
 
 namespace FF14Toolkit.App.Views;
@@ -17,14 +16,9 @@ public partial class MainWindow : Window
     private const int ToggleOverlayEditHotKeyId = 0x1401;
     private const int CraftSequenceHotKeyIdBase = 0x1410;
     private const int WindowMessageHotKey = 0x0312;
-    private const uint ModifierAlt = 0x0001;
-    private const uint ModifierControl = 0x0002;
-    private const uint ModifierShift = 0x0004;
-    private const uint ModifierWin = 0x0008;
 
     private readonly CraftSequenceHotkeyExecutionService craftSequenceHotkeyExecutionService;
-    private readonly CraftSequenceHotkeyActivityState craftSequenceHotkeyActivityState;
-    private readonly CraftSequenceHotkeyRegistrationState craftSequenceHotkeyRegistrationState;
+    private readonly CraftSequenceHotkeyLogService craftSequenceHotkeyLogService;
     private readonly CraftSequenceHotkeyStore craftSequenceHotkeyStore;
     private readonly HotkeyCaptureState hotkeyCaptureState;
     private readonly HotkeySettingsStore hotkeySettingsStore;
@@ -35,8 +29,7 @@ public partial class MainWindow : Window
         MainWindowViewModel viewModel,
         OverlayWorkspaceService overlayWorkspaceService,
         CraftSequenceHotkeyStore craftSequenceHotkeyStore,
-        CraftSequenceHotkeyActivityState craftSequenceHotkeyActivityState,
-        CraftSequenceHotkeyRegistrationState craftSequenceHotkeyRegistrationState,
+        CraftSequenceHotkeyLogService craftSequenceHotkeyLogService,
         CraftSequenceHotkeyExecutionService craftSequenceHotkeyExecutionService,
         HotkeySettingsStore hotkeySettingsStore,
         HotkeyCaptureState hotkeyCaptureState)
@@ -45,8 +38,7 @@ public partial class MainWindow : Window
         DataContext = viewModel;
         this.overlayWorkspaceService = overlayWorkspaceService;
         this.craftSequenceHotkeyStore = craftSequenceHotkeyStore;
-        this.craftSequenceHotkeyActivityState = craftSequenceHotkeyActivityState;
-        this.craftSequenceHotkeyRegistrationState = craftSequenceHotkeyRegistrationState;
+        this.craftSequenceHotkeyLogService = craftSequenceHotkeyLogService;
         this.craftSequenceHotkeyExecutionService = craftSequenceHotkeyExecutionService;
         this.hotkeySettingsStore = hotkeySettingsStore;
         this.hotkeyCaptureState = hotkeyCaptureState;
@@ -142,25 +134,28 @@ public partial class MainWindow : Window
 
         if (!overlayWorkspaceService.IsOverlayMode || overlayWorkspaceService.IsEditMode)
         {
-            UpdateCraftSequenceRegistrationStatusesForInactiveOverlay();
             return;
         }
 
         for (int slotNumber = 1; slotNumber <= 5; slotNumber++)
         {
-            bool isConfigured = IsCraftSequenceHotkeyConfigured(slotNumber);
+            CraftSequenceHotkeyBinding binding = craftSequenceHotkeyStore.GetBinding(slotNumber);
+            bool isConfigured = IsCraftSequenceHotkeyConfigured(binding);
             if (!isConfigured)
             {
-                craftSequenceHotkeyRegistrationState.UpdateStatus(slotNumber, CraftSequenceHotkeyRegistrationStatus.NotConfigured);
+                craftSequenceHotkeyLogService.LogInformation($"Craft sequence hotkey not configured: {binding.HotkeyText}");
                 continue;
             }
 
-            bool isRegistered = RegisterHotKeyBinding(handle, CraftSequenceHotKeyIdBase + slotNumber, $"Ctrl+Shift+{slotNumber}");
-            craftSequenceHotkeyRegistrationState.UpdateStatus(
-                slotNumber,
-                isRegistered
-                    ? CraftSequenceHotkeyRegistrationStatus.Registered
-                    : CraftSequenceHotkeyRegistrationStatus.RegistrationFailed);
+            bool isRegistered = RegisterHotKeyBinding(handle, CraftSequenceHotKeyIdBase + slotNumber, binding.HotkeyText);
+            if (isRegistered)
+            {
+                craftSequenceHotkeyLogService.LogInformation($"Craft sequence hotkey registered: {binding.HotkeyText}");
+            }
+            else
+            {
+                craftSequenceHotkeyLogService.LogInformation($"Craft sequence hotkey registration failed: {binding.HotkeyText}");
+            }
         }
     }
 
@@ -175,118 +170,21 @@ public partial class MainWindow : Window
         }
     }
 
-    private bool IsCraftSequenceHotkeyConfigured(int slotNumber)
+    private static bool IsCraftSequenceHotkeyConfigured(CraftSequenceHotkeyBinding binding)
     {
-        CraftSequenceHotkeyBinding binding = craftSequenceHotkeyStore.GetBinding(slotNumber);
-        return binding.IsEnabled && binding.SequenceId.HasValue;
-    }
-
-    private void UpdateCraftSequenceRegistrationStatusesForInactiveOverlay()
-    {
-        for (int slotNumber = 1; slotNumber <= 5; slotNumber++)
-        {
-            CraftSequenceHotkeyBinding binding = craftSequenceHotkeyStore.GetBinding(slotNumber);
-            if (!binding.IsEnabled || !binding.SequenceId.HasValue)
-            {
-                craftSequenceHotkeyRegistrationState.UpdateStatus(slotNumber, CraftSequenceHotkeyRegistrationStatus.NotConfigured);
-                continue;
-            }
-
-            CraftSequenceHotkeyRegistrationStatus currentStatus = craftSequenceHotkeyRegistrationState.GetStatus(slotNumber);
-            if (currentStatus is CraftSequenceHotkeyRegistrationStatus.Registered or CraftSequenceHotkeyRegistrationStatus.RegistrationFailed)
-            {
-                continue;
-            }
-
-            craftSequenceHotkeyRegistrationState.UpdateStatus(slotNumber, CraftSequenceHotkeyRegistrationStatus.Pending);
-        }
+        return binding.IsEnabled
+            && binding.SequenceId.HasValue
+            && !string.IsNullOrWhiteSpace(binding.HotkeyText);
     }
 
     private static bool RegisterHotKeyBinding(IntPtr handle, int hotKeyId, string hotKeyText)
     {
-        if (!TryParseHotKey(hotKeyText, out uint modifiers, out uint virtualKey))
+        if (!HotkeyTextUtility.TryParseHotKey(hotKeyText, out uint modifiers, out uint virtualKey))
         {
             return false;
         }
 
         return RegisterHotKey(handle, hotKeyId, modifiers, virtualKey);
-    }
-
-    private static bool TryParseHotKey(string hotKeyText, out uint modifiers, out uint virtualKey)
-    {
-        modifiers = 0;
-        virtualKey = 0;
-
-        if (string.IsNullOrWhiteSpace(hotKeyText))
-        {
-            return false;
-        }
-
-        string[] parts = hotKeyText
-            .Split('+', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-        if (parts.Length == 0)
-        {
-            return false;
-        }
-
-        for (int index = 0; index < parts.Length - 1; index++)
-        {
-            switch (parts[index].ToLowerInvariant())
-            {
-                case "ctrl":
-                case "control":
-                    modifiers |= ModifierControl;
-                    break;
-                case "shift":
-                    modifiers |= ModifierShift;
-                    break;
-                case "alt":
-                    modifiers |= ModifierAlt;
-                    break;
-                case "win":
-                case "windows":
-                    modifiers |= ModifierWin;
-                    break;
-                default:
-                    return false;
-            }
-        }
-
-        string keyToken = NormalizeKeyToken(parts[^1]);
-        if (!Enum.TryParse(keyToken, true, out Key key))
-        {
-            return false;
-        }
-
-        int keyCode = KeyInterop.VirtualKeyFromKey(key);
-        if (keyCode <= 0)
-        {
-            return false;
-        }
-
-        virtualKey = (uint)keyCode;
-        return true;
-    }
-
-    private static string NormalizeKeyToken(string keyToken)
-    {
-        return keyToken.Trim().ToUpperInvariant() switch
-        {
-            "ESC" => nameof(Key.Escape),
-            "ENTER" => nameof(Key.Return),
-            "DEL" => nameof(Key.Delete),
-            "INS" => nameof(Key.Insert),
-            "PGUP" => nameof(Key.Prior),
-            "PAGEUP" => nameof(Key.Prior),
-            "PGDN" => nameof(Key.Next),
-            "PAGEDOWN" => nameof(Key.Next),
-            "LEFT" => nameof(Key.Left),
-            "RIGHT" => nameof(Key.Right),
-            "UP" => nameof(Key.Up),
-            "DOWN" => nameof(Key.Down),
-            "SPACE" => nameof(Key.Space),
-            _ => keyToken.Trim()
-        };
     }
 
     private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
@@ -296,23 +194,33 @@ public partial class MainWindow : Window
             return IntPtr.Zero;
         }
 
-        int hotKeyId = wParam.ToInt32();
-        if (hotKeyId == ToggleOverlayHotKeyId)
+        try
         {
-            overlayWorkspaceService.ToggleMode();
-            handled = true;
+            int hotKeyId = wParam.ToInt32();
+            if (hotKeyId == ToggleOverlayHotKeyId)
+            {
+                craftSequenceHotkeyLogService.LogInformation($"Overlay toggle hotkey pressed: {hotkeySettingsStore.ToggleOverlayHotKey}");
+                overlayWorkspaceService.ToggleMode();
+                handled = true;
+            }
+            else if (hotKeyId == ToggleOverlayEditHotKeyId)
+            {
+                craftSequenceHotkeyLogService.LogInformation($"Overlay edit hotkey pressed: {hotkeySettingsStore.ToggleOverlayEditHotKey}");
+                overlayWorkspaceService.ToggleEditMode();
+                handled = true;
+            }
+            else if (hotKeyId >= CraftSequenceHotKeyIdBase + 1 && hotKeyId <= CraftSequenceHotKeyIdBase + 5)
+            {
+                int slotNumber = hotKeyId - CraftSequenceHotKeyIdBase;
+                CraftSequenceHotkeyBinding binding = craftSequenceHotkeyStore.GetBinding(slotNumber);
+                craftSequenceHotkeyLogService.LogInformation($"Craft sequence hotkey pressed: {binding.HotkeyText}");
+                craftSequenceHotkeyExecutionService.HandleHotkeyPressed(slotNumber);
+                handled = true;
+            }
         }
-        else if (hotKeyId == ToggleOverlayEditHotKeyId)
+        catch (Exception exception)
         {
-            overlayWorkspaceService.ToggleEditMode();
-            handled = true;
-        }
-        else if (hotKeyId >= CraftSequenceHotKeyIdBase + 1 && hotKeyId <= CraftSequenceHotKeyIdBase + 5)
-        {
-            int slotNumber = hotKeyId - CraftSequenceHotKeyIdBase;
-            craftSequenceHotkeyActivityState.Report($"Ctrl+Shift+{slotNumber} received");
-            craftSequenceHotkeyExecutionService.HandleHotkeyPressed(slotNumber);
-            handled = true;
+            craftSequenceHotkeyLogService.LogError("Unhandled WM_HOTKEY processing error.", exception);
         }
 
         return IntPtr.Zero;

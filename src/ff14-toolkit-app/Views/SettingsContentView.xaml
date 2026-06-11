@@ -3,8 +3,9 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             mc:Ignorable="d">
-    <Grid>
+             mc:Ignorable="d"
+             PreviewMouseLeftButtonDown="OnRootPreviewMouseLeftButtonDown">
+    <Grid Background="Transparent">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />
             <ColumnDefinition Width="16" />
@@ -50,10 +51,6 @@
                             <ColumnDefinition Width="170" />
                             <ColumnDefinition Width="12" />
                             <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="10" />
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="10" />
-                            <ColumnDefinition Width="48" />
                         </Grid.ColumnDefinitions>
 
                         <TextBlock VerticalAlignment="Center"
@@ -68,15 +65,18 @@
                                  PreviewMouseLeftButtonDown="OnHotKeyTextBoxPreviewMouseLeftButtonDown"
                                  PreviewKeyDown="OnHotKeyTextBoxPreviewKeyDown"
                                  PreviewTextInput="OnHotKeyTextBoxPreviewTextInput"
-                                 Text="{Binding ToggleOverlayHotKey, UpdateSourceTrigger=PropertyChanged}"
-                                 Style="{StaticResource ToolkitTextBoxStyle}" />
-                        <TextBlock x:Name="ToggleOverlayHotKeyCaptureStateTextBlock"
-                                   Grid.Column="6"
-                                   VerticalAlignment="Center"
-                                   Foreground="{StaticResource AppAccentBrush}"
-                                   FontWeight="SemiBold"
-                                   Text="{Binding HotkeyCapturingLabel}"
-                                   Visibility="Hidden" />
+                                 Text="{Binding ToggleOverlayHotKey, UpdateSourceTrigger=PropertyChanged}">
+                            <TextBox.Style>
+                                <Style TargetType="TextBox" BasedOn="{StaticResource ToolkitTextBoxStyle}">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding RelativeSource={RelativeSource Self}, Path=IsKeyboardFocused}" Value="True">
+                                            <Setter Property="BorderBrush" Value="#2F7A57" />
+                                            <Setter Property="BorderThickness" Value="2" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBox.Style>
+                        </TextBox>
 
                         <TextBlock Grid.Row="2"
                                    VerticalAlignment="Center"
@@ -92,16 +92,18 @@
                                  PreviewMouseLeftButtonDown="OnHotKeyTextBoxPreviewMouseLeftButtonDown"
                                  PreviewKeyDown="OnHotKeyTextBoxPreviewKeyDown"
                                  PreviewTextInput="OnHotKeyTextBoxPreviewTextInput"
-                                 Text="{Binding ToggleOverlayEditHotKey, UpdateSourceTrigger=PropertyChanged}"
-                                 Style="{StaticResource ToolkitTextBoxStyle}" />
-                        <TextBlock x:Name="ToggleOverlayEditHotKeyCaptureStateTextBlock"
-                                   Grid.Row="2"
-                                   Grid.Column="6"
-                                   VerticalAlignment="Center"
-                                   Foreground="{StaticResource AppAccentBrush}"
-                                   FontWeight="SemiBold"
-                                   Text="{Binding HotkeyCapturingLabel}"
-                                   Visibility="Hidden" />
+                                 Text="{Binding ToggleOverlayEditHotKey, UpdateSourceTrigger=PropertyChanged}">
+                            <TextBox.Style>
+                                <Style TargetType="TextBox" BasedOn="{StaticResource ToolkitTextBoxStyle}">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding RelativeSource={RelativeSource Self}, Path=IsKeyboardFocused}" Value="True">
+                                            <Setter Property="BorderBrush" Value="#2F7A57" />
+                                            <Setter Property="BorderThickness" Value="2" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBox.Style>
+                        </TextBox>
                     </Grid>
 
                     <Button Grid.Row="4"

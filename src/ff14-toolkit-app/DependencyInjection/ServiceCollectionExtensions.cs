@@ -6,6 +6,7 @@ using FF14Toolkit.App.Services.Hotbar;
 using FF14Toolkit.App.Services.Keybind;
 using FF14Toolkit.App.Services.Localization;
 using FF14Toolkit.App.Services.Overlay;
+using FF14Toolkit.App.Services.OverlayPlugin;
 using FF14Toolkit.App.ViewModels;
 using FF14Toolkit.App.Views;
 using Microsoft.Extensions.DependencyInjection;
@@ -20,10 +21,14 @@ public static class ServiceCollectionExtensions
             .BindConfiguration("Localization");
         services.AddOptions<CacheOptions>()
             .BindConfiguration("Cache");
+        services.AddOptions<DevelopmentOptions>()
+            .BindConfiguration("Development");
         services.AddOptions<CharacterSettingsOptions>()
             .BindConfiguration("CharacterSettings");
         services.AddOptions<HotkeySettingsOptions>()
             .BindConfiguration("Hotkeys");
+        services.AddOptions<OverlayPluginOptions>()
+            .BindConfiguration("OverlayPlugin");
         services.AddOptions<LuminaOptions>()
             .BindConfiguration("Lumina");
         services.AddSingleton(LocalizationService.Instance);
@@ -33,8 +38,8 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<HotkeyCaptureState>();
         services.AddSingleton<CraftActionSequenceStore>();
         services.AddSingleton<CraftSequenceHotkeyStore>();
-        services.AddSingleton<CraftSequenceHotkeyRegistrationState>();
-        services.AddSingleton<CraftSequenceHotkeyActivityState>();
+        services.AddSingleton<CraftSequenceHotkeyLogService>();
+        services.AddSingleton<CraftStartButtonAutomationService>();
         services.AddSingleton<CraftSequenceHotkeyExecutionService>();
         services.AddSingleton<IGameDataService, LuminaGameDataService>();
         services.AddSingleton<HotbarDatParser>();
@@ -45,6 +50,12 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IKeybindDataService, KeybindDataService>();
         services.AddSingleton<OverlayLayoutStore>();
         services.AddSingleton<OverlayWorkspaceService>();
+        services.AddSingleton<TemplateMatchOverlayService>();
+        services.AddSingleton<IOverlayPluginWebSocketService, OverlayPluginWebSocketService>();
+        services.AddSingleton<IOverlayPluginWebSocketSessionService, OverlayPluginWebSocketSessionService>();
+        services.AddSingleton<OverlayPluginLogService>();
+        services.AddSingleton<OverlayPluginConnectionStateService>();
+        services.AddSingleton<OverlayPluginSnapshotService>();
         services.AddSingleton<MainWindow>();
         services.AddSingleton<MainWindowViewModel>();
 

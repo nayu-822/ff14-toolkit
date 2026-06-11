@@ -1,7 +1,9 @@
 using FF14Toolkit.App.DependencyInjection;
 using FF14Toolkit.App.Models.Configuration;
+using FF14Toolkit.App.Services.GameData;
 using FF14Toolkit.App.Services.Localization;
 using FF14Toolkit.App.Services.Overlay;
+using FF14Toolkit.App.Services.OverlayPlugin;
 using FF14Toolkit.App.Views;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -42,6 +44,14 @@ public partial class App : Application
         var localizationOptions = host.Services.GetRequiredService<IOptions<LocalizationOptions>>().Value;
         var localizationService = host.Services.GetRequiredService<ILocalizationService>();
         localizationService.Initialize(localizationOptions.DefaultCulture, localizationOptions.SupportedCultures);
+        var gameDataService = host.Services.GetRequiredService<IGameDataService>();
+        var overlayPluginLogService = host.Services.GetRequiredService<OverlayPluginLogService>();
+        GameDataStatus gameDataStatus = await gameDataService.CheckAvailabilityAsync();
+        overlayPluginLogService.LogInformation(
+            $"App startup: Lumina initialized. state={gameDataStatus.State}, available={gameDataStatus.IsAvailable}, sqPackPath={gameDataStatus.SqPackPath ?? "-"}");
+        var overlayPluginConnectionStateService = host.Services.GetRequiredService<OverlayPluginConnectionStateService>();
+        _ = overlayPluginConnectionStateService.InitializeAsync();
+        overlayPluginLogService.LogInformation("App startup: OverlayPlugin auto-connect started.");
 
         var mainWindow = host.Services.GetRequiredService<MainWindow>();
         MainWindow = mainWindow;
@@ -52,6 +62,7 @@ public partial class App : Application
     {
         if (host is not null)
         {
+            host.Services.GetRequiredService<TemplateMatchOverlayService>().Shutdown();
             host.Services.GetRequiredService<OverlayWorkspaceService>().Shutdown();
             await host.StopAsync();
             host.Dispose();

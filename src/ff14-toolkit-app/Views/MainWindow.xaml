@@ -30,6 +30,18 @@
             <views:CraftSequenceHotkeySettingsContentView />
         </DataTemplate>
 
+        <DataTemplate DataType="{x:Type viewModels:HotbarContentViewModel}">
+            <views:HotbarContentView />
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type viewModels:OverlayPluginWSServerContentViewModel}">
+            <views:OverlayPluginWSServerContentView />
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type viewModels:OverlayPluginInfoContentViewModel}">
+            <views:OverlayPluginInfoContentView />
+        </DataTemplate>
+
         <DataTemplate DataType="{x:Type viewModels:SettingsContentViewModel}">
             <views:SettingsContentView />
         </DataTemplate>
@@ -58,6 +70,58 @@
                                FontWeight="SemiBold"
                                Foreground="{StaticResource AppTextBrush}"
                                Text="{markup:Localize App_Title}" />
+                    <Border Margin="0,14,0,0"
+                            Padding="14"
+                            Style="{StaticResource MutedCardStyle}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="10" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal">
+                                    <Ellipse Width="12"
+                                             Height="12"
+                                             Margin="0,0,8,0"
+                                             VerticalAlignment="Center">
+                                        <Ellipse.Style>
+                                            <Style TargetType="Ellipse">
+                                                <Setter Property="Fill" Value="#C95A57" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsOverlayPluginConnected}" Value="True">
+                                                        <Setter Property="Fill" Value="#2F7A57" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Ellipse.Style>
+                                    </Ellipse>
+
+                                    <TextBlock VerticalAlignment="Center"
+                                               FontSize="13"
+                                               FontWeight="SemiBold"
+                                               Foreground="{StaticResource AppTextBrush}"
+                                               Text="{Binding OverlayPluginCharacterDisplay}" />
+                                </StackPanel>
+
+                                <TextBlock Margin="20,4,0,0"
+                                           FontSize="13"
+                                           FontWeight="SemiBold"
+                                           Foreground="{StaticResource AppTextBrush}"
+                                           Text="{Binding OverlayPluginWorldDisplay}" />
+                            </StackPanel>
+
+                            <Button Grid.Column="2"
+                                    MinWidth="68"
+                                    Margin="0,0,0,0"
+                                    VerticalAlignment="Top"
+                                    Command="{Binding StartOverlayPluginConnectionCommand}"
+                                    Style="{StaticResource PrimaryButtonStyle}">
+                                <TextBlock Text="{Binding OverlayPluginStartButtonLabel}" />
+                            </Button>
+                        </Grid>
+                    </Border>
                 </StackPanel>
 
                 <ScrollViewer Grid.Row="2"

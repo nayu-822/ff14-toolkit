@@ -50,3 +50,5 @@ Cache/
 # Workspace helper artifacts
 artifacts/**/[Bb]in/
 artifacts/**/[Oo]bj/
+artifacts/verification-build/
+src/ff14-toolkit-app/artifacts/
