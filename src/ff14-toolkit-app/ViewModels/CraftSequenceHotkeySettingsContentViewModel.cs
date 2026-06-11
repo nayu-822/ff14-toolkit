@@ -9,21 +9,27 @@ namespace FF14Toolkit.App.ViewModels;
 
 public sealed class CraftSequenceHotkeySettingsContentViewModel : ShellContentViewModel
 {
+    private readonly CraftStartButtonAutomationService craftStartButtonAutomationService;
     private readonly ILocalizationService localizationService;
     private readonly CraftActionSequenceStore craftActionSequenceStore;
     private readonly CraftSequenceHotkeyStore craftSequenceHotkeyStore;
+    private readonly RelayCommand startMonitoringCommand;
+    private readonly RelayCommand stopMonitoringCommand;
     private readonly RelayCommand saveCommand;
+    private bool isTemplateMatchMonitoring;
 
     public CraftSequenceHotkeySettingsContentViewModel(
         ILocalizationService localizationService,
         CraftActionSequenceStore craftActionSequenceStore,
-        CraftSequenceHotkeyStore craftSequenceHotkeyStore)
+        CraftSequenceHotkeyStore craftSequenceHotkeyStore,
+        CraftStartButtonAutomationService craftStartButtonAutomationService)
         : base(
             "crafting-sequence-hotkeys",
             "Nav_CraftingSequenceHotkeys",
             "Section_CraftingSequenceHotkeys_Description",
             localizationService)
     {
+        this.craftStartButtonAutomationService = craftStartButtonAutomationService;
         this.localizationService = localizationService;
         this.craftActionSequenceStore = craftActionSequenceStore;
         this.craftSequenceHotkeyStore = craftSequenceHotkeyStore;
@@ -32,8 +38,12 @@ public sealed class CraftSequenceHotkeySettingsContentViewModel : ShellContentVi
         HotkeySlots = new ObservableCollection<CraftSequenceHotkeySlotViewModel>(
             craftSequenceHotkeyStore.Bindings.Select(binding => new CraftSequenceHotkeySlotViewModel(binding)));
         saveCommand = new RelayCommand(Save);
+        startMonitoringCommand = new RelayCommand(StartMonitoring, () => !IsTemplateMatchMonitoring);
+        stopMonitoringCommand = new RelayCommand(StopMonitoring, () => IsTemplateMatchMonitoring);
+        isTemplateMatchMonitoring = craftStartButtonAutomationService.IsMonitoring;
 
         craftActionSequenceStore.Sequences.CollectionChanged += OnSequencesChanged;
+        craftStartButtonAutomationService.MonitoringStateChanged += OnMonitoringStateChanged;
         RefreshAvailableSequences();
     }
 
@@ -43,7 +53,19 @@ public sealed class CraftSequenceHotkeySettingsContentViewModel : ShellContentVi
 
     public RelayCommand SaveCommand => saveCommand;
 
+    public RelayCommand StartMonitoringCommand => startMonitoringCommand;
+
+    public RelayCommand StopMonitoringCommand => stopMonitoringCommand;
+
     public string SaveButtonLabel => localizationService["CraftingSequenceHotkeys_SaveButton"];
+
+    public string StartMonitoringButtonLabel => "CRAFTING LOG 監視を開始";
+
+    public string StopMonitoringButtonLabel => "CRAFTING LOG 監視を停止";
+
+    public string TemplateMatchMonitoringStatusLabel => IsTemplateMatchMonitoring
+        ? "CRAFTING LOG サンプル監視: 実行中"
+        : "CRAFTING LOG サンプル監視: 停止中";
 
     public string EnabledColumnLabel => localizationService["CraftingSequenceHotkeys_EnabledColumn"];
 
@@ -61,9 +83,35 @@ public sealed class CraftSequenceHotkeySettingsContentViewModel : ShellContentVi
 
     public string HotkeyCapturingLabel => localizationService["Settings_HotkeyCapturingLabel"];
 
+    public bool IsTemplateMatchMonitoring
+    {
+        get => isTemplateMatchMonitoring;
+        private set
+        {
+            if (!SetProperty(ref isTemplateMatchMonitoring, value))
+            {
+                return;
+            }
+
+            OnPropertyChanged(nameof(TemplateMatchMonitoringStatusLabel));
+            startMonitoringCommand.NotifyCanExecuteChanged();
+            stopMonitoringCommand.NotifyCanExecuteChanged();
+        }
+    }
+
     private void Save()
     {
         craftSequenceHotkeyStore.Save(HotkeySlots.Select(slot => slot.ToBinding()));
+    }
+
+    private void StartMonitoring()
+    {
+        _ = craftStartButtonAutomationService.StartTemplateMatchMonitoringAsync();
+    }
+
+    private void StopMonitoring()
+    {
+        _ = craftStartButtonAutomationService.StopTemplateMatchMonitoringAsync();
     }
 
     private void OnSequencesChanged(object? sender, NotifyCollectionChangedEventArgs e)
@@ -113,6 +161,14 @@ public sealed class CraftSequenceHotkeySettingsContentViewModel : ShellContentVi
         OnPropertyChanged(nameof(EmptySequencesMessage));
         OnPropertyChanged(nameof(OverlayOnlyNotice));
         OnPropertyChanged(nameof(HotkeyCapturingLabel));
+        OnPropertyChanged(nameof(StartMonitoringButtonLabel));
+        OnPropertyChanged(nameof(StopMonitoringButtonLabel));
+        OnPropertyChanged(nameof(TemplateMatchMonitoringStatusLabel));
         RefreshAvailableSequences();
+    }
+
+    private void OnMonitoringStateChanged(object? sender, EventArgs e)
+    {
+        IsTemplateMatchMonitoring = craftStartButtonAutomationService.IsMonitoring;
     }
 }

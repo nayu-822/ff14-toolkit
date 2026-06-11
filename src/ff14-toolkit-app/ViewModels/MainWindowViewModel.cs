@@ -41,6 +41,7 @@ public sealed class MainWindowViewModel : ViewModelBase
         IKeybindDataService keybindDataService,
         CraftActionSequenceStore craftActionSequenceStore,
         CraftSequenceHotkeyStore craftSequenceHotkeyStore,
+        CraftStartButtonAutomationService craftStartButtonAutomationService,
         OverlayPluginConnectionStateService overlayPluginConnectionStateService,
         IOverlayPluginWebSocketSessionService overlayPluginWebSocketSessionService)
     {
@@ -65,7 +66,8 @@ public sealed class MainWindowViewModel : ViewModelBase
         craftSequenceHotkeySettingsContentViewModel = new CraftSequenceHotkeySettingsContentViewModel(
             localizationService,
             craftActionSequenceStore,
-            craftSequenceHotkeyStore);
+            craftSequenceHotkeyStore,
+            craftStartButtonAutomationService);
         hotbarContentViewModel = new HotbarContentViewModel(
             localizationService,
             characterSettingsStore,

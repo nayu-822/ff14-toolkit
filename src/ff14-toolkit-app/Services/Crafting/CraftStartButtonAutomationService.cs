@@ -6,6 +6,7 @@ using System.IO;
 using System.Runtime.InteropServices;
 using FF14Toolkit.App.Models.Configuration;
 using FF14Toolkit.App.Services.Overlay;
+using FF14Toolkit.App.Services.TemplateMatching;
 using Microsoft.Extensions.Options;
 using MediaColor = System.Windows.Media.Color;
 
@@ -13,8 +14,11 @@ namespace FF14Toolkit.App.Services.Crafting;
 
 public sealed class CraftStartButtonAutomationService
 {
+    private static readonly TimeSpan MonitorInterval = TimeSpan.FromMilliseconds(200);
     private static readonly double[] TitleScales = [0.80, 0.90, 1.00, 1.10, 1.25];
     private static readonly double[] ButtonScales = [0.80, 0.90, 1.00, 1.10, 1.25];
+    private const string CraftingLogMonitorId = "crafting-log-monitor";
+    private const string CraftingLogTargetName = "CRAFTING LOG";
 
     private const int TitleCoarseStep = 6;
     private const int ButtonCoarseStep = 3;
@@ -30,18 +34,28 @@ public sealed class CraftStartButtonAutomationService
     private const int SystemMetricVirtualScreenHeight = 79;
 
     private readonly string debugImageDirectoryPath;
+    private readonly CraftSequenceHotkeyLogService logger;
     private readonly TemplateBitmap craftStartButtonTemplate;
     private readonly TemplateBitmap craftingLogTitleTemplate;
     private readonly CraftWindowAnchorDefinition craftWindowDefinition;
+    private readonly TemplateMatchDebugViewMode debugViewMode;
     private readonly bool saveDebugImages;
+    private readonly ITemplateMatchMonitor templateMatchMonitor;
     private readonly TemplateMatchOverlayService templateMatchOverlayService;
+    private readonly Lock monitorSyncRoot = new();
+    private bool isMonitoring;
 
     public CraftStartButtonAutomationService(
         TemplateMatchOverlayService templateMatchOverlayService,
+        ITemplateMatchMonitor templateMatchMonitor,
         IOptions<DevelopmentOptions> developmentOptions,
-        IOptions<CacheOptions> cacheOptions)
+        IOptions<CacheOptions> cacheOptions,
+        CraftSequenceHotkeyLogService logger)
     {
         this.templateMatchOverlayService = templateMatchOverlayService;
+        this.templateMatchMonitor = templateMatchMonitor;
+        this.logger = logger;
+        debugViewMode = developmentOptions.Value.TemplateMatchDebugViewMode;
         saveDebugImages = developmentOptions.Value.SaveTemplateMatchDebugImages;
         string cacheRootPath = Environment.ExpandEnvironmentVariables(cacheOptions.Value.RootPath);
         debugImageDirectoryPath = Path.Combine(cacheRootPath, "Images", "TemplateMatchDebug");
@@ -67,6 +81,19 @@ public sealed class CraftStartButtonAutomationService
             Path.Combine(templateRootPath, "craft-start-button.ppm"),
             "craft-start-button",
             2);
+    }
+
+    public event EventHandler? MonitoringStateChanged;
+
+    public bool IsMonitoring
+    {
+        get
+        {
+            lock (monitorSyncRoot)
+            {
+                return isMonitoring;
+            }
+        }
     }
 
     public async Task<CraftStartButtonClickResult> TryClickAsync(CancellationToken cancellationToken = default)
@@ -132,6 +159,64 @@ public sealed class CraftStartButtonAutomationService
             lastDetectionResult?.ButtonCandidate,
             lastDetectionResult?.SearchRegion,
             lastDebugImagePath);
+    }
+
+    public Task StartTemplateMatchMonitoringAsync(CancellationToken cancellationToken = default)
+    {
+        lock (monitorSyncRoot)
+        {
+            if (isMonitoring)
+            {
+                return Task.CompletedTask;
+            }
+        }
+
+        string templateRootPath = Path.Combine(AppContext.BaseDirectory, "Assets", "Templates", "Crafting");
+        TemplateMonitorDefinition definition = new(
+            CraftingLogMonitorId,
+            CraftingLogTargetName,
+            new TemplateResourceDefinition(
+                "crafting-log-title",
+                Path.Combine(templateRootPath, "crafting-log-title.json")),
+            new TemplateMatchRequest(
+                "crafting-log-title",
+                GetVirtualScreenBounds(),
+                null,
+                TitleScales,
+                craftWindowDefinition.MinimumTitleScore,
+                TemplateMatchMode.RgbSamples,
+                SampleStep: 1),
+            MonitorInterval,
+            EnableDebugVisualization: true,
+            DebugViewMode: debugViewMode);
+
+        try
+        {
+            SetMonitoringState(true);
+            return templateMatchMonitor.StartAsync(definition, cancellationToken);
+        }
+        catch
+        {
+            SetMonitoringState(false);
+            throw;
+        }
+    }
+
+    public async Task StopTemplateMatchMonitoringAsync()
+    {
+        try
+        {
+            await templateMatchMonitor.StopAsync(CraftingLogMonitorId).ConfigureAwait(false);
+        }
+        finally
+        {
+            SetMonitoringState(false);
+        }
+    }
+
+    public void Shutdown()
+    {
+        _ = StopTemplateMatchMonitoringAsync();
     }
 
     private DetectionResult TryDetect(Bitmap screenshot, CancellationToken cancellationToken)
@@ -700,6 +785,49 @@ public sealed class CraftStartButtonAutomationService
 
     private void ShowDetectionOverlay(Rectangle captureBounds, DetectionResult result)
     {
+        templateMatchOverlayService.ShowFrame(captureBounds, CreateOverlayFrame(captureBounds, result), keepVisible: false);
+    }
+
+    private TemplateMatchOverlayFrame CreateOverlayFrame(Rectangle captureBounds, DetectionResult result)
+    {
+        List<TemplateMatchOverlayRegion> regions = CreateOverlayRegions(captureBounds, result);
+
+        if (result.WindowAnchorMatch is not null)
+        {
+            return new TemplateMatchOverlayFrame(
+                TemplateMatchOverlayState.Matched,
+                "CRAFTING LOG",
+                result.WindowAnchorMatch.Score,
+                craftWindowDefinition.MinimumTitleScore,
+                result.WindowAnchorMatch.Scale,
+                regions,
+                null);
+        }
+
+        if (result.WindowAnchorCandidate is not null)
+        {
+            return new TemplateMatchOverlayFrame(
+                TemplateMatchOverlayState.NotMatched,
+                "CRAFTING LOG",
+                result.WindowAnchorCandidate.Score,
+                craftWindowDefinition.MinimumTitleScore,
+                result.WindowAnchorCandidate.Scale,
+                regions,
+                null);
+        }
+
+        return new TemplateMatchOverlayFrame(
+            TemplateMatchOverlayState.NotMatched,
+            "CRAFTING LOG",
+            null,
+            craftWindowDefinition.MinimumTitleScore,
+            null,
+            regions,
+            null);
+    }
+
+    private List<TemplateMatchOverlayRegion> CreateOverlayRegions(Rectangle captureBounds, DetectionResult result)
+    {
         List<TemplateMatchOverlayRegion> regions = [];
 
         if (result.WindowBounds is Rectangle windowBounds)
@@ -729,7 +857,8 @@ public sealed class CraftStartButtonAutomationService
                 captureBounds,
                 MediaColor.FromArgb(232, 76, 217, 100),
                 MediaColor.FromArgb(72, 76, 217, 100),
-                "crafting-log-title",
+                "crafting-log-title MATCHED",
+                threshold: craftWindowDefinition.MinimumTitleScore,
                 includeScale: true));
         }
         else if (result.WindowAnchorCandidate is not null)
@@ -739,8 +868,9 @@ public sealed class CraftStartButtonAutomationService
                 captureBounds,
                 MediaColor.FromArgb(224, 255, 193, 7),
                 MediaColor.FromArgb(32, 255, 193, 7),
-                "crafting-log-title-candidate",
+                "crafting-log-title CANDIDATE",
                 useDashedStroke: true,
+                threshold: craftWindowDefinition.MinimumTitleScore,
                 includeScale: true));
         }
 
@@ -751,7 +881,8 @@ public sealed class CraftStartButtonAutomationService
                 captureBounds,
                 MediaColor.FromArgb(232, 255, 122, 69),
                 MediaColor.FromArgb(56, 255, 122, 69),
-                "craft-start-button"));
+                "craft-start-button MATCHED",
+                threshold: craftWindowDefinition.MinimumButtonScore));
         }
         else if (result.ButtonCandidate is not null)
         {
@@ -760,11 +891,12 @@ public sealed class CraftStartButtonAutomationService
                 captureBounds,
                 MediaColor.FromArgb(224, 255, 193, 7),
                 MediaColor.FromArgb(32, 255, 193, 7),
-                "craft-start-button-candidate",
-                useDashedStroke: true));
+                "craft-start-button CANDIDATE",
+                useDashedStroke: true,
+                threshold: craftWindowDefinition.MinimumButtonScore));
         }
 
-        templateMatchOverlayService.Show(captureBounds, regions);
+        return regions;
     }
 
     private static TemplateMatchOverlayRegion CreateOverlayRegion(
@@ -774,11 +906,13 @@ public sealed class CraftStartButtonAutomationService
         MediaColor fillColor,
         string labelPrefix,
         bool useDashedStroke = false,
+        double? threshold = null,
         bool includeScale = false)
     {
+        string thresholdText = threshold is double value ? $" / {value:F3}" : string.Empty;
         string label = includeScale
-            ? $"{labelPrefix} score={match.Score:F3} scale={match.Scale:F2}"
-            : $"{labelPrefix} score={match.Score:F3}";
+            ? $"{labelPrefix} {match.Score:F3}{thresholdText} scale={match.Scale:F2}"
+            : $"{labelPrefix} {match.Score:F3}{thresholdText}";
         return new TemplateMatchOverlayRegion(
             label,
             CraftWindowDetectionCalculator.OffsetBoundsToScreen(match.Bounds, captureBounds),
@@ -862,6 +996,21 @@ public sealed class CraftStartButtonAutomationService
         if (sent != inputs.Length)
         {
             throw new InvalidOperationException($"SendInput failed. Sent={sent}, expected={inputs.Length}, error={Marshal.GetLastWin32Error()}");
+        }
+    }
+
+    private void SetMonitoringState(bool value)
+    {
+        bool changed;
+        lock (monitorSyncRoot)
+        {
+            changed = isMonitoring != value;
+            isMonitoring = value;
+        }
+
+        if (changed)
+        {
+            MonitoringStateChanged?.Invoke(this, EventArgs.Empty);
         }
     }
 

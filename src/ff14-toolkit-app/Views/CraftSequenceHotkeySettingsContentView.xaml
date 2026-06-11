@@ -16,6 +16,8 @@
                 <RowDefinition Height="*" />
                 <RowDefinition Height="16" />
                 <RowDefinition Height="Auto" />
+                <RowDefinition Height="12" />
+                <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
             <TextBlock FontSize="16"
@@ -136,7 +138,26 @@
                 </TextBlock>
             </Grid>
 
-            <Button Grid.Row="6"
+            <StackPanel Grid.Row="6"
+                        Orientation="Horizontal">
+                <TextBlock VerticalAlignment="Center"
+                           Foreground="{StaticResource AppMutedTextBrush}"
+                           Text="{Binding TemplateMatchMonitoringStatusLabel}" />
+                <Button Margin="16,0,0,0"
+                        MinWidth="160"
+                        Padding="16,8"
+                        Command="{Binding StartMonitoringCommand}"
+                        Content="{Binding StartMonitoringButtonLabel}"
+                        Style="{StaticResource SecondaryButtonStyle}" />
+                <Button Margin="8,0,0,0"
+                        MinWidth="160"
+                        Padding="16,8"
+                        Command="{Binding StopMonitoringCommand}"
+                        Content="{Binding StopMonitoringButtonLabel}"
+                        Style="{StaticResource SecondaryButtonStyle}" />
+            </StackPanel>
+
+            <Button Grid.Row="8"
                     HorizontalAlignment="Left"
                     MinWidth="88"
                     Padding="16,8"

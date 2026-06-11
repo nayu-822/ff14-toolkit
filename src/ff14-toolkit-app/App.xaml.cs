@@ -1,5 +1,6 @@
 using FF14Toolkit.App.DependencyInjection;
 using FF14Toolkit.App.Models.Configuration;
+using FF14Toolkit.App.Services.Crafting;
 using FF14Toolkit.App.Services.GameData;
 using FF14Toolkit.App.Services.Localization;
 using FF14Toolkit.App.Services.Overlay;
@@ -62,6 +63,7 @@ public partial class App : Application
     {
         if (host is not null)
         {
+            host.Services.GetRequiredService<CraftStartButtonAutomationService>().Shutdown();
             host.Services.GetRequiredService<TemplateMatchOverlayService>().Shutdown();
             host.Services.GetRequiredService<OverlayWorkspaceService>().Shutdown();
             await host.StopAsync();

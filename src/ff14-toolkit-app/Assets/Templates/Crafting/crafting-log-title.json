@@ -1,0 +1,12 @@
+{
+  "templateId": "crafting-log-title",
+  "template": "crafting-log-title.ppm",
+  "preview": "crafting-log-title.png",
+  "referenceWindowWidth": 894,
+  "referenceWindowHeight": 634,
+  "referenceAnchorOffsetX": 6,
+  "referenceAnchorOffsetY": 3,
+  "referenceTemplateWidth": 90,
+  "referenceTemplateHeight": 28,
+  "minimumScore": 0.85
+}
