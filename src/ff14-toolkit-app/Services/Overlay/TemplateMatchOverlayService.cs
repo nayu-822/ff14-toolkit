@@ -11,30 +11,39 @@ namespace FF14Toolkit.App.Services.Overlay;
 public sealed class TemplateMatchOverlayService
 {
     private static readonly TimeSpan DisplayDuration = TimeSpan.FromSeconds(1.6);
+    private const string ActiveFrameId = "template-match:active";
 
     private readonly Dispatcher dispatcher;
     private readonly bool isEnabled;
     private readonly CraftSequenceHotkeyLogService logger;
     private readonly Func<ITemplateMatchOverlayWindow> windowFactory;
+    private readonly IOverlayFrameStore frameStore;
+    private readonly TemplateMatchOverlayFrameAdapter frameAdapter;
     private ITemplateMatchOverlayWindow? overlayWindow;
     private int overlayVersion;
     private int handleCreatedLogged;
 
     public TemplateMatchOverlayService(
         IOptions<DevelopmentOptions> developmentOptions,
-        CraftSequenceHotkeyLogService logger)
-        : this(developmentOptions, logger, static () => new TemplateMatchOverlayWindowHost())
+        CraftSequenceHotkeyLogService logger,
+        IOverlayFrameStore frameStore,
+        TemplateMatchOverlayFrameAdapter frameAdapter)
+        : this(developmentOptions, logger, frameStore, frameAdapter, static () => new TemplateMatchOverlayWindowHost())
     {
     }
 
     internal TemplateMatchOverlayService(
         IOptions<DevelopmentOptions> developmentOptions,
         CraftSequenceHotkeyLogService logger,
+        IOverlayFrameStore frameStore,
+        TemplateMatchOverlayFrameAdapter frameAdapter,
         Func<ITemplateMatchOverlayWindow> windowFactory)
     {
         dispatcher = Application.Current.Dispatcher;
         isEnabled = developmentOptions.Value.ShowTemplateMatchOverlay;
         this.logger = logger;
+        this.frameStore = frameStore;
+        this.frameAdapter = frameAdapter;
         this.windowFactory = windowFactory;
     }
 
@@ -48,12 +57,12 @@ public sealed class TemplateMatchOverlayService
             null,
             regions,
             null);
-        _ = ShowFrameAsync(screenBounds, frame, keepVisible: false);
+        ObserveFireAndForget(ShowFrameAsync(screenBounds, frame, keepVisible: false), "Failed to show template-match overlay.");
     }
 
     public void ShowFrame(Rectangle screenBounds, TemplateMatchOverlayFrame frame, bool keepVisible)
     {
-        _ = ShowFrameAsync(screenBounds, frame, keepVisible);
+        ObserveFireAndForget(ShowFrameAsync(screenBounds, frame, keepVisible), "Failed to show template-match overlay.");
     }
 
     public async Task ShowFrameAsync(Rectangle screenBounds, TemplateMatchOverlayFrame frame, bool keepVisible)
@@ -66,10 +75,13 @@ public sealed class TemplateMatchOverlayService
         try
         {
             int currentVersion = Interlocked.Increment(ref overlayVersion);
+            OverlayFrame overlayFrame = frameAdapter.CreateOverlayFrame(ActiveFrameId, screenBounds, frame);
+            frameStore.AddOrUpdate(overlayFrame);
             await dispatcher.InvokeAsync(() =>
             {
                 overlayWindow ??= windowFactory();
-                TemplateMatchOverlayPresenter.Present(overlayWindow, screenBounds, frame);
+                TemplateMatchOverlayFrame presentedFrame = frameAdapter.ToTemplateMatchOverlayFrame(overlayFrame, frame);
+                TemplateMatchOverlayPresenter.Present(overlayWindow, screenBounds, presentedFrame);
                 if (Interlocked.Exchange(ref handleCreatedLogged, 1) == 0)
                 {
                     logger.LogInformation("Overlay window handle created.");
@@ -92,7 +104,7 @@ public sealed class TemplateMatchOverlayService
 
     public void Hide()
     {
-        _ = HideAsync();
+        ObserveFireAndForget(HideAsync(), "Failed to hide template-match overlay.");
     }
 
     public async Task HideAsync()
@@ -100,6 +112,7 @@ public sealed class TemplateMatchOverlayService
         try
         {
             Interlocked.Increment(ref overlayVersion);
+            frameStore.Remove(ActiveFrameId);
             await dispatcher.InvokeAsync(() =>
             {
                 overlayWindow?.Hide();
@@ -124,6 +137,7 @@ public sealed class TemplateMatchOverlayService
                     return;
                 }
 
+                frameStore.Clear();
                 overlayWindow.Close();
                 overlayWindow = null;
             }
@@ -149,6 +163,7 @@ public sealed class TemplateMatchOverlayService
                     return;
                 }
 
+                frameStore.Remove(ActiveFrameId);
                 overlayWindow?.Hide();
             }).Task.ConfigureAwait(false);
         }
@@ -167,6 +182,23 @@ public sealed class TemplateMatchOverlayService
         catch (Exception exception)
         {
             logger.LogError("Dispatcher exception logging: template-match overlay update failed.", exception);
+        }
+    }
+
+    private void ObserveFireAndForget(Task task, string message)
+    {
+        _ = ObserveFireAndForgetCoreAsync(task, message);
+    }
+
+    private async Task ObserveFireAndForgetCoreAsync(Task task, string message)
+    {
+        try
+        {
+            await task.ConfigureAwait(false);
+        }
+        catch (Exception exception)
+        {
+            logger.LogError(message, exception);
         }
     }
 }

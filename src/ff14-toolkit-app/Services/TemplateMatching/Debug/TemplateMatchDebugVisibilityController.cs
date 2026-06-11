@@ -39,8 +39,9 @@ public sealed class TemplateMatchDebugVisibilityController
             bool leftButtonDown = (GetAsyncKeyState(VirtualKeyLeftButton) & KeyDownMask) != 0;
             bool suppressedNow = false;
             bool restoredNow = false;
+            bool pressedNow = leftButtonDown && !state.WasLeftButtonDown;
 
-            if (leftButtonDown && !state.WasLeftButtonDown && clickableBounds is Rectangle bounds)
+            if (pressedNow && clickableBounds is Rectangle bounds)
             {
                 Point cursor = GetCursorPosition();
                 if (bounds.Contains(cursor))
@@ -50,12 +51,6 @@ public sealed class TemplateMatchDebugVisibilityController
                 }
             }
 
-            if (!leftButtonDown && state.WasLeftButtonDown && state.IsSuppressed)
-            {
-                state.IsSuppressed = false;
-                restoredNow = true;
-            }
-
             state.WasLeftButtonDown = leftButtonDown;
             states[monitorId] = state;
             return new VisibilityDecision(state.IsSuppressed, suppressedNow, restoredNow);
@@ -63,6 +58,21 @@ public sealed class TemplateMatchDebugVisibilityController
     }
 
     public void Reset(string monitorId)
+    {
+        lock (syncRoot)
+        {
+            if (states.TryGetValue(monitorId, out SuppressionState? state))
+            {
+                state.IsSuppressed = false;
+                states[monitorId] = state;
+                return;
+            }
+
+            states[monitorId] = new SuppressionState();
+        }
+    }
+
+    public void Remove(string monitorId)
     {
         lock (syncRoot)
         {

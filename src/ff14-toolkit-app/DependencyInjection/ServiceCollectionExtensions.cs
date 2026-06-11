@@ -56,6 +56,9 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IKeybindDataService, KeybindDataService>();
         services.AddSingleton<OverlayLayoutStore>();
         services.AddSingleton<OverlayWorkspaceService>();
+        services.AddSingleton<IOverlayFrameStore, OverlayFrameStore>();
+        services.AddSingleton<TemplateMatchOverlayFrameAdapter>();
+        services.AddSingleton<TemplateMatchOverlayFrameFactory>();
         services.AddSingleton<TemplateMatchOverlayService>();
         services.AddSingleton<ITemplateResourceLoader, PpmP6TemplateLoader>();
         services.AddSingleton<IScreenCaptureService, ScreenCaptureService>();

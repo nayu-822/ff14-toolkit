@@ -1,7 +1,9 @@
 using System.Drawing;
 using System.IO;
 using FF14Toolkit.App.Services.Crafting;
+using FF14Toolkit.App.Services.Overlay;
 using FF14Toolkit.App.Services.TemplateMatching;
+using FF14Toolkit.App.Services.TemplateMatching.Debug;
 using FF14Toolkit.App.Services.TemplateMatching.Matching;
 using FF14Toolkit.App.Services.TemplateMatching.Monitoring;
 using FF14Toolkit.App.Services.TemplateMatching.Resources;
@@ -150,11 +152,12 @@ public sealed class TemplateMatchingTests
         TemplateMatcher matcher = new();
         TemplateMatchResultPublisher publisher = new();
         FakeDebugVisualizer debugVisualizer = new();
+        TemplateMatchDebugVisibilityController visibilityController = new();
         CraftSequenceHotkeyLogService logger = new(Options.Create(new FF14Toolkit.App.Models.Configuration.CacheOptions
         {
             RootPath = Path.Combine(Path.GetTempPath(), "ff14-toolkit-tests-cache")
         }));
-        TemplateMatchMonitor monitor = new(captureService, loader, matcher, publisher, debugVisualizer, logger);
+        TemplateMatchMonitor monitor = new(captureService, loader, matcher, publisher, debugVisualizer, visibilityController, logger);
         TaskCompletionSource<bool> published = new(TaskCreationOptions.RunContinuationsAsynchronously);
         publisher.ResultPublished += (_, args) =>
         {
@@ -188,6 +191,99 @@ public sealed class TemplateMatchingTests
         Assert.AreEqual(TemplateMatchStatus.Matched, latest!.Status);
         Assert.IsTrue(debugVisualizer.ShowCount > 0);
         Assert.AreEqual(1, debugVisualizer.HideCount);
+    }
+
+    [TestMethod]
+    public void TemplateMatchOverlayFrameFactory_UsesMatchedBoundsBeforeCandidate()
+    {
+        TemplateMatchOverlayFrameFactory factory = new();
+        TemplateMatchDebugFrame frame = new(
+            "sample-monitor",
+            "SAMPLE",
+            new TemplateMatchResult(
+                "sample",
+                TemplateMatchStatus.Matched,
+                new Rectangle(100, 200, 400, 300),
+                new Rectangle(120, 220, 200, 100),
+                new Rectangle(150, 240, 30, 20),
+                new Rectangle(140, 230, 40, 30),
+                0.99,
+                0.90,
+                1.00,
+                TimeSpan.FromMilliseconds(10),
+                DateTimeOffset.Now,
+                null),
+            TemplateMatchDebugViewMode.Overlay,
+            null);
+
+        TemplateMatchOverlayFrame overlayFrame = factory.Create(frame);
+
+        Assert.AreEqual(TemplateMatchOverlayState.Matched, overlayFrame.State);
+        Assert.AreEqual(2, overlayFrame.Regions.Count);
+        Assert.AreEqual(new Rectangle(150, 240, 30, 20), factory.GetClickableBounds(frame.Result));
+    }
+
+    [TestMethod]
+    public void OverlayFrameStore_ReplacesByFrameIdAndRemovesByOwner()
+    {
+        OverlayFrameStore store = new();
+        OverlayFrame first = new(
+            "frame-1",
+            "owner-a",
+            new Rectangle(0, 0, 100, 100),
+            [],
+            new OverlayFrameOptions(true, false, OverlayInputMode.ClickThrough, null, true));
+        OverlayFrame updated = first with { ScreenBounds = new Rectangle(10, 20, 100, 100) };
+        OverlayFrame second = new(
+            "frame-2",
+            "owner-b",
+            new Rectangle(30, 40, 100, 100),
+            [],
+            new OverlayFrameOptions(true, false, OverlayInputMode.ClickThrough, null, true));
+
+        store.AddOrUpdate(first);
+        store.AddOrUpdate(updated);
+        store.AddOrUpdate(second);
+
+        Assert.AreEqual(2, store.GetAll().Count);
+        Assert.AreEqual(new Rectangle(10, 20, 100, 100), store.GetAll().Single(frame => frame.FrameId == "frame-1").ScreenBounds);
+
+        IReadOnlyList<OverlayFrame> removed = store.RemoveByOwner("owner-a");
+
+        Assert.AreEqual(1, removed.Count);
+        Assert.AreEqual("frame-1", removed[0].FrameId);
+        Assert.AreEqual(1, store.GetAll().Count);
+    }
+
+    [TestMethod]
+    public void TemplateMatchOverlayFrameAdapter_MapsRegionsToOverlayElements()
+    {
+        TemplateMatchOverlayFrameAdapter adapter = new();
+        TemplateMatchOverlayFrame source = new(
+            TemplateMatchOverlayState.NotMatched,
+            "SAMPLE",
+            0.75,
+            0.90,
+            1.0,
+            [
+                new TemplateMatchOverlayRegion(
+                    "candidate",
+                    new Rectangle(120, 140, 30, 20),
+                    System.Windows.Media.Color.FromArgb(255, 255, 193, 7),
+                    System.Windows.Media.Color.FromArgb(32, 255, 193, 7),
+                    true)
+            ],
+            null);
+
+        OverlayFrame overlayFrame = adapter.CreateOverlayFrame("template-match:sample", new Rectangle(100, 100, 400, 300), source);
+        TemplateMatchOverlayFrame roundTripped = adapter.ToTemplateMatchOverlayFrame(overlayFrame, source);
+
+        Assert.AreEqual("template-match:sample", overlayFrame.FrameId);
+        Assert.AreEqual(TemplateMatchOverlayFrameAdapter.OwnerId, overlayFrame.OwnerId);
+        Assert.AreEqual(1, overlayFrame.Elements.Count);
+        Assert.AreEqual(1, roundTripped.Regions.Count);
+        Assert.AreEqual(source.Regions[0].Bounds, roundTripped.Regions[0].Bounds);
+        Assert.IsTrue(roundTripped.Regions[0].UseDashedStroke);
     }
 
     private static string CreateTempDirectory()

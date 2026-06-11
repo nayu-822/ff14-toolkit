@@ -16,4 +16,15 @@ public sealed class TemplateMatchDebugVisibilityControllerTests
 
         Assert.IsFalse(controller.IsSuppressed("sample-monitor"));
     }
+
+    [TestMethod]
+    public void Remove_DeletesSuppressionState()
+    {
+        TemplateMatchDebugVisibilityController controller = new();
+
+        controller.Suppress("sample-monitor");
+        controller.Remove("sample-monitor");
+
+        Assert.IsFalse(controller.IsSuppressed("sample-monitor"));
+    }
 }
