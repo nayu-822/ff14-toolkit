@@ -6,12 +6,8 @@ using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Shapes;
 using DrawingRectangle = System.Drawing.Rectangle;
-using DrawingPoint = System.Drawing.Point;
-using DrawingSize = System.Drawing.Size;
 using MediaBrushes = System.Windows.Media.Brushes;
 using MediaColor = System.Windows.Media.Color;
-using WpfPoint = System.Windows.Point;
-using WpfSize = System.Windows.Size;
 
 namespace FF14Toolkit.App.Views;
 
@@ -28,41 +24,52 @@ public partial class TemplateMatchOverlayWindow : Window
         SourceInitialized += OnSourceInitialized;
     }
 
-    public void ShowRegions(DrawingRectangle screenBounds, IReadOnlyList<TemplateMatchOverlayRegion> regions)
+    public TemplateMatchOverlayDebugLogEntry ShowRegions(DrawingRectangle pixelScreenBounds, IReadOnlyList<TemplateMatchOverlayRegion> regions)
     {
-        WpfPoint windowOrigin = TransformFromDevice(screenBounds.Location);
-        WpfSize windowSize = TransformSizeFromDevice(screenBounds.Size);
+        Matrix transformFromDevice = GetRequiredTransformFromDeviceMatrix();
+        TemplateMatchOverlayWindowLayout layout = TemplateMatchOverlayLayoutCalculator.Calculate(
+            pixelScreenBounds,
+            regions,
+            transformFromDevice);
 
-        Left = windowOrigin.X;
-        Top = windowOrigin.Y;
-        Width = windowSize.Width;
-        Height = windowSize.Height;
-        RootCanvas.Width = windowSize.Width;
-        RootCanvas.Height = windowSize.Height;
+        Left = layout.DipWindowOrigin.X;
+        Top = layout.DipWindowOrigin.Y;
+        Width = layout.DipWindowSize.Width;
+        Height = layout.DipWindowSize.Height;
+        RootCanvas.Width = layout.DipWindowSize.Width;
+        RootCanvas.Height = layout.DipWindowSize.Height;
         RootCanvas.Children.Clear();
 
-        foreach (TemplateMatchOverlayRegion region in regions)
+        foreach (TemplateMatchOverlayRegionLayout regionLayout in layout.Regions)
         {
-            AddRegionVisual(region, screenBounds);
+            AddRegionVisual(regionLayout);
         }
+
+        Vector dpiScale = transformFromDevice.Transform(new Vector(1d, 1d));
+        return new TemplateMatchOverlayDebugLogEntry(
+            pixelScreenBounds,
+            layout.DipWindowOrigin,
+            layout.DipWindowSize,
+            dpiScale.X,
+            dpiScale.Y,
+            layout.Regions
+                .Select(region => new TemplateMatchOverlayDebugRegionLogEntry(
+                    region.Region.Label,
+                    region.Region.Bounds,
+                    region.DipRegionOrigin,
+                    region.DipRegionSize,
+                    region.DipLabelOrigin))
+                .ToArray());
     }
 
-    private void AddRegionVisual(TemplateMatchOverlayRegion region, DrawingRectangle screenBounds)
+    private void AddRegionVisual(TemplateMatchOverlayRegionLayout regionLayout)
     {
-        DrawingPoint pixelOffset = new(
-            region.Bounds.Left - screenBounds.Left,
-            region.Bounds.Top - screenBounds.Top);
-        DrawingSize pixelSize = new(region.Bounds.Width, region.Bounds.Height);
-        WpfPoint offset = TransformFromDevice(pixelOffset);
-        WpfSize size = TransformSizeFromDevice(pixelSize);
-
-        double left = offset.X;
-        double top = offset.Y;
+        TemplateMatchOverlayRegion region = regionLayout.Region;
 
         RectangleShape overlayShape = new()
         {
-            Width = Math.Max(1d, size.Width),
-            Height = Math.Max(1d, size.Height),
+            Width = Math.Max(1d, regionLayout.DipRegionSize.Width),
+            Height = Math.Max(1d, regionLayout.DipRegionSize.Height),
             RadiusX = 6,
             RadiusY = 6,
             Stroke = new SolidColorBrush(region.StrokeColor),
@@ -75,8 +82,8 @@ public partial class TemplateMatchOverlayWindow : Window
             overlayShape.StrokeDashArray = [6, 4];
         }
 
-        Canvas.SetLeft(overlayShape, left);
-        Canvas.SetTop(overlayShape, top);
+        Canvas.SetLeft(overlayShape, regionLayout.DipRegionOrigin.X);
+        Canvas.SetTop(overlayShape, regionLayout.DipRegionOrigin.Y);
         RootCanvas.Children.Add(overlayShape);
 
         Border labelSurface = new()
@@ -95,28 +102,22 @@ public partial class TemplateMatchOverlayWindow : Window
             }
         };
 
-        Canvas.SetLeft(labelSurface, Math.Max(0, left));
-        Canvas.SetTop(labelSurface, Math.Max(0, top - 24));
+        Canvas.SetLeft(labelSurface, regionLayout.DipLabelOrigin.X);
+        Canvas.SetTop(labelSurface, regionLayout.DipLabelOrigin.Y);
         RootCanvas.Children.Add(labelSurface);
     }
 
-    private WpfPoint TransformFromDevice(DrawingPoint point)
+    private Matrix GetRequiredTransformFromDeviceMatrix()
     {
-        Matrix matrix = GetTransformFromDeviceMatrix();
-        return matrix.Transform(new WpfPoint(point.X, point.Y));
-    }
+        IntPtr handle = new WindowInteropHelper(this).Handle;
+        if (handle == IntPtr.Zero)
+        {
+            throw new InvalidOperationException("Overlay window handle is not available.");
+        }
 
-    private WpfSize TransformSizeFromDevice(DrawingSize size)
-    {
-        Matrix matrix = GetTransformFromDeviceMatrix();
-        Vector vector = matrix.Transform(new Vector(size.Width, size.Height));
-        return new WpfSize(Math.Abs(vector.X), Math.Abs(vector.Y));
-    }
-
-    private Matrix GetTransformFromDeviceMatrix()
-    {
-        HwndSource? hwndSource = (HwndSource?)PresentationSource.FromVisual(this);
-        return hwndSource?.CompositionTarget?.TransformFromDevice ?? Matrix.Identity;
+        HwndSource? hwndSource = HwndSource.FromHwnd(handle);
+        return hwndSource?.CompositionTarget?.TransformFromDevice
+            ?? throw new InvalidOperationException("Overlay window DPI transform is not available.");
     }
 
     private void OnSourceInitialized(object? sender, EventArgs e)
