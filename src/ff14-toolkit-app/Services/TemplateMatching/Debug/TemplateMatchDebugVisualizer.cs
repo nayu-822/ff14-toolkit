@@ -36,9 +36,10 @@ public sealed class TemplateMatchDebugVisualizer : ITemplateMatchDebugVisualizer
             return;
         }
 
+        Rectangle? clickableBounds = frame.Result.MatchedBounds ?? frame.Result.BestCandidateBounds;
         TemplateMatchDebugVisibilityController.VisibilityDecision decision = visibilityController.Evaluate(
             frame.MonitorId,
-            frame.Result.MatchedBounds);
+            clickableBounds);
 
         if (decision.SuppressedNow)
         {
@@ -52,6 +53,7 @@ public sealed class TemplateMatchDebugVisualizer : ITemplateMatchDebugVisualizer
 
         if (decision.IsSuppressed)
         {
+            logger.LogDebug($"Template monitor debug frame skipped: MonitorId={frame.MonitorId}, ViewMode={frame.ViewMode}, Status={frame.Result.Status}, Reason=Suppressed");
             await HideByModeAsync(frame.MonitorId, frame.ViewMode, cancellationToken).ConfigureAwait(false);
             return;
         }
@@ -119,6 +121,9 @@ public sealed class TemplateMatchDebugVisualizer : ITemplateMatchDebugVisualizer
             _ => TemplateMatchOverlayState.Error
         };
 
+        logger.LogDebug(
+            $"Template monitor debug frame: MonitorId={frame.MonitorId}, ViewMode={frame.ViewMode}, Status={frame.Result.Status}, State={state}, Clickable={(clickableBounds is null ? "None" : clickableBounds.Value.ToString())}, Regions={regions.Count}");
+
         await ShowByModeAsync(
             frame,
             new TemplateMatchOverlayFrame(
@@ -136,7 +141,7 @@ public sealed class TemplateMatchDebugVisualizer : ITemplateMatchDebugVisualizer
     {
         cancellationToken.ThrowIfCancellationRequested();
         visibilityController.Reset(monitorId);
-        overlayService.Hide();
+        await overlayService.HideAsync().ConfigureAwait(false);
         await normalWindowService.HideAsync(monitorId, cancellationToken).ConfigureAwait(false);
     }
 
@@ -149,12 +154,12 @@ public sealed class TemplateMatchDebugVisualizer : ITemplateMatchDebugVisualizer
         {
             case TemplateMatchDebugViewMode.NormalWindow:
                 await normalWindowService.ShowAsync(frame, cancellationToken).ConfigureAwait(false);
-                overlayService.Hide();
+                await overlayService.HideAsync().ConfigureAwait(false);
                 break;
 
             case TemplateMatchDebugViewMode.Overlay:
                 await normalWindowService.HideAsync(frame.MonitorId, cancellationToken).ConfigureAwait(false);
-                overlayService.ShowFrame(frame.Result.CaptureBounds, overlayFrame, keepVisible: true);
+                await overlayService.ShowFrameAsync(frame.Result.CaptureBounds, overlayFrame, keepVisible: true).ConfigureAwait(false);
                 break;
 
             default:
@@ -175,11 +180,11 @@ public sealed class TemplateMatchDebugVisualizer : ITemplateMatchDebugVisualizer
                 break;
 
             case TemplateMatchDebugViewMode.Overlay:
-                overlayService.Hide();
+                await overlayService.HideAsync().ConfigureAwait(false);
                 break;
 
             default:
-                overlayService.Hide();
+                await overlayService.HideAsync().ConfigureAwait(false);
                 await normalWindowService.HideAsync(monitorId, cancellationToken).ConfigureAwait(false);
                 break;
         }

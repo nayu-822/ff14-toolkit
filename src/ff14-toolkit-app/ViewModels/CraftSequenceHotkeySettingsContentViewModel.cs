@@ -22,7 +22,7 @@ public sealed class CraftSequenceHotkeySettingsContentViewModel : ShellContentVi
     private readonly AsyncRelayCommand stopMonitoringCommand;
     private readonly RelayCommand saveCommand;
     private bool isTemplateMatchMonitoring;
-    private string monitorStatusSummary = "状態: Stopped";
+    private string monitorStatusSummary = "監視状態: Stopped";
     private string monitorStatusDetails = "フレーム数: 0";
 
     public CraftSequenceHotkeySettingsContentViewModel(
@@ -49,7 +49,6 @@ public sealed class CraftSequenceHotkeySettingsContentViewModel : ShellContentVi
         saveCommand = new RelayCommand(Save);
         startMonitoringCommand = new AsyncRelayCommand(StartMonitoringAsync, () => !IsTemplateMatchMonitoring);
         stopMonitoringCommand = new AsyncRelayCommand(StopMonitoringAsync, () => IsTemplateMatchMonitoring);
-        isTemplateMatchMonitoring = craftStartButtonAutomationService.IsMonitoring;
 
         craftActionSequenceStore.Sequences.CollectionChanged += OnSequencesChanged;
         craftStartButtonAutomationService.MonitoringStateChanged += OnMonitoringStateChanged;
@@ -127,8 +126,9 @@ public sealed class CraftSequenceHotkeySettingsContentViewModel : ShellContentVi
         }
         catch (Exception exception)
         {
-            monitorStatusSummary = "状態: Faulted";
+            monitorStatusSummary = "監視状態: Faulted";
             monitorStatusDetails = $"エラー: {exception.Message}";
+            IsTemplateMatchMonitoring = false;
             OnPropertyChanged(nameof(MonitorStatusSummary));
             OnPropertyChanged(nameof(MonitorStatusDetails));
         }
@@ -142,8 +142,9 @@ public sealed class CraftSequenceHotkeySettingsContentViewModel : ShellContentVi
         }
         catch (Exception exception)
         {
-            monitorStatusSummary = "状態: Faulted";
+            monitorStatusSummary = "監視状態: Faulted";
             monitorStatusDetails = $"停止エラー: {exception.Message}";
+            IsTemplateMatchMonitoring = false;
             OnPropertyChanged(nameof(MonitorStatusSummary));
             OnPropertyChanged(nameof(MonitorStatusDetails));
         }
@@ -204,7 +205,7 @@ public sealed class CraftSequenceHotkeySettingsContentViewModel : ShellContentVi
 
     private void OnMonitoringStateChanged(object? sender, EventArgs e)
     {
-        IsTemplateMatchMonitoring = craftStartButtonAutomationService.IsMonitoring;
+        RefreshMonitorStatus();
     }
 
     private void OnTemplateMonitorStatusChanged(object? sender, TemplateMonitorStatusChangedEventArgs e)
@@ -237,13 +238,14 @@ public sealed class CraftSequenceHotkeySettingsContentViewModel : ShellContentVi
 
     private void ApplyStatus(TemplateMonitorStatus status)
     {
-        monitorStatusSummary = $"状態: {status.State}";
+        IsTemplateMatchMonitoring = IsActiveState(status.State);
+        monitorStatusSummary = $"監視状態: {status.State}";
         monitorStatusDetails =
             $"開始: {FormatTimestamp(status.StartedAt ?? status.StartRequestedAt)} / " +
             $"初回フレーム: {FormatTimestamp(status.FirstFrameCompletedAt)} / " +
             $"停止: {FormatTimestamp(status.StoppedAt)} / " +
             $"フレーム数: {status.ProcessedFrameCount} / " +
-            $"最新結果: {status.LastMatchStatus?.ToString() ?? "-"} / " +
+            $"最新状態: {status.LastMatchStatus?.ToString() ?? "-"} / " +
             $"Best score: {FormatScore(status.LastScore)}" +
             (string.IsNullOrWhiteSpace(status.ErrorMessage) ? string.Empty : $" / エラー: {status.ErrorMessage}");
         OnPropertyChanged(nameof(MonitorStatusSummary));
@@ -258,5 +260,12 @@ public sealed class CraftSequenceHotkeySettingsContentViewModel : ShellContentVi
     private static string FormatScore(double? score)
     {
         return score is double value ? value.ToString("F3") : "-";
+    }
+
+    private static bool IsActiveState(TemplateMonitorState state)
+    {
+        return state is TemplateMonitorState.Starting
+            or TemplateMonitorState.Running
+            or TemplateMonitorState.Stopping;
     }
 }

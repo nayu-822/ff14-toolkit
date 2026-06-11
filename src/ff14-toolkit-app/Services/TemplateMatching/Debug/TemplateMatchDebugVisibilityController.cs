@@ -8,7 +8,28 @@ public sealed class TemplateMatchDebugVisibilityController
     private readonly Lock syncRoot = new();
     private readonly Dictionary<string, SuppressionState> states = new(StringComparer.OrdinalIgnoreCase);
 
-    public VisibilityDecision Evaluate(string monitorId, Rectangle? matchedBounds)
+    public bool IsSuppressed(string monitorId)
+    {
+        lock (syncRoot)
+        {
+            return states.TryGetValue(monitorId, out SuppressionState? state) && state.IsSuppressed;
+        }
+    }
+
+    public bool Suppress(string monitorId)
+    {
+        lock (syncRoot)
+        {
+            states.TryGetValue(monitorId, out SuppressionState? state);
+            state ??= new SuppressionState();
+            bool changed = !state.IsSuppressed;
+            state.IsSuppressed = true;
+            states[monitorId] = state;
+            return changed;
+        }
+    }
+
+    public VisibilityDecision Evaluate(string monitorId, Rectangle? clickableBounds)
     {
         lock (syncRoot)
         {
@@ -19,35 +40,23 @@ public sealed class TemplateMatchDebugVisibilityController
             bool suppressedNow = false;
             bool restoredNow = false;
 
-            if (leftButtonDown && !state.WasLeftButtonDown && matchedBounds is Rectangle clickableBounds)
+            if (leftButtonDown && !state.WasLeftButtonDown && clickableBounds is Rectangle bounds)
             {
                 Point cursor = GetCursorPosition();
-                if (clickableBounds.Contains(cursor))
+                if (bounds.Contains(cursor))
                 {
+                    suppressedNow = !state.IsSuppressed;
                     state.IsSuppressed = true;
-                    state.SuppressedBounds = clickableBounds;
-                    suppressedNow = true;
                 }
+            }
+
+            if (!leftButtonDown && state.WasLeftButtonDown && state.IsSuppressed)
+            {
+                state.IsSuppressed = false;
+                restoredNow = true;
             }
 
             state.WasLeftButtonDown = leftButtonDown;
-
-            if (state.IsSuppressed)
-            {
-                if (matchedBounds is null)
-                {
-                    state.IsSuppressed = false;
-                    state.SuppressedBounds = null;
-                    restoredNow = true;
-                }
-                else if (state.SuppressedBounds is not Rectangle suppressedBounds || suppressedBounds != matchedBounds.Value)
-                {
-                    state.IsSuppressed = false;
-                    state.SuppressedBounds = null;
-                    restoredNow = true;
-                }
-            }
-
             states[monitorId] = state;
             return new VisibilityDecision(state.IsSuppressed, suppressedNow, restoredNow);
         }
@@ -78,8 +87,6 @@ public sealed class TemplateMatchDebugVisibilityController
         public bool WasLeftButtonDown { get; set; }
 
         public bool IsSuppressed { get; set; }
-
-        public Rectangle? SuppressedBounds { get; set; }
     }
 
     [DllImport("user32.dll")]

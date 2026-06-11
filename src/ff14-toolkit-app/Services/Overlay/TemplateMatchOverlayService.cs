@@ -48,20 +48,25 @@ public sealed class TemplateMatchOverlayService
             null,
             regions,
             null);
-        ShowFrame(screenBounds, frame, keepVisible: false);
+        _ = ShowFrameAsync(screenBounds, frame, keepVisible: false);
     }
 
     public void ShowFrame(Rectangle screenBounds, TemplateMatchOverlayFrame frame, bool keepVisible)
+    {
+        _ = ShowFrameAsync(screenBounds, frame, keepVisible);
+    }
+
+    public async Task ShowFrameAsync(Rectangle screenBounds, TemplateMatchOverlayFrame frame, bool keepVisible)
     {
         if (!isEnabled)
         {
             return;
         }
 
-        int currentVersion = Interlocked.Increment(ref overlayVersion);
-        DispatcherOperation operation = dispatcher.InvokeAsync(() =>
+        try
         {
-            try
+            int currentVersion = Interlocked.Increment(ref overlayVersion);
+            await dispatcher.InvokeAsync(() =>
             {
                 overlayWindow ??= windowFactory();
                 TemplateMatchOverlayPresenter.Present(overlayWindow, screenBounds, frame);
@@ -70,40 +75,41 @@ public sealed class TemplateMatchOverlayService
                     logger.LogInformation("Overlay window handle created.");
                 }
 
-                logger.LogDebug("Template-match overlay frame updated.");
-            }
-            catch (Exception exception)
+                logger.LogDebug($"Template-match overlay frame updated. State={frame.State}, Regions={frame.Regions.Count}, KeepVisible={keepVisible}");
+            }).Task.ConfigureAwait(false);
+
+            if (!keepVisible)
             {
-                logger.LogError("Template-match overlay update failed.", exception);
-                throw;
+                _ = HideLaterAsync(currentVersion);
             }
-        });
-
-        _ = ObserveDispatcherOperationAsync(operation);
-
-        if (!keepVisible)
+        }
+        catch (Exception exception)
         {
-            _ = HideLaterAsync(currentVersion);
+            logger.LogError("Template-match overlay update failed.", exception);
+            throw;
         }
     }
 
     public void Hide()
     {
-        Interlocked.Increment(ref overlayVersion);
-        DispatcherOperation operation = dispatcher.InvokeAsync(() =>
+        _ = HideAsync();
+    }
+
+    public async Task HideAsync()
+    {
+        try
         {
-            try
+            Interlocked.Increment(ref overlayVersion);
+            await dispatcher.InvokeAsync(() =>
             {
                 overlayWindow?.Hide();
-            }
-            catch (Exception exception)
-            {
-                logger.LogError("Template-match overlay hide/stop failed.", exception);
-                throw;
-            }
-        });
-
-        _ = ObserveDispatcherOperationAsync(operation);
+            }).Task.ConfigureAwait(false);
+        }
+        catch (Exception exception)
+        {
+            logger.LogError("Template-match overlay hide/stop failed.", exception);
+            throw;
+        }
     }
 
     public void Shutdown()
@@ -133,10 +139,10 @@ public sealed class TemplateMatchOverlayService
 
     private async Task HideLaterAsync(int version)
     {
-        await Task.Delay(DisplayDuration).ConfigureAwait(false);
-        DispatcherOperation operation = dispatcher.InvokeAsync(() =>
+        try
         {
-            try
+            await Task.Delay(DisplayDuration).ConfigureAwait(false);
+            await dispatcher.InvokeAsync(() =>
             {
                 if (version != overlayVersion)
                 {
@@ -144,15 +150,12 @@ public sealed class TemplateMatchOverlayService
                 }
 
                 overlayWindow?.Hide();
-            }
-            catch (Exception exception)
-            {
-                logger.LogError("Template-match overlay hide/stop failed.", exception);
-                throw;
-            }
-        });
-
-        await ObserveDispatcherOperationAsync(operation).ConfigureAwait(false);
+            }).Task.ConfigureAwait(false);
+        }
+        catch (Exception exception)
+        {
+            logger.LogError("Template-match overlay hide/stop failed.", exception);
+        }
     }
 
     private async Task ObserveDispatcherOperationAsync(DispatcherOperation operation)

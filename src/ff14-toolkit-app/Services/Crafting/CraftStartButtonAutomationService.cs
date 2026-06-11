@@ -161,13 +161,13 @@ public sealed class CraftStartButtonAutomationService
             lastDebugImagePath);
     }
 
-    public Task StartTemplateMatchMonitoringAsync(CancellationToken cancellationToken = default)
+    public async Task StartTemplateMatchMonitoringAsync(CancellationToken cancellationToken = default)
     {
         lock (monitorSyncRoot)
         {
             if (isMonitoring)
             {
-                return Task.CompletedTask;
+                return;
             }
         }
 
@@ -193,7 +193,7 @@ public sealed class CraftStartButtonAutomationService
         try
         {
             SetMonitoringState(true);
-            return templateMatchMonitor.StartAsync(definition, cancellationToken);
+            await templateMatchMonitor.StartAsync(definition, cancellationToken).ConfigureAwait(false);
         }
         catch
         {

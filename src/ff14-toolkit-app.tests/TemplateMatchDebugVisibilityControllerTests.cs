@@ -1,4 +1,3 @@
-using System.Drawing;
 using FF14Toolkit.App.Services.TemplateMatching.Debug;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -12,13 +11,9 @@ public sealed class TemplateMatchDebugVisibilityControllerTests
     {
         TemplateMatchDebugVisibilityController controller = new();
 
+        controller.Suppress("sample-monitor");
         controller.Reset("sample-monitor");
-        TemplateMatchDebugVisibilityController.VisibilityDecision decision = controller.Evaluate(
-            "sample-monitor",
-            new Rectangle(100, 100, 50, 50));
 
-        Assert.IsFalse(decision.IsSuppressed);
-        Assert.IsFalse(decision.SuppressedNow);
-        Assert.IsFalse(decision.RestoredNow);
+        Assert.IsFalse(controller.IsSuppressed("sample-monitor"));
     }
 }

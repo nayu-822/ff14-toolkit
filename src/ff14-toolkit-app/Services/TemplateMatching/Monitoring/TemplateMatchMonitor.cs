@@ -42,6 +42,20 @@ public sealed class TemplateMatchMonitor : ITemplateMatchMonitor, ITemplateMonit
         }
 
         DateTimeOffset startRequestedAt = DateTimeOffset.Now;
+        MonitorSession session;
+        lock (syncRoot)
+        {
+            if (sessions.ContainsKey(definition.MonitorId))
+            {
+                throw new InvalidOperationException($"Template monitor already exists: {definition.MonitorId}");
+            }
+
+            CancellationTokenSource cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            TaskCompletionSource startedCompletion = new(TaskCreationOptions.RunContinuationsAsynchronously);
+            session = new MonitorSession(cancellationTokenSource, startedCompletion);
+            sessions.Add(definition.MonitorId, session);
+        }
+
         UpdateStatus(new TemplateMonitorStatus(
             definition.MonitorId,
             TemplateMonitorState.Starting,
@@ -54,22 +68,11 @@ public sealed class TemplateMatchMonitor : ITemplateMatchMonitor, ITemplateMonit
             null,
             null));
 
-        lock (syncRoot)
-        {
-            if (sessions.ContainsKey(definition.MonitorId))
-            {
-                throw new InvalidOperationException($"Template monitor already exists: {definition.MonitorId}");
-            }
-
-            CancellationTokenSource cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-            TaskCompletionSource startedCompletion = new(TaskCreationOptions.RunContinuationsAsynchronously);
-            Task task = Task.Run(() => RunAsync(definition, startedCompletion, cancellationTokenSource.Token), cancellationTokenSource.Token);
-            sessions.Add(definition.MonitorId, new MonitorSession(cancellationTokenSource, task, startedCompletion));
-        }
+        session.Task = Task.Run(() => RunAsync(definition, session, session.CancellationTokenSource.Token), CancellationToken.None);
 
         logger.LogInformation($"Template debug visualization: MonitorId={definition.MonitorId} Requested={definition.EnableDebugVisualization} ViewMode={definition.DebugViewMode} GlobalEnabled=<configured-in-visualizer>");
         logger.LogInformation($"Template monitor started: {definition.MonitorId}");
-        await sessions[definition.MonitorId].StartedCompletion.Task.WaitAsync(cancellationToken).ConfigureAwait(false);
+        await session.StartedCompletion.Task.WaitAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task StopAsync(
@@ -80,10 +83,6 @@ public sealed class TemplateMatchMonitor : ITemplateMatchMonitor, ITemplateMonit
         lock (syncRoot)
         {
             sessions.TryGetValue(monitorId, out session);
-            if (session is not null)
-            {
-                sessions.Remove(monitorId);
-            }
         }
 
         TemplateMonitorStatus? status = GetStatus(monitorId);
@@ -107,12 +106,6 @@ public sealed class TemplateMatchMonitor : ITemplateMatchMonitor, ITemplateMonit
         catch (OperationCanceledException)
         {
         }
-        finally
-        {
-            session.CancellationTokenSource.Dispose();
-            await debugVisualizer.HideAsync(monitorId, cancellationToken).ConfigureAwait(false);
-            logger.LogInformation($"Template monitor stopped: {monitorId}");
-        }
     }
 
     public TemplateMonitorStatus? GetStatus(string monitorId)
@@ -127,14 +120,15 @@ public sealed class TemplateMatchMonitor : ITemplateMatchMonitor, ITemplateMonit
 
     private async Task RunAsync(
         TemplateMonitorDefinition definition,
-        TaskCompletionSource startedCompletion,
+        MonitorSession session,
         CancellationToken cancellationToken)
     {
         Exception? failure = null;
+        bool completedBySelf = false;
         long processedFrameCount = 0;
         DateTimeOffset? startedAt = null;
         DateTimeOffset? firstFrameCompletedAt = null;
-        TemplateResource resource;
+        TemplateResource resource = null!;
 
         try
         {
@@ -179,12 +173,17 @@ public sealed class TemplateMatchMonitor : ITemplateMatchMonitor, ITemplateMonit
                     .ConfigureAwait(false);
             }
 
-            startedCompletion.TrySetResult();
+            session.StartedCompletion.TrySetResult();
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            session.StartedCompletion.TrySetCanceled(cancellationToken);
+            return;
         }
         catch (Exception exception)
         {
             failure = exception;
-            startedCompletion.TrySetException(exception);
+            session.StartedCompletion.TrySetException(exception);
             logger.LogError("Template resource loading failed.", exception);
             TemplateMatchResult loadFailedResult = new(
                 definition.MatchRequest.TemplateId,
@@ -224,123 +223,151 @@ public sealed class TemplateMatchMonitor : ITemplateMatchMonitor, ITemplateMonit
                 loadFailedResult.Status,
                 loadFailedResult.BestScore,
                 loadFailedResult.ErrorMessage));
-            return;
         }
 
         try
         {
-            while (!cancellationToken.IsCancellationRequested)
+            if (failure is null)
             {
-                long frameStartedAt = System.Diagnostics.Stopwatch.GetTimestamp();
-                TemplateMatchResult result;
-                TemplateMatchCapturePreview? preview = null;
-
                 try
                 {
-                    using ScreenCaptureFrame capture = screenCaptureService.Capture(definition.MatchRequest.CaptureBounds);
-                    result = templateMatcher.Match(capture, resource, definition.MatchRequest, cancellationToken);
-                    preview = new TemplateMatchCapturePreview(
-                        capture.ScreenBounds,
-                        capture.Width,
-                        capture.Height,
-                        capture.Stride,
-                        [.. capture.Pixels]);
+                    while (!cancellationToken.IsCancellationRequested)
+                    {
+                        long frameStartedAt = System.Diagnostics.Stopwatch.GetTimestamp();
+                        TemplateMatchResult result;
+                        TemplateMatchCapturePreview? preview = null;
+
+                        try
+                        {
+                            using ScreenCaptureFrame capture = screenCaptureService.Capture(definition.MatchRequest.CaptureBounds);
+                            result = templateMatcher.Match(capture, resource, definition.MatchRequest, cancellationToken);
+                            preview = new TemplateMatchCapturePreview(
+                                capture.ScreenBounds,
+                                capture.Width,
+                                capture.Height,
+                                capture.Stride,
+                                [.. capture.Pixels]);
+                        }
+                        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+                        {
+                            throw;
+                        }
+                        catch (Exception exception)
+                        {
+                            logger.LogError("Template matching failed.", exception);
+                            result = new TemplateMatchResult(
+                                definition.MatchRequest.TemplateId,
+                                TemplateMatchStatus.CaptureFailed,
+                                definition.MatchRequest.CaptureBounds,
+                                definition.MatchRequest.SearchBounds ?? definition.MatchRequest.CaptureBounds,
+                                null,
+                                null,
+                                0d,
+                                definition.MatchRequest.MinimumScore,
+                                0d,
+                                System.Diagnostics.Stopwatch.GetElapsedTime(frameStartedAt),
+                                DateTimeOffset.Now,
+                                exception.Message);
+                        }
+
+                        processedFrameCount++;
+                        firstFrameCompletedAt ??= DateTimeOffset.Now;
+
+                        await resultSink.PublishAsync(definition.MonitorId, result, cancellationToken).ConfigureAwait(false);
+
+                        if (definition.EnableDebugVisualization && definition.DebugViewMode != TemplateMatchDebugViewMode.None)
+                        {
+                            await debugVisualizer.ShowAsync(
+                                    new TemplateMatchDebugFrame(
+                                        definition.MonitorId,
+                                        definition.TargetName,
+                                        result,
+                                        definition.DebugViewMode,
+                                        preview),
+                                    cancellationToken)
+                                .ConfigureAwait(false);
+                        }
+
+                        UpdateStatus(new TemplateMonitorStatus(
+                            definition.MonitorId,
+                            TemplateMonitorState.Running,
+                            GetStatus(definition.MonitorId)?.StartRequestedAt,
+                            startedAt,
+                            firstFrameCompletedAt,
+                            null,
+                            processedFrameCount,
+                            result.Status,
+                            result.BestScore,
+                            result.ErrorMessage));
+
+                        logger.LogDebug(
+                            $"Frame processed. MonitorId={definition.MonitorId}, Status={result.Status}, BestScore={result.BestScore:F3}, Threshold={result.Threshold:F3}, Scale={result.Scale:F2}, ProcessingTime={result.ProcessingTime.TotalMilliseconds:F1}ms");
+
+                        TimeSpan remaining = definition.Interval - System.Diagnostics.Stopwatch.GetElapsedTime(frameStartedAt);
+                        if (remaining > TimeSpan.Zero)
+                        {
+                            await Task.Delay(remaining, cancellationToken).ConfigureAwait(false);
+                        }
+                    }
+
+                    completedBySelf = true;
                 }
                 catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
                 {
-                    throw;
                 }
                 catch (Exception exception)
                 {
-                    logger.LogError("Template matching failed.", exception);
-                    result = new TemplateMatchResult(
-                        definition.MatchRequest.TemplateId,
-                        TemplateMatchStatus.CaptureFailed,
-                        definition.MatchRequest.CaptureBounds,
-                        definition.MatchRequest.SearchBounds ?? definition.MatchRequest.CaptureBounds,
-                        null,
-                        null,
-                        0d,
-                        definition.MatchRequest.MinimumScore,
-                        0d,
-                        System.Diagnostics.Stopwatch.GetElapsedTime(frameStartedAt),
-                        DateTimeOffset.Now,
-                        exception.Message);
-                }
-
-                processedFrameCount++;
-                firstFrameCompletedAt ??= DateTimeOffset.Now;
-
-                await resultSink.PublishAsync(definition.MonitorId, result, cancellationToken).ConfigureAwait(false);
-
-                if (definition.EnableDebugVisualization && definition.DebugViewMode != TemplateMatchDebugViewMode.None)
-                {
-                    await debugVisualizer.ShowAsync(
-                            new TemplateMatchDebugFrame(
-                                definition.MonitorId,
-                                definition.TargetName,
-                                result,
-                                definition.DebugViewMode,
-                                preview),
-                            cancellationToken)
-                        .ConfigureAwait(false);
-                }
-
-                UpdateStatus(new TemplateMonitorStatus(
-                    definition.MonitorId,
-                    TemplateMonitorState.Running,
-                    GetStatus(definition.MonitorId)?.StartRequestedAt,
-                    startedAt,
-                    firstFrameCompletedAt,
-                    null,
-                    processedFrameCount,
-                    result.Status,
-                    result.BestScore,
-                    result.ErrorMessage));
-
-                logger.LogDebug(
-                    $"Frame processed. MonitorId={definition.MonitorId}, Status={result.Status}, BestScore={result.BestScore:F3}, Threshold={result.Threshold:F3}, Scale={result.Scale:F2}, ProcessingTime={result.ProcessingTime.TotalMilliseconds:F1}ms");
-
-                TimeSpan remaining = definition.Interval - System.Diagnostics.Stopwatch.GetElapsedTime(frameStartedAt);
-                if (remaining > TimeSpan.Zero)
-                {
-                    await Task.Delay(remaining, cancellationToken).ConfigureAwait(false);
+                    failure = exception;
                 }
             }
-        }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-        {
-        }
-        catch (Exception exception)
-        {
-            failure = exception;
-            throw;
         }
         finally
         {
             await debugVisualizer.HideAsync(definition.MonitorId, CancellationToken.None).ConfigureAwait(false);
+            session.CancellationTokenSource.Dispose();
+            RemoveSessionIfCurrent(definition.MonitorId, session);
+
+            TemplateMonitorStatus? currentStatus = GetStatus(definition.MonitorId);
 
             TemplateMonitorState finalState = failure is not null
                 ? TemplateMonitorState.Faulted
-                : processedFrameCount > 0
-                    ? TemplateMonitorState.Completed
-                    : TemplateMonitorState.Stopped;
+                : cancellationToken.IsCancellationRequested
+                    ? TemplateMonitorState.Stopped
+                    : completedBySelf
+                        ? TemplateMonitorState.Completed
+                        : TemplateMonitorState.Stopped;
 
             UpdateStatus(new TemplateMonitorStatus(
                 definition.MonitorId,
                 finalState,
-                GetStatus(definition.MonitorId)?.StartRequestedAt,
+                currentStatus?.StartRequestedAt,
                 startedAt,
                 firstFrameCompletedAt,
                 DateTimeOffset.Now,
                 processedFrameCount,
-                GetStatus(definition.MonitorId)?.LastMatchStatus,
-                GetStatus(definition.MonitorId)?.LastScore,
-                failure?.Message));
+                currentStatus?.LastMatchStatus,
+                currentStatus?.LastScore,
+                failure?.Message ?? currentStatus?.ErrorMessage));
 
             if (failure is not null)
             {
                 logger.LogError($"Template monitor faulted: {definition.MonitorId}", failure);
+            }
+            else
+            {
+                logger.LogInformation($"Template monitor stopped: {definition.MonitorId}, State={finalState}, Frames={processedFrameCount}");
+            }
+        }
+    }
+
+    private void RemoveSessionIfCurrent(string monitorId, MonitorSession expectedSession)
+    {
+        lock (syncRoot)
+        {
+            if (sessions.TryGetValue(monitorId, out MonitorSession? currentSession)
+                && ReferenceEquals(currentSession, expectedSession))
+            {
+                sessions.Remove(monitorId);
             }
         }
     }
@@ -355,8 +382,20 @@ public sealed class TemplateMatchMonitor : ITemplateMatchMonitor, ITemplateMonit
         StatusChanged?.Invoke(this, new TemplateMonitorStatusChangedEventArgs(status));
     }
 
-    private sealed record MonitorSession(
-        CancellationTokenSource CancellationTokenSource,
-        Task Task,
-        TaskCompletionSource StartedCompletion);
+    private sealed class MonitorSession
+    {
+        public MonitorSession(
+            CancellationTokenSource cancellationTokenSource,
+            TaskCompletionSource startedCompletion)
+        {
+            CancellationTokenSource = cancellationTokenSource;
+            StartedCompletion = startedCompletion;
+        }
+
+        public CancellationTokenSource CancellationTokenSource { get; }
+
+        public TaskCompletionSource StartedCompletion { get; }
+
+        public Task Task { get; set; } = Task.CompletedTask;
+    }
 }
