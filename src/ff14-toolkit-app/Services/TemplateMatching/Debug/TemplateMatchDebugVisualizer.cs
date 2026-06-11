@@ -56,6 +56,11 @@ public sealed class TemplateMatchDebugVisualizer : ITemplateMatchDebugVisualizer
             return;
         }
 
+        bool isSearchingFrame =
+            string.Equals(frame.Result.ErrorMessage, "SEARCHING", StringComparison.Ordinal)
+            && frame.Result.MatchedBounds is null
+            && frame.Result.BestCandidateBounds is null;
+
         if (frame.Result.Status == TemplateMatchStatus.CaptureFailed
             || frame.Result.Status == TemplateMatchStatus.TemplateLoadFailed
             || frame.Result.Status == TemplateMatchStatus.Error)
@@ -106,6 +111,7 @@ public sealed class TemplateMatchDebugVisualizer : ITemplateMatchDebugVisualizer
         TemplateMatchOverlayState state = frame.Result.Status switch
         {
             TemplateMatchStatus.Matched => TemplateMatchOverlayState.Matched,
+            _ when isSearchingFrame => TemplateMatchOverlayState.Searching,
             TemplateMatchStatus.NotMatched => TemplateMatchOverlayState.NotMatched,
             TemplateMatchStatus.InvalidRequest => TemplateMatchOverlayState.Error,
             TemplateMatchStatus.CaptureFailed => TemplateMatchOverlayState.Error,

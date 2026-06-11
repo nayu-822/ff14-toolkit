@@ -66,6 +66,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<TemplateMatchDebugWindowService>();
         services.AddSingleton<ITemplateMatchDebugVisualizer, TemplateMatchDebugVisualizer>();
         services.AddSingleton<ITemplateMatchMonitor, TemplateMatchMonitor>();
+        services.AddSingleton<ITemplateMonitorStatusSource>(serviceProvider => (TemplateMatchMonitor)serviceProvider.GetRequiredService<ITemplateMatchMonitor>());
         services.AddSingleton<IOverlayPluginWebSocketService, OverlayPluginWebSocketService>();
         services.AddSingleton<IOverlayPluginWebSocketSessionService, OverlayPluginWebSocketSessionService>();
         services.AddSingleton<OverlayPluginLogService>();

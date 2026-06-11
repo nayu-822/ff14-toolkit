@@ -1,28 +1,36 @@
+using System.Collections.ObjectModel;
+using System.Collections.Specialized;
+using System.Windows;
 using FF14Toolkit.App.Infrastructure;
 using FF14Toolkit.App.Models.Crafting;
 using FF14Toolkit.App.Services.Crafting;
 using FF14Toolkit.App.Services.Localization;
-using System.Collections.ObjectModel;
-using System.Collections.Specialized;
+using FF14Toolkit.App.Services.TemplateMatching;
 
 namespace FF14Toolkit.App.ViewModels;
 
 public sealed class CraftSequenceHotkeySettingsContentViewModel : ShellContentViewModel
 {
+    private const string CraftingLogMonitorId = "crafting-log-monitor";
+
     private readonly CraftStartButtonAutomationService craftStartButtonAutomationService;
+    private readonly ITemplateMonitorStatusSource templateMonitorStatusSource;
     private readonly ILocalizationService localizationService;
     private readonly CraftActionSequenceStore craftActionSequenceStore;
     private readonly CraftSequenceHotkeyStore craftSequenceHotkeyStore;
-    private readonly RelayCommand startMonitoringCommand;
-    private readonly RelayCommand stopMonitoringCommand;
+    private readonly AsyncRelayCommand startMonitoringCommand;
+    private readonly AsyncRelayCommand stopMonitoringCommand;
     private readonly RelayCommand saveCommand;
     private bool isTemplateMatchMonitoring;
+    private string monitorStatusSummary = "状態: Stopped";
+    private string monitorStatusDetails = "フレーム数: 0";
 
     public CraftSequenceHotkeySettingsContentViewModel(
         ILocalizationService localizationService,
         CraftActionSequenceStore craftActionSequenceStore,
         CraftSequenceHotkeyStore craftSequenceHotkeyStore,
-        CraftStartButtonAutomationService craftStartButtonAutomationService)
+        CraftStartButtonAutomationService craftStartButtonAutomationService,
+        ITemplateMonitorStatusSource templateMonitorStatusSource)
         : base(
             "crafting-sequence-hotkeys",
             "Nav_CraftingSequenceHotkeys",
@@ -30,6 +38,7 @@ public sealed class CraftSequenceHotkeySettingsContentViewModel : ShellContentVi
             localizationService)
     {
         this.craftStartButtonAutomationService = craftStartButtonAutomationService;
+        this.templateMonitorStatusSource = templateMonitorStatusSource;
         this.localizationService = localizationService;
         this.craftActionSequenceStore = craftActionSequenceStore;
         this.craftSequenceHotkeyStore = craftSequenceHotkeyStore;
@@ -38,13 +47,15 @@ public sealed class CraftSequenceHotkeySettingsContentViewModel : ShellContentVi
         HotkeySlots = new ObservableCollection<CraftSequenceHotkeySlotViewModel>(
             craftSequenceHotkeyStore.Bindings.Select(binding => new CraftSequenceHotkeySlotViewModel(binding)));
         saveCommand = new RelayCommand(Save);
-        startMonitoringCommand = new RelayCommand(StartMonitoring, () => !IsTemplateMatchMonitoring);
-        stopMonitoringCommand = new RelayCommand(StopMonitoring, () => IsTemplateMatchMonitoring);
+        startMonitoringCommand = new AsyncRelayCommand(StartMonitoringAsync, () => !IsTemplateMatchMonitoring);
+        stopMonitoringCommand = new AsyncRelayCommand(StopMonitoringAsync, () => IsTemplateMatchMonitoring);
         isTemplateMatchMonitoring = craftStartButtonAutomationService.IsMonitoring;
 
         craftActionSequenceStore.Sequences.CollectionChanged += OnSequencesChanged;
         craftStartButtonAutomationService.MonitoringStateChanged += OnMonitoringStateChanged;
+        templateMonitorStatusSource.StatusChanged += OnTemplateMonitorStatusChanged;
         RefreshAvailableSequences();
+        RefreshMonitorStatus();
     }
 
     public ObservableCollection<CraftSequenceOptionViewModel> AvailableSequences { get; }
@@ -53,9 +64,9 @@ public sealed class CraftSequenceHotkeySettingsContentViewModel : ShellContentVi
 
     public RelayCommand SaveCommand => saveCommand;
 
-    public RelayCommand StartMonitoringCommand => startMonitoringCommand;
+    public AsyncRelayCommand StartMonitoringCommand => startMonitoringCommand;
 
-    public RelayCommand StopMonitoringCommand => stopMonitoringCommand;
+    public AsyncRelayCommand StopMonitoringCommand => stopMonitoringCommand;
 
     public string SaveButtonLabel => localizationService["CraftingSequenceHotkeys_SaveButton"];
 
@@ -66,6 +77,10 @@ public sealed class CraftSequenceHotkeySettingsContentViewModel : ShellContentVi
     public string TemplateMatchMonitoringStatusLabel => IsTemplateMatchMonitoring
         ? "CRAFTING LOG サンプル監視: 実行中"
         : "CRAFTING LOG サンプル監視: 停止中";
+
+    public string MonitorStatusSummary => monitorStatusSummary;
+
+    public string MonitorStatusDetails => monitorStatusDetails;
 
     public string EnabledColumnLabel => localizationService["CraftingSequenceHotkeys_EnabledColumn"];
 
@@ -104,14 +119,34 @@ public sealed class CraftSequenceHotkeySettingsContentViewModel : ShellContentVi
         craftSequenceHotkeyStore.Save(HotkeySlots.Select(slot => slot.ToBinding()));
     }
 
-    private void StartMonitoring()
+    private async Task StartMonitoringAsync()
     {
-        _ = craftStartButtonAutomationService.StartTemplateMatchMonitoringAsync();
+        try
+        {
+            await craftStartButtonAutomationService.StartTemplateMatchMonitoringAsync().ConfigureAwait(true);
+        }
+        catch (Exception exception)
+        {
+            monitorStatusSummary = "状態: Faulted";
+            monitorStatusDetails = $"エラー: {exception.Message}";
+            OnPropertyChanged(nameof(MonitorStatusSummary));
+            OnPropertyChanged(nameof(MonitorStatusDetails));
+        }
     }
 
-    private void StopMonitoring()
+    private async Task StopMonitoringAsync()
     {
-        _ = craftStartButtonAutomationService.StopTemplateMatchMonitoringAsync();
+        try
+        {
+            await craftStartButtonAutomationService.StopTemplateMatchMonitoringAsync().ConfigureAwait(true);
+        }
+        catch (Exception exception)
+        {
+            monitorStatusSummary = "状態: Faulted";
+            monitorStatusDetails = $"停止エラー: {exception.Message}";
+            OnPropertyChanged(nameof(MonitorStatusSummary));
+            OnPropertyChanged(nameof(MonitorStatusDetails));
+        }
     }
 
     private void OnSequencesChanged(object? sender, NotifyCollectionChangedEventArgs e)
@@ -170,5 +205,58 @@ public sealed class CraftSequenceHotkeySettingsContentViewModel : ShellContentVi
     private void OnMonitoringStateChanged(object? sender, EventArgs e)
     {
         IsTemplateMatchMonitoring = craftStartButtonAutomationService.IsMonitoring;
+    }
+
+    private void OnTemplateMonitorStatusChanged(object? sender, TemplateMonitorStatusChangedEventArgs e)
+    {
+        if (!string.Equals(e.Status.MonitorId, CraftingLogMonitorId, StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        if (Application.Current.Dispatcher.CheckAccess())
+        {
+            ApplyStatus(e.Status);
+            return;
+        }
+
+        _ = Application.Current.Dispatcher.InvokeAsync(() => ApplyStatus(e.Status));
+    }
+
+    private void RefreshMonitorStatus()
+    {
+        TemplateMonitorStatus? status = templateMonitorStatusSource.GetStatus(CraftingLogMonitorId);
+        if (status is null)
+        {
+            ApplyStatus(new TemplateMonitorStatus(CraftingLogMonitorId, TemplateMonitorState.Stopped, null, null, null, null, 0, null, null, null));
+            return;
+        }
+
+        ApplyStatus(status);
+    }
+
+    private void ApplyStatus(TemplateMonitorStatus status)
+    {
+        monitorStatusSummary = $"状態: {status.State}";
+        monitorStatusDetails =
+            $"開始: {FormatTimestamp(status.StartedAt ?? status.StartRequestedAt)} / " +
+            $"初回フレーム: {FormatTimestamp(status.FirstFrameCompletedAt)} / " +
+            $"停止: {FormatTimestamp(status.StoppedAt)} / " +
+            $"フレーム数: {status.ProcessedFrameCount} / " +
+            $"最新結果: {status.LastMatchStatus?.ToString() ?? "-"} / " +
+            $"Best score: {FormatScore(status.LastScore)}" +
+            (string.IsNullOrWhiteSpace(status.ErrorMessage) ? string.Empty : $" / エラー: {status.ErrorMessage}");
+        OnPropertyChanged(nameof(MonitorStatusSummary));
+        OnPropertyChanged(nameof(MonitorStatusDetails));
+    }
+
+    private static string FormatTimestamp(DateTimeOffset? timestamp)
+    {
+        return timestamp?.ToString("yyyy-MM-dd HH:mm:ss.fff") ?? "-";
+    }
+
+    private static string FormatScore(double? score)
+    {
+        return score is double value ? value.ToString("F3") : "-";
     }
 }

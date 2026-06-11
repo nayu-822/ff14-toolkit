@@ -8,6 +8,7 @@ using FF14Toolkit.App.Services.Hotbar;
 using FF14Toolkit.App.Services.Keybind;
 using FF14Toolkit.App.Services.Localization;
 using FF14Toolkit.App.Services.OverlayPlugin;
+using FF14Toolkit.App.Services.TemplateMatching;
 using Microsoft.Extensions.Options;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -42,6 +43,7 @@ public sealed class MainWindowViewModel : ViewModelBase
         CraftActionSequenceStore craftActionSequenceStore,
         CraftSequenceHotkeyStore craftSequenceHotkeyStore,
         CraftStartButtonAutomationService craftStartButtonAutomationService,
+        ITemplateMonitorStatusSource templateMonitorStatusSource,
         OverlayPluginConnectionStateService overlayPluginConnectionStateService,
         IOverlayPluginWebSocketSessionService overlayPluginWebSocketSessionService)
     {
@@ -67,7 +69,8 @@ public sealed class MainWindowViewModel : ViewModelBase
             localizationService,
             craftActionSequenceStore,
             craftSequenceHotkeyStore,
-            craftStartButtonAutomationService);
+            craftStartButtonAutomationService,
+            templateMonitorStatusSource);
         hotbarContentViewModel = new HotbarContentViewModel(
             localizationService,
             characterSettingsStore,

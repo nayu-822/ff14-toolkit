@@ -18,7 +18,8 @@ public partial class TemplateMatchOverlayWindow : Window
     private const int ExtendedWindowStyleIndex = -20;
     private const int ExtendedStyleTransparent = 0x00000020;
     private const int ExtendedStyleNoActivate = 0x08000000;
-    private const int WindowPosFlags = 0x0020 | 0x0001 | 0x0002 | 0x0004;
+    private const int WindowPosFlags = 0x0040 | 0x0020 | 0x0001 | 0x0002 | 0x0004;
+    private static readonly IntPtr HwndTopmost = new(-1);
 
     public TemplateMatchOverlayWindow()
     {
@@ -202,7 +203,7 @@ public partial class TemplateMatchOverlayWindow : Window
         styles |= ExtendedStyleTransparent;
         styles |= ExtendedStyleNoActivate;
         SetWindowLong(handle, ExtendedWindowStyleIndex, styles);
-        SetWindowPos(handle, IntPtr.Zero, 0, 0, 0, 0, WindowPosFlags);
+        SetWindowPos(handle, HwndTopmost, 0, 0, 0, 0, WindowPosFlags);
     }
 
     [System.Runtime.InteropServices.DllImport("user32.dll", EntryPoint = "GetWindowLong")]

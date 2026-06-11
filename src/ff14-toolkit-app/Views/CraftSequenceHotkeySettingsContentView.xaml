@@ -156,14 +156,20 @@
                         Content="{Binding StopMonitoringButtonLabel}"
                         Style="{StaticResource SecondaryButtonStyle}" />
             </StackPanel>
-
-            <Button Grid.Row="8"
-                    HorizontalAlignment="Left"
-                    MinWidth="88"
-                    Padding="16,8"
-                    Command="{Binding SaveCommand}"
-                    Content="{Binding SaveButtonLabel}"
-                    Style="{StaticResource PrimaryButtonStyle}" />
+            <StackPanel Grid.Row="8">
+                <TextBlock Foreground="{StaticResource AppMutedTextBrush}"
+                           Text="{Binding MonitorStatusSummary}" />
+                <TextBlock Margin="0,4,0,12"
+                           TextWrapping="Wrap"
+                           Foreground="{StaticResource AppMutedTextBrush}"
+                           Text="{Binding MonitorStatusDetails}" />
+                <Button HorizontalAlignment="Left"
+                        MinWidth="88"
+                        Padding="16,8"
+                        Command="{Binding SaveCommand}"
+                        Content="{Binding SaveButtonLabel}"
+                        Style="{StaticResource PrimaryButtonStyle}" />
+            </StackPanel>
         </Grid>
     </Border>
 </UserControl>

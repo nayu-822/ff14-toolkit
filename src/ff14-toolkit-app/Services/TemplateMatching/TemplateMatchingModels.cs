@@ -17,6 +17,16 @@ public enum TemplateMatchStatus
     Error = 5
 }
 
+public enum TemplateMonitorState
+{
+    Stopped = 0,
+    Starting = 1,
+    Running = 2,
+    Stopping = 3,
+    Completed = 4,
+    Faulted = 5
+}
+
 public enum TemplateMatchDebugViewMode
 {
     None = 0,
@@ -95,6 +105,28 @@ public sealed record TemplateMatchCapturePreview(
     int Height,
     int Stride,
     byte[] BgraPixels);
+
+public sealed record TemplateMonitorStatus(
+    string MonitorId,
+    TemplateMonitorState State,
+    DateTimeOffset? StartRequestedAt,
+    DateTimeOffset? StartedAt,
+    DateTimeOffset? FirstFrameCompletedAt,
+    DateTimeOffset? StoppedAt,
+    long ProcessedFrameCount,
+    TemplateMatchStatus? LastMatchStatus,
+    double? LastScore,
+    string? ErrorMessage);
+
+public sealed class TemplateMonitorStatusChangedEventArgs : EventArgs
+{
+    public TemplateMonitorStatusChangedEventArgs(TemplateMonitorStatus status)
+    {
+        Status = status;
+    }
+
+    public TemplateMonitorStatus Status { get; }
+}
 
 public sealed class ScreenCaptureFrame : IDisposable
 {

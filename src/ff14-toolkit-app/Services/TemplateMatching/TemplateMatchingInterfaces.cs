@@ -48,3 +48,10 @@ public interface ITemplateMatchResultSink
         TemplateMatchResult result,
         CancellationToken cancellationToken = default);
 }
+
+public interface ITemplateMonitorStatusSource
+{
+    event EventHandler<TemplateMonitorStatusChangedEventArgs>? StatusChanged;
+
+    TemplateMonitorStatus? GetStatus(string monitorId);
+}
