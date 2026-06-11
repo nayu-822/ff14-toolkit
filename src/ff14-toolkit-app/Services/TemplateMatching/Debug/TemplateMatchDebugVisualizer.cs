@@ -8,14 +8,16 @@ namespace FF14Toolkit.App.Services.TemplateMatching.Debug;
 public sealed class TemplateMatchDebugVisualizer : ITemplateMatchDebugVisualizer
 {
     private readonly bool isEnabled;
-    private readonly TemplateMatchOverlayService overlayService;
+    private readonly IOverlayService overlayService;
+    private readonly TemplateMatchOverlayFrameAdapter overlayFrameAdapter;
     private readonly TemplateMatchOverlayFrameFactory overlayFrameFactory;
     private readonly TemplateMatchDebugWindowService normalWindowService;
     private readonly TemplateMatchDebugVisibilityController visibilityController;
     private readonly FF14Toolkit.App.Services.Crafting.CraftSequenceHotkeyLogService logger;
 
     public TemplateMatchDebugVisualizer(
-        TemplateMatchOverlayService overlayService,
+        IOverlayService overlayService,
+        TemplateMatchOverlayFrameAdapter overlayFrameAdapter,
         TemplateMatchOverlayFrameFactory overlayFrameFactory,
         TemplateMatchDebugWindowService normalWindowService,
         TemplateMatchDebugVisibilityController visibilityController,
@@ -24,6 +26,7 @@ public sealed class TemplateMatchDebugVisualizer : ITemplateMatchDebugVisualizer
     {
         isEnabled = developmentOptions.Value.ShowTemplateMatchOverlay;
         this.overlayService = overlayService;
+        this.overlayFrameAdapter = overlayFrameAdapter;
         this.overlayFrameFactory = overlayFrameFactory;
         this.normalWindowService = normalWindowService;
         this.visibilityController = visibilityController;
@@ -76,7 +79,7 @@ public sealed class TemplateMatchDebugVisualizer : ITemplateMatchDebugVisualizer
     {
         cancellationToken.ThrowIfCancellationRequested();
         visibilityController.Remove(monitorId);
-        await overlayService.HideAsync().ConfigureAwait(false);
+        await overlayService.HideFrameAsync(CreateFrameId(monitorId), OverlayCloseReason.ExplicitlyClosed, cancellationToken).ConfigureAwait(false);
         await normalWindowService.HideAsync(monitorId, cancellationToken).ConfigureAwait(false);
     }
 
@@ -104,12 +107,18 @@ public sealed class TemplateMatchDebugVisualizer : ITemplateMatchDebugVisualizer
         {
             case TemplateMatchDebugViewMode.NormalWindow:
                 await normalWindowService.ShowAsync(frame, cancellationToken).ConfigureAwait(false);
-                await overlayService.HideAsync().ConfigureAwait(false);
+                await overlayService.HideFrameAsync(CreateFrameId(frame.MonitorId), OverlayCloseReason.ExplicitlyClosed, cancellationToken).ConfigureAwait(false);
                 break;
 
             case TemplateMatchDebugViewMode.Overlay:
                 await normalWindowService.HideAsync(frame.MonitorId, cancellationToken).ConfigureAwait(false);
-                await overlayService.ShowFrameAsync(frame.Result.CaptureBounds, overlayFrame, keepVisible: true).ConfigureAwait(false);
+                OverlayFrame genericOverlayFrame = overlayFrameAdapter.CreateOverlayFrame(
+                    CreateFrameId(frame.MonitorId),
+                    frame.Result.CaptureBounds,
+                    overlayFrame,
+                    keepVisible: true,
+                    autoHideAfter: null);
+                await overlayService.ShowOrUpdateAsync(genericOverlayFrame, cancellationToken).ConfigureAwait(false);
                 break;
 
             default:
@@ -130,14 +139,19 @@ public sealed class TemplateMatchDebugVisualizer : ITemplateMatchDebugVisualizer
                 break;
 
             case TemplateMatchDebugViewMode.Overlay:
-                await overlayService.HideAsync().ConfigureAwait(false);
+                await overlayService.HideFrameAsync(CreateFrameId(monitorId), OverlayCloseReason.ExplicitlyClosed, cancellationToken).ConfigureAwait(false);
                 break;
 
             default:
-                await overlayService.HideAsync().ConfigureAwait(false);
+                await overlayService.HideFrameAsync(CreateFrameId(monitorId), OverlayCloseReason.ExplicitlyClosed, cancellationToken).ConfigureAwait(false);
                 await normalWindowService.HideAsync(monitorId, cancellationToken).ConfigureAwait(false);
                 break;
         }
+    }
+
+    private static string CreateFrameId(string monitorId)
+    {
+        return $"template-match:{monitorId}";
     }
 
     private sealed record TemplateDebugVisualizationDecision(
