@@ -267,6 +267,42 @@ public sealed class TemplateMatchingTests
     }
 
     [TestMethod]
+    public void TemplateMatchOverlayFrameFactory_CreatesOverlayFrameDirectly()
+    {
+        TemplateMatchOverlayFrameFactory factory = new();
+        TemplateMatchDebugFrame frame = new(
+            "sample-monitor",
+            "SAMPLE",
+            new TemplateMatchResult(
+                "sample",
+                TemplateMatchStatus.NotMatched,
+                new Rectangle(100, 200, 400, 300),
+                new Rectangle(120, 220, 200, 100),
+                null,
+                new Rectangle(140, 230, 40, 30),
+                0.82,
+                0.90,
+                1.00,
+                TimeSpan.FromMilliseconds(10),
+                DateTimeOffset.Now,
+                null),
+            TemplateMatchDebugViewMode.Overlay,
+            null);
+
+        OverlayFrame overlayFrame = factory.CreateOverlayFrame(
+            "template-match:sample-monitor",
+            frame,
+            keepVisible: true,
+            autoHideAfter: null);
+
+        Assert.AreEqual("template-match:sample-monitor", overlayFrame.FrameId);
+        Assert.AreEqual(TemplateMatchOverlayFrameFactory.OwnerId, overlayFrame.OwnerId);
+        Assert.AreEqual(frame.Result.CaptureBounds, overlayFrame.ScreenBounds);
+        Assert.AreEqual(2, overlayFrame.Elements.Count);
+        Assert.AreEqual(OverlayInputMode.InteractiveElementsOnly, overlayFrame.Options.InputMode);
+    }
+
+    [TestMethod]
     public void OverlayFrameStore_ReplacesByFrameIdAndRemovesByOwner()
     {
         OverlayFrameStore store = new();

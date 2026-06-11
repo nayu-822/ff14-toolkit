@@ -5,7 +5,7 @@ namespace FF14Toolkit.App.Services.Overlay;
 
 public sealed class TemplateMatchOverlayFrameAdapter
 {
-    public const string OwnerId = "template-matching";
+    public const string OwnerId = TemplateMatchOverlayFrameFactory.OwnerId;
 
     public OverlayFrame CreateOverlayFrame(
         string frameId,

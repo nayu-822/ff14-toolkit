@@ -9,7 +9,6 @@ public sealed class TemplateMatchDebugVisualizer : ITemplateMatchDebugVisualizer
 {
     private readonly bool isEnabled;
     private readonly IOverlayService overlayService;
-    private readonly TemplateMatchOverlayFrameAdapter overlayFrameAdapter;
     private readonly TemplateMatchOverlayFrameFactory overlayFrameFactory;
     private readonly TemplateMatchDebugWindowService normalWindowService;
     private readonly TemplateMatchDebugVisibilityController visibilityController;
@@ -17,7 +16,6 @@ public sealed class TemplateMatchDebugVisualizer : ITemplateMatchDebugVisualizer
 
     public TemplateMatchDebugVisualizer(
         IOverlayService overlayService,
-        TemplateMatchOverlayFrameAdapter overlayFrameAdapter,
         TemplateMatchOverlayFrameFactory overlayFrameFactory,
         TemplateMatchDebugWindowService normalWindowService,
         TemplateMatchDebugVisibilityController visibilityController,
@@ -26,7 +24,6 @@ public sealed class TemplateMatchDebugVisualizer : ITemplateMatchDebugVisualizer
     {
         isEnabled = developmentOptions.Value.ShowTemplateMatchOverlay;
         this.overlayService = overlayService;
-        this.overlayFrameAdapter = overlayFrameAdapter;
         this.overlayFrameFactory = overlayFrameFactory;
         this.normalWindowService = normalWindowService;
         this.visibilityController = visibilityController;
@@ -112,10 +109,9 @@ public sealed class TemplateMatchDebugVisualizer : ITemplateMatchDebugVisualizer
 
             case TemplateMatchDebugViewMode.Overlay:
                 await normalWindowService.HideAsync(frame.MonitorId, cancellationToken).ConfigureAwait(false);
-                OverlayFrame genericOverlayFrame = overlayFrameAdapter.CreateOverlayFrame(
+                OverlayFrame genericOverlayFrame = overlayFrameFactory.CreateOverlayFrame(
                     CreateFrameId(frame.MonitorId),
-                    frame.Result.CaptureBounds,
-                    overlayFrame,
+                    frame,
                     keepVisible: true,
                     autoHideAfter: null);
                 await overlayService.ShowOrUpdateAsync(genericOverlayFrame, cancellationToken).ConfigureAwait(false);

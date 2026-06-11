@@ -6,9 +6,48 @@ namespace FF14Toolkit.App.Services.Overlay;
 
 public sealed class TemplateMatchOverlayFrameFactory
 {
+    public const string OwnerId = "template-matching";
+
     public Rectangle? GetClickableBounds(TemplateMatchResult result)
     {
         return result.MatchedBounds ?? result.BestCandidateBounds;
+    }
+
+    public OverlayFrame CreateOverlayFrame(
+        string frameId,
+        TemplateMatchDebugFrame frame,
+        bool keepVisible = true,
+        TimeSpan? autoHideAfter = null)
+    {
+        List<TemplateMatchOverlayRegion> regions = CreateRegions(frame);
+        List<OverlayElement> elements = new(regions.Count);
+
+        for (int i = 0; i < regions.Count; i++)
+        {
+            TemplateMatchOverlayRegion region = regions[i];
+            elements.Add(new OverlayRectangleElement(
+                ElementId: $"{frameId}:region:{i}",
+                Bounds: region.Bounds,
+                Stroke: new OverlayStroke(
+                    ToOverlayColor(region.StrokeColor),
+                    2d,
+                    region.UseDashedStroke ? OverlayDashStyle.Dash : OverlayDashStyle.Solid),
+                Fill: new OverlayFill(ToOverlayColor(region.FillColor)),
+                Label: region.Label,
+                ZIndex: i));
+        }
+
+        return new OverlayFrame(
+            frameId,
+            OwnerId,
+            frame.Result.CaptureBounds,
+            elements,
+            new OverlayFrameOptions(
+                Topmost: true,
+                ShowActivated: false,
+                InputMode: OverlayInputMode.InteractiveElementsOnly,
+                AutoHideAfter: autoHideAfter,
+                KeepVisible: keepVisible));
     }
 
     public TemplateMatchOverlayFrame Create(TemplateMatchDebugFrame frame)
@@ -32,6 +71,31 @@ public sealed class TemplateMatchOverlayFrameFactory
                 frame.Result.ErrorMessage);
         }
 
+        List<TemplateMatchOverlayRegion> regions = CreateRegions(frame);
+
+        TemplateMatchOverlayState state = frame.Result.Status switch
+        {
+            TemplateMatchStatus.Matched => TemplateMatchOverlayState.Matched,
+            _ when isSearchingFrame => TemplateMatchOverlayState.Searching,
+            TemplateMatchStatus.NotMatched => TemplateMatchOverlayState.NotMatched,
+            TemplateMatchStatus.InvalidRequest => TemplateMatchOverlayState.Error,
+            TemplateMatchStatus.CaptureFailed => TemplateMatchOverlayState.Error,
+            TemplateMatchStatus.TemplateLoadFailed => TemplateMatchOverlayState.Error,
+            _ => TemplateMatchOverlayState.Error
+        };
+
+        return new TemplateMatchOverlayFrame(
+            state,
+            frame.TargetName,
+            frame.Result.BestScore > 0d ? frame.Result.BestScore : null,
+            frame.Result.Threshold,
+            frame.Result.Scale > 0d ? frame.Result.Scale : null,
+            regions,
+            frame.Result.ErrorMessage);
+    }
+
+    private static List<TemplateMatchOverlayRegion> CreateRegions(TemplateMatchDebugFrame frame)
+    {
         List<TemplateMatchOverlayRegion> regions =
         [
             new(
@@ -63,24 +127,11 @@ public sealed class TemplateMatchOverlayFrameFactory
                 false));
         }
 
-        TemplateMatchOverlayState state = frame.Result.Status switch
-        {
-            TemplateMatchStatus.Matched => TemplateMatchOverlayState.Matched,
-            _ when isSearchingFrame => TemplateMatchOverlayState.Searching,
-            TemplateMatchStatus.NotMatched => TemplateMatchOverlayState.NotMatched,
-            TemplateMatchStatus.InvalidRequest => TemplateMatchOverlayState.Error,
-            TemplateMatchStatus.CaptureFailed => TemplateMatchOverlayState.Error,
-            TemplateMatchStatus.TemplateLoadFailed => TemplateMatchOverlayState.Error,
-            _ => TemplateMatchOverlayState.Error
-        };
+        return regions;
+    }
 
-        return new TemplateMatchOverlayFrame(
-            state,
-            frame.TargetName,
-            frame.Result.BestScore > 0d ? frame.Result.BestScore : null,
-            frame.Result.Threshold,
-            frame.Result.Scale > 0d ? frame.Result.Scale : null,
-            regions,
-            frame.Result.ErrorMessage);
+    private static OverlayColor ToOverlayColor(MediaColor color)
+    {
+        return new OverlayColor(color.A, color.R, color.G, color.B);
     }
 }
