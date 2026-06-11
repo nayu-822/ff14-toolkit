@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using FF14Toolkit.App.Services.Crafting;
 using FF14Toolkit.App.Services.TemplateMatching.Debug;
 
@@ -46,6 +47,9 @@ public sealed class TemplateMatchMonitor : ITemplateMatchMonitor, ITemplateMonit
         }
 
         DateTimeOffset startRequestedAt = DateTimeOffset.Now;
+        logger.LogInformation(
+            $"Template monitor start requested. MonitorId={definition.MonitorId}, TemplateId={definition.MatchRequest.TemplateId}, CaptureBounds={definition.MatchRequest.CaptureBounds}, SearchBounds={(definition.MatchRequest.SearchBounds?.ToString() ?? definition.MatchRequest.CaptureBounds.ToString())}, IntervalMs={definition.Interval.TotalMilliseconds:F0}, MinimumScore={definition.MatchRequest.MinimumScore:F3}, Scales={string.Join(',', definition.MatchRequest.Scales.Select(scale => scale.ToString("F2")))}");
+
         MonitorSession session;
         lock (syncRoot)
         {
@@ -70,11 +74,11 @@ public sealed class TemplateMatchMonitor : ITemplateMatchMonitor, ITemplateMonit
             0,
             null,
             null,
-            null));
+            null,
+            new TemplateMonitorMetricsAccumulator().Snapshot()));
 
         visibilityController.Reset(definition.MonitorId);
-        session.Task = Task.Run(() => RunAsync(definition, session, session.CancellationTokenSource.Token), CancellationToken.None);
-        logger.LogInformation($"Template monitor started: {definition.MonitorId}");
+        session.Task = Task.Run(() => RunAsync(definition, startRequestedAt, session, session.CancellationTokenSource.Token), CancellationToken.None);
         await session.StartedCompletion.Task.WaitAsync(cancellationToken).ConfigureAwait(false);
     }
 
@@ -123,6 +127,7 @@ public sealed class TemplateMatchMonitor : ITemplateMatchMonitor, ITemplateMonit
 
     private async Task RunAsync(
         TemplateMonitorDefinition definition,
+        DateTimeOffset startRequestedAt,
         MonitorSession session,
         CancellationToken cancellationToken)
     {
@@ -133,12 +138,20 @@ public sealed class TemplateMatchMonitor : ITemplateMatchMonitor, ITemplateMonit
         long processedFrameCount = 0;
         DateTimeOffset? startedAt = null;
         DateTimeOffset? firstFrameCompletedAt = null;
+        DateTimeOffset? previousFrameCompletedAt = null;
         TemplateResource resource = null!;
+        TemplateMonitorMetricsAccumulator metrics = new();
+        TemplateMatchStatus? previousStatus = null;
+        double? previousScore = null;
 
         try
         {
+            long resourceLoadStartedAt = Stopwatch.GetTimestamp();
+            logger.LogDebug(
+                $"Template resource loading started. MonitorId={definition.MonitorId}, TemplateId={definition.MatchRequest.TemplateId}, TemplatePath={definition.Resource.MetadataPath}");
             resource = templateResourceLoader.Load(definition.Resource);
-            logger.LogInformation($"Template resource loaded: {definition.Resource.TemplateId}");
+            logger.LogInformation(
+                $"Template resource loading completed. MonitorId={definition.MonitorId}, TemplateId={definition.MatchRequest.TemplateId}, Width={resource.Image.Width}, Height={resource.Image.Height}, ElapsedMs={Stopwatch.GetElapsedTime(resourceLoadStartedAt).TotalMilliseconds:F1}");
 
             startedAt = DateTimeOffset.Now;
             UpdateStatus(new TemplateMonitorStatus(
@@ -151,7 +164,8 @@ public sealed class TemplateMatchMonitor : ITemplateMatchMonitor, ITemplateMonit
                 0,
                 null,
                 null,
-                null));
+                null,
+                metrics.Snapshot()));
 
             if (definition.EnableDebugVisualization && definition.DebugViewMode != TemplateMatchDebugViewMode.None)
             {
@@ -179,16 +193,29 @@ public sealed class TemplateMatchMonitor : ITemplateMatchMonitor, ITemplateMonit
             }
 
             startCompletionSignaled = session.StartedCompletion.TrySetResult();
+            logger.LogInformation(
+                $"Template monitor started. MonitorId={definition.MonitorId}, TemplateId={definition.MatchRequest.TemplateId}, StartedAt={startedAt:yyyy-MM-dd HH:mm:ss.fff zzz}, StartupElapsedMs={(startedAt.Value - startRequestedAt).TotalMilliseconds:F1}");
+
             while (!cancellationToken.IsCancellationRequested)
             {
-                long frameStartedAt = System.Diagnostics.Stopwatch.GetTimestamp();
+                long frameStartedAt = Stopwatch.GetTimestamp();
+                long captureStartedAt = Stopwatch.GetTimestamp();
                 TemplateMatchResult result;
                 TemplateMatchCapturePreview? preview = null;
+                TimeSpan captureDuration = TimeSpan.Zero;
+                TimeSpan matchingDuration = TimeSpan.Zero;
+                TimeSpan publishDuration = TimeSpan.Zero;
+                TimeSpan visualizationDuration = TimeSpan.Zero;
 
                 try
                 {
                     using ScreenCaptureFrame capture = screenCaptureService.Capture(definition.MatchRequest.CaptureBounds);
+                    captureDuration = Stopwatch.GetElapsedTime(captureStartedAt);
+                    long matchingStartedAt = Stopwatch.GetTimestamp();
+                    logger.LogDebug(
+                        $"Template matching started. MonitorId={definition.MonitorId}, FrameNumber={processedFrameCount + 1}, TemplateId={definition.MatchRequest.TemplateId}, SearchBounds={(definition.MatchRequest.SearchBounds?.ToString() ?? definition.MatchRequest.CaptureBounds.ToString())}, ScaleCount={definition.MatchRequest.Scales.Count}");
                     result = templateMatcher.Match(capture, resource, definition.MatchRequest, cancellationToken);
+                    matchingDuration = Stopwatch.GetElapsedTime(matchingStartedAt);
                     preview = new TemplateMatchCapturePreview(
                         capture.ScreenBounds,
                         capture.Width,
@@ -213,18 +240,20 @@ public sealed class TemplateMatchMonitor : ITemplateMatchMonitor, ITemplateMonit
                         0d,
                         definition.MatchRequest.MinimumScore,
                         0d,
-                        System.Diagnostics.Stopwatch.GetElapsedTime(frameStartedAt),
+                        Stopwatch.GetElapsedTime(frameStartedAt),
                         DateTimeOffset.Now,
                         exception.Message);
                 }
 
                 processedFrameCount++;
-                firstFrameCompletedAt ??= DateTimeOffset.Now;
 
+                long publishStartedAt = Stopwatch.GetTimestamp();
                 await resultSink.PublishAsync(definition.MonitorId, result, cancellationToken).ConfigureAwait(false);
+                publishDuration = Stopwatch.GetElapsedTime(publishStartedAt);
 
                 if (definition.EnableDebugVisualization && definition.DebugViewMode != TemplateMatchDebugViewMode.None)
                 {
+                    long visualizationStartedAt = Stopwatch.GetTimestamp();
                     await debugVisualizer.ShowAsync(
                             new TemplateMatchDebugFrame(
                                 definition.MonitorId,
@@ -234,7 +263,24 @@ public sealed class TemplateMatchMonitor : ITemplateMatchMonitor, ITemplateMonit
                                 preview),
                             cancellationToken)
                         .ConfigureAwait(false);
+                    visualizationDuration = Stopwatch.GetElapsedTime(visualizationStartedAt);
                 }
+
+                DateTimeOffset frameCompletedAt = DateTimeOffset.Now;
+                firstFrameCompletedAt ??= frameCompletedAt;
+                TimeSpan actualInterval = previousFrameCompletedAt is null
+                    ? TimeSpan.Zero
+                    : frameCompletedAt - previousFrameCompletedAt.Value;
+                previousFrameCompletedAt = frameCompletedAt;
+
+                TemplateMatchFrameMetrics frameMetrics = new(
+                    captureDuration,
+                    matchingDuration == TimeSpan.Zero ? result.ProcessingTime : matchingDuration,
+                    publishDuration,
+                    visualizationDuration,
+                    Stopwatch.GetElapsedTime(frameStartedAt),
+                    actualInterval);
+                metrics.Record(result, frameMetrics);
 
                 UpdateStatus(new TemplateMonitorStatus(
                     definition.MonitorId,
@@ -246,12 +292,29 @@ public sealed class TemplateMatchMonitor : ITemplateMatchMonitor, ITemplateMonit
                     processedFrameCount,
                     result.Status,
                     result.BestScore,
-                    result.ErrorMessage));
+                    result.ErrorMessage,
+                    metrics.Snapshot()));
+
+                if (processedFrameCount == 1)
+                {
+                    logger.LogInformation(
+                        $"Template monitor first frame completed. MonitorId={definition.MonitorId}, TemplateId={definition.MatchRequest.TemplateId}, FrameNumber=1, Status={result.Status}, BestScore={result.BestScore:F3}, Threshold={result.Threshold:F3}, SelectedScale={result.Scale:F2}, CaptureMs={frameMetrics.CaptureDuration.TotalMilliseconds:F1}, MatchingMs={frameMetrics.MatchingDuration.TotalMilliseconds:F1}, PublishMs={frameMetrics.PublishDuration.TotalMilliseconds:F1}, VisualizationMs={frameMetrics.VisualizationDuration.TotalMilliseconds:F1}, TotalFrameMs={frameMetrics.TotalDuration.TotalMilliseconds:F1}, ElapsedFromStartMs={(frameCompletedAt - startedAt.Value).TotalMilliseconds:F1}");
+                }
+
+                if (previousStatus is not null
+                    && (previousStatus != result.Status || previousScore != result.BestScore))
+                {
+                    logger.LogInformation(
+                        $"Template match state changed. MonitorId={definition.MonitorId}, FrameNumber={processedFrameCount}, PreviousStatus={previousStatus}, CurrentStatus={result.Status}, PreviousScore={(previousScore?.ToString("F3") ?? "-")}, CurrentScore={result.BestScore:F3}");
+                }
+
+                previousStatus = result.Status;
+                previousScore = result.BestScore;
 
                 logger.LogDebug(
-                    $"Frame processed. MonitorId={definition.MonitorId}, Status={result.Status}, BestScore={result.BestScore:F3}, Threshold={result.Threshold:F3}, Scale={result.Scale:F2}, ProcessingTime={result.ProcessingTime.TotalMilliseconds:F1}ms");
+                    $"Template frame processed. MonitorId={definition.MonitorId}, TemplateId={definition.MatchRequest.TemplateId}, FrameNumber={processedFrameCount}, Status={result.Status}, BestScore={result.BestScore:F3}, Threshold={result.Threshold:F3}, SelectedScale={result.Scale:F2}, CaptureMs={frameMetrics.CaptureDuration.TotalMilliseconds:F1}, MatchingMs={frameMetrics.MatchingDuration.TotalMilliseconds:F1}, PublishMs={frameMetrics.PublishDuration.TotalMilliseconds:F1}, VisualizationMs={frameMetrics.VisualizationDuration.TotalMilliseconds:F1}, TotalFrameMs={frameMetrics.TotalDuration.TotalMilliseconds:F1}, ActualIntervalMs={frameMetrics.ActualInterval.TotalMilliseconds:F1}, ConfiguredIntervalMs={definition.Interval.TotalMilliseconds:F1}");
 
-                TimeSpan remaining = definition.Interval - System.Diagnostics.Stopwatch.GetElapsedTime(frameStartedAt);
+                TimeSpan remaining = definition.Interval - frameMetrics.TotalDuration;
                 if (remaining > TimeSpan.Zero)
                 {
                     await Task.Delay(remaining, cancellationToken).ConfigureAwait(false);
@@ -292,6 +355,7 @@ public sealed class TemplateMatchMonitor : ITemplateMatchMonitor, ITemplateMonit
                 startedAt,
                 firstFrameCompletedAt,
                 processedFrameCount,
+                metrics.Snapshot(),
                 cancelled,
                 completedBySelf,
                 failure).ConfigureAwait(false);
@@ -356,6 +420,7 @@ public sealed class TemplateMatchMonitor : ITemplateMatchMonitor, ITemplateMonit
         DateTimeOffset? startedAt,
         DateTimeOffset? firstFrameCompletedAt,
         long processedFrameCount,
+        TemplateMonitorMetricsSnapshot metrics,
         bool cancelled,
         bool completedBySelf,
         Exception? failure)
@@ -405,25 +470,43 @@ public sealed class TemplateMatchMonitor : ITemplateMatchMonitor, ITemplateMonit
                     ? TemplateMonitorState.Completed
                     : TemplateMonitorState.Stopped;
 
+        DateTimeOffset stoppedAt = DateTimeOffset.Now;
         UpdateStatus(new TemplateMonitorStatus(
             definition.MonitorId,
             finalState,
             currentStatus?.StartRequestedAt,
             startedAt,
             firstFrameCompletedAt,
-            DateTimeOffset.Now,
+            stoppedAt,
             processedFrameCount,
             currentStatus?.LastMatchStatus,
             currentStatus?.LastScore,
-            failure?.Message ?? currentStatus?.ErrorMessage));
+            failure?.Message ?? currentStatus?.ErrorMessage,
+            metrics));
 
         if (failure is not null)
         {
-            logger.LogError($"Template monitor faulted: {definition.MonitorId}", failure);
+            double totalElapsedMs = startedAt is null ? 0d : (stoppedAt - startedAt.Value).TotalMilliseconds;
+            logger.LogError(
+                $"Template monitor faulted. MonitorId={definition.MonitorId}, TemplateId={definition.MatchRequest.TemplateId}, TotalElapsedMs={totalElapsedMs:F1}, ProcessedFrameCount={processedFrameCount}, LastStatus={currentStatus?.LastMatchStatus?.ToString() ?? "-"}, LastScore={(currentStatus?.LastScore?.ToString("F3") ?? "-")}",
+                failure);
             return;
         }
 
-        logger.LogInformation($"Template monitor stopped: {definition.MonitorId}, State={finalState}, Frames={processedFrameCount}");
+        double elapsedMs = startedAt is null ? 0d : (stoppedAt - startedAt.Value).TotalMilliseconds;
+        string logLabel = finalState == TemplateMonitorState.Completed
+            ? "Template monitor completed"
+            : "Template monitor stopped";
+        string stopReason = finalState switch
+        {
+            TemplateMonitorState.Completed => "Completed",
+            TemplateMonitorState.Stopped when cancelled => "Cancelled",
+            TemplateMonitorState.Stopped => "UserRequested",
+            _ => finalState.ToString()
+        };
+
+        logger.LogInformation(
+            $"{logLabel}. MonitorId={definition.MonitorId}, TemplateId={definition.MatchRequest.TemplateId}, FinalState={finalState}, StopReason={stopReason}, StartedAt={startedAt:yyyy-MM-dd HH:mm:ss.fff zzz}, StoppedAt={stoppedAt:yyyy-MM-dd HH:mm:ss.fff zzz}, TotalElapsedMs={elapsedMs:F1}, ProcessedFrameCount={processedFrameCount}, MatchedFrameCount={metrics.MatchedFrameCount}, NotMatchedFrameCount={metrics.NotMatchedFrameCount}, ErrorFrameCount={metrics.ErrorFrameCount}, AverageCaptureMs={metrics.AverageCaptureDuration.TotalMilliseconds:F1}, AverageMatchingMs={metrics.AverageMatchingDuration.TotalMilliseconds:F1}, AveragePublishMs={metrics.AveragePublishDuration.TotalMilliseconds:F1}, AverageVisualizationMs={metrics.AverageVisualizationDuration.TotalMilliseconds:F1}, AverageTotalFrameMs={metrics.AverageFrameDuration.TotalMilliseconds:F1}, MaxFrameMs={metrics.MaxFrameDuration.TotalMilliseconds:F1}, LastStatus={currentStatus?.LastMatchStatus?.ToString() ?? "-"}, LastScore={(currentStatus?.LastScore?.ToString("F3") ?? "-")}");
     }
 
     private void RemoveSessionIfCurrent(string monitorId, MonitorSession expectedSession)
@@ -463,5 +546,62 @@ public sealed class TemplateMatchMonitor : ITemplateMatchMonitor, ITemplateMonit
         public TaskCompletionSource StartedCompletion { get; }
 
         public Task Task { get; set; } = Task.CompletedTask;
+    }
+
+    internal sealed class TemplateMonitorMetricsAccumulator
+    {
+        private long matchedFrameCount;
+        private long notMatchedFrameCount;
+        private long errorFrameCount;
+        private TimeSpan captureDurationTotal;
+        private TimeSpan matchingDurationTotal;
+        private TimeSpan publishDurationTotal;
+        private TimeSpan visualizationDurationTotal;
+        private TimeSpan frameDurationTotal;
+        private TimeSpan maxFrameDuration;
+        private TemplateMatchFrameMetrics? lastFrameMetrics;
+
+        public void Record(TemplateMatchResult result, TemplateMatchFrameMetrics metrics)
+        {
+            switch (result.Status)
+            {
+                case TemplateMatchStatus.Matched:
+                    matchedFrameCount++;
+                    break;
+                case TemplateMatchStatus.NotMatched:
+                    notMatchedFrameCount++;
+                    break;
+                default:
+                    errorFrameCount++;
+                    break;
+            }
+
+            captureDurationTotal += metrics.CaptureDuration;
+            matchingDurationTotal += metrics.MatchingDuration;
+            publishDurationTotal += metrics.PublishDuration;
+            visualizationDurationTotal += metrics.VisualizationDuration;
+            frameDurationTotal += metrics.TotalDuration;
+            if (metrics.TotalDuration > maxFrameDuration)
+            {
+                maxFrameDuration = metrics.TotalDuration;
+            }
+
+            lastFrameMetrics = metrics;
+        }
+
+        public TemplateMonitorMetricsSnapshot Snapshot()
+        {
+            return new TemplateMonitorMetricsSnapshot(
+                matchedFrameCount,
+                notMatchedFrameCount,
+                errorFrameCount,
+                captureDurationTotal,
+                matchingDurationTotal,
+                publishDurationTotal,
+                visualizationDurationTotal,
+                frameDurationTotal,
+                maxFrameDuration,
+                lastFrameMetrics);
+        }
     }
 }

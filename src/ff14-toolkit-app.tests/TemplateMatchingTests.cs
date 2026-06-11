@@ -191,6 +191,10 @@ public sealed class TemplateMatchingTests
         Assert.AreEqual(TemplateMatchStatus.Matched, latest!.Status);
         Assert.IsTrue(debugVisualizer.ShowCount > 0);
         Assert.AreEqual(1, debugVisualizer.HideCount);
+        TemplateMonitorStatus? status = monitor.GetStatus("sample-monitor");
+        Assert.IsNotNull(status);
+        Assert.IsNotNull(status!.Metrics);
+        Assert.IsTrue(status.Metrics!.MatchedFrameCount > 0);
     }
 
     [TestMethod]

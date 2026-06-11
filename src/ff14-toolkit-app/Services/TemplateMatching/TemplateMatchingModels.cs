@@ -106,6 +106,46 @@ public sealed record TemplateMatchCapturePreview(
     int Stride,
     byte[] BgraPixels);
 
+public sealed record TemplateMatchFrameMetrics(
+    TimeSpan CaptureDuration,
+    TimeSpan MatchingDuration,
+    TimeSpan PublishDuration,
+    TimeSpan VisualizationDuration,
+    TimeSpan TotalDuration,
+    TimeSpan ActualInterval);
+
+public sealed record TemplateMonitorMetricsSnapshot(
+    long MatchedFrameCount,
+    long NotMatchedFrameCount,
+    long ErrorFrameCount,
+    TimeSpan CaptureDurationTotal,
+    TimeSpan MatchingDurationTotal,
+    TimeSpan PublishDurationTotal,
+    TimeSpan VisualizationDurationTotal,
+    TimeSpan FrameDurationTotal,
+    TimeSpan MaxFrameDuration,
+    TemplateMatchFrameMetrics? LastFrameMetrics)
+{
+    public TimeSpan AverageCaptureDuration => Divide(CaptureDurationTotal);
+
+    public TimeSpan AverageMatchingDuration => Divide(MatchingDurationTotal);
+
+    public TimeSpan AveragePublishDuration => Divide(PublishDurationTotal);
+
+    public TimeSpan AverageVisualizationDuration => Divide(VisualizationDurationTotal);
+
+    public TimeSpan AverageFrameDuration => Divide(FrameDurationTotal);
+
+    public long TotalCompletedFrames => MatchedFrameCount + NotMatchedFrameCount + ErrorFrameCount;
+
+    private TimeSpan Divide(TimeSpan total)
+    {
+        return TotalCompletedFrames <= 0
+            ? TimeSpan.Zero
+            : TimeSpan.FromTicks(total.Ticks / TotalCompletedFrames);
+    }
+}
+
 public sealed record TemplateMonitorStatus(
     string MonitorId,
     TemplateMonitorState State,
@@ -116,7 +156,8 @@ public sealed record TemplateMonitorStatus(
     long ProcessedFrameCount,
     TemplateMatchStatus? LastMatchStatus,
     double? LastScore,
-    string? ErrorMessage);
+    string? ErrorMessage,
+    TemplateMonitorMetricsSnapshot? Metrics = null);
 
 public sealed class TemplateMonitorStatusChangedEventArgs : EventArgs
 {
