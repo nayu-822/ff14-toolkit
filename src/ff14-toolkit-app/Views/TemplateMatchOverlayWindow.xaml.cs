@@ -24,9 +24,9 @@ public partial class TemplateMatchOverlayWindow : Window
         SourceInitialized += OnSourceInitialized;
     }
 
-    public TemplateMatchOverlayDebugLogEntry ShowRegions(DrawingRectangle pixelScreenBounds, IReadOnlyList<TemplateMatchOverlayRegion> regions)
+    public void ShowRegions(DrawingRectangle pixelScreenBounds, IReadOnlyList<TemplateMatchOverlayRegion> regions)
     {
-        Matrix transformFromDevice = GetRequiredTransformFromDeviceMatrix();
+        Matrix transformFromDevice = GetTransformFromDeviceMatrix();
         TemplateMatchOverlayWindowLayout layout = TemplateMatchOverlayLayoutCalculator.Calculate(
             pixelScreenBounds,
             regions,
@@ -44,22 +44,6 @@ public partial class TemplateMatchOverlayWindow : Window
         {
             AddRegionVisual(regionLayout);
         }
-
-        Vector dpiScale = transformFromDevice.Transform(new Vector(1d, 1d));
-        return new TemplateMatchOverlayDebugLogEntry(
-            pixelScreenBounds,
-            layout.DipWindowOrigin,
-            layout.DipWindowSize,
-            dpiScale.X,
-            dpiScale.Y,
-            layout.Regions
-                .Select(region => new TemplateMatchOverlayDebugRegionLogEntry(
-                    region.Region.Label,
-                    region.Region.Bounds,
-                    region.DipRegionOrigin,
-                    region.DipRegionSize,
-                    region.DipLabelOrigin))
-                .ToArray());
     }
 
     private void AddRegionVisual(TemplateMatchOverlayRegionLayout regionLayout)
@@ -107,7 +91,7 @@ public partial class TemplateMatchOverlayWindow : Window
         RootCanvas.Children.Add(labelSurface);
     }
 
-    private Matrix GetRequiredTransformFromDeviceMatrix()
+    private Matrix GetTransformFromDeviceMatrix()
     {
         IntPtr handle = new WindowInteropHelper(this).Handle;
         if (handle == IntPtr.Zero)

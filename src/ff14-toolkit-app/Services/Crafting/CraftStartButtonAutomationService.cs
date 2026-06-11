@@ -1,29 +1,26 @@
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.Globalization;
 using System.IO;
 using System.Runtime.InteropServices;
+using FF14Toolkit.App.Models.Configuration;
 using FF14Toolkit.App.Services.Overlay;
+using Microsoft.Extensions.Options;
 using MediaColor = System.Windows.Media.Color;
 
 namespace FF14Toolkit.App.Services.Crafting;
 
 public sealed class CraftStartButtonAutomationService
 {
-    private static readonly double[] WindowAnchorScales = [0.90, 1.00, 1.10];
-    private static readonly double[] ButtonScales = [0.90, 1.00, 1.10, 1.20];
+    private static readonly double[] TitleScales = [0.80, 0.90, 1.00, 1.10, 1.25];
+    private static readonly double[] ButtonScales = [0.80, 0.90, 1.00, 1.10, 1.25];
 
-    private const int WindowAnchorOffsetX = 495;
-    private const int WindowAnchorOffsetY = 92;
-    private const int FullWindowWidth = 720;
-    private const int FullWindowHeight = 510;
-    private const int WindowAnchorCoarseStep = 8;
+    private const int TitleCoarseStep = 6;
     private const int ButtonCoarseStep = 3;
     private const int MaxAttempts = 3;
     private const int RetryDelayMilliseconds = 250;
     private const int CursorPreviewDelayMilliseconds = 500;
-    private const double MinimumWindowScore = 0.53;
-    private const double MinimumButtonScore = 0.60;
     private const uint InputMouse = 0;
     private const uint MouseEventLeftDown = 0x0002;
     private const uint MouseEventLeftUp = 0x0004;
@@ -32,17 +29,39 @@ public sealed class CraftStartButtonAutomationService
     private const int SystemMetricVirtualScreenWidth = 78;
     private const int SystemMetricVirtualScreenHeight = 79;
 
-    private readonly TemplateBitmap craftWindowAnchorTemplate;
+    private readonly string debugImageDirectoryPath;
     private readonly TemplateBitmap craftStartButtonTemplate;
+    private readonly TemplateBitmap craftingLogTitleTemplate;
+    private readonly CraftWindowAnchorDefinition craftWindowDefinition;
+    private readonly bool saveDebugImages;
     private readonly TemplateMatchOverlayService templateMatchOverlayService;
 
-    public CraftStartButtonAutomationService(TemplateMatchOverlayService templateMatchOverlayService)
+    public CraftStartButtonAutomationService(
+        TemplateMatchOverlayService templateMatchOverlayService,
+        IOptions<DevelopmentOptions> developmentOptions,
+        IOptions<CacheOptions> cacheOptions)
     {
         this.templateMatchOverlayService = templateMatchOverlayService;
+        saveDebugImages = developmentOptions.Value.SaveTemplateMatchDebugImages;
+        string cacheRootPath = Environment.ExpandEnvironmentVariables(cacheOptions.Value.RootPath);
+        debugImageDirectoryPath = Path.Combine(cacheRootPath, "Images", "TemplateMatchDebug");
+
+        craftWindowDefinition = new CraftWindowAnchorDefinition(
+            "crafting-log-title",
+            new Size(894, 634),
+            new Point(6, 3),
+            new Size(90, 28),
+            new RelativeRegion(0.73, 0.84, 0.24, 0.12),
+            0.85,
+            0.60,
+            0.90,
+            0.80,
+            1.25);
+
         string templateRootPath = Path.Combine(AppContext.BaseDirectory, "Assets", "Templates", "Crafting");
-        craftWindowAnchorTemplate = LoadTemplate(
-            Path.Combine(templateRootPath, "craft-window-anchor.ppm"),
-            "craft-window-anchor",
+        craftingLogTitleTemplate = LoadTemplate(
+            Path.Combine(templateRootPath, "crafting-log-title.ppm"),
+            craftWindowDefinition.TemplateName,
             1);
         craftStartButtonTemplate = LoadTemplate(
             Path.Combine(templateRootPath, "craft-start-button.ppm"),
@@ -53,6 +72,7 @@ public sealed class CraftStartButtonAutomationService
     public async Task<CraftStartButtonClickResult> TryClickAsync(CancellationToken cancellationToken = default)
     {
         DetectionResult? lastDetectionResult = null;
+        string? lastDebugImagePath = null;
 
         for (int attempt = 1; attempt <= MaxAttempts; attempt++)
         {
@@ -62,7 +82,9 @@ public sealed class CraftStartButtonAutomationService
             using Bitmap screenshot = CaptureScreen(captureBounds);
             DetectionResult result = TryDetect(screenshot, cancellationToken);
             ShowDetectionOverlay(captureBounds, result);
+            lastDebugImagePath = SaveDebugImage(screenshot, captureBounds, result);
             lastDetectionResult = result;
+
             if (result.ButtonMatch is not null)
             {
                 Rectangle buttonBounds = result.ButtonMatch.Bounds;
@@ -81,10 +103,12 @@ public sealed class CraftStartButtonAutomationService
                     result.WindowAnchorMatch?.TemplateName,
                     result.ButtonMatch.TemplateName,
                     result.WindowBounds,
+                    result.WindowVisibleAreaRatio,
                     result.WindowAnchorMatch,
                     result.WindowAnchorCandidate,
                     result.ButtonCandidate,
-                    result.SearchRegion);
+                    result.SearchRegion,
+                    lastDebugImagePath);
             }
 
             if (attempt < MaxAttempts)
@@ -102,62 +126,73 @@ public sealed class CraftStartButtonAutomationService
             lastDetectionResult?.WindowAnchorMatch?.TemplateName,
             lastDetectionResult?.ButtonMatch?.TemplateName,
             lastDetectionResult?.WindowBounds,
+            lastDetectionResult?.WindowVisibleAreaRatio ?? 0d,
             lastDetectionResult?.WindowAnchorMatch,
             lastDetectionResult?.WindowAnchorCandidate,
             lastDetectionResult?.ButtonCandidate,
-            lastDetectionResult?.SearchRegion);
+            lastDetectionResult?.SearchRegion,
+            lastDebugImagePath);
     }
 
     private DetectionResult TryDetect(Bitmap screenshot, CancellationToken cancellationToken)
     {
-        Rectangle bounds = new(0, 0, screenshot.Width, screenshot.Height);
+        Rectangle bitmapBounds = new(0, 0, screenshot.Width, screenshot.Height);
+        Rectangle screenBounds = new(0, 0, screenshot.Width, screenshot.Height);
         BitmapData? bitmapData = null;
 
         try
         {
-            bitmapData = screenshot.LockBits(bounds, ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb);
+            bitmapData = screenshot.LockBits(bitmapBounds, ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb);
             int stride = Math.Abs(bitmapData.Stride);
             byte[] pixels = new byte[stride * bitmapData.Height];
             Marshal.Copy(bitmapData.Scan0, pixels, 0, pixels.Length);
 
-            MatchSearchResult windowAnchorSearchResult = FindBestMatch(
+            TitleDetectionResult titleDetection = DetectCraftingLogTitle(
                 pixels,
                 stride,
                 screenshot.Width,
                 screenshot.Height,
-                craftWindowAnchorTemplate,
-                WindowAnchorScales,
-                WindowAnchorCoarseStep,
-                MinimumWindowScore,
-                null,
+                screenBounds,
                 cancellationToken);
 
-            TemplateMatch? acceptedWindowAnchor = windowAnchorSearchResult.AcceptedMatch;
-            TemplateMatch? bestWindowAnchor = acceptedWindowAnchor ?? windowAnchorSearchResult.BestCandidate;
-            if (bestWindowAnchor is null)
+            if (titleDetection.BestCandidate is null)
             {
-                return new DetectionResult(null, null, null, windowAnchorSearchResult.BestCandidate, null, null);
+                return new DetectionResult(null, null, null, 0d, null, null, null);
             }
 
-            Rectangle windowBounds = TranslateAnchorToWindowBounds(bestWindowAnchor, screenshot.Width, screenshot.Height);
-            Rectangle buttonSearchRegion = CreateButtonSearchRegion(windowBounds);
-            MatchSearchResult buttonSearchResult = FindBestMatch(
+            if (titleDetection.AcceptedMatch is null || titleDetection.WindowBounds is not Rectangle windowBounds)
+            {
+                return new DetectionResult(
+                    null,
+                    null,
+                    titleDetection.WindowBounds,
+                    titleDetection.VisibleAreaRatio,
+                    titleDetection.BestCandidate,
+                    null,
+                    null);
+            }
+
+            Rectangle buttonSearchRegion = ClampRectangle(
+                CraftWindowDetectionCalculator.CalculateCraftButtonSearchRegion(
+                    windowBounds,
+                    craftWindowDefinition.CraftStartButtonSearchRegion),
+                screenshot.Width,
+                screenshot.Height);
+
+            MatchSearchResult buttonSearchResult = DetectCraftStartButton(
                 pixels,
                 stride,
                 screenshot.Width,
                 screenshot.Height,
-                craftStartButtonTemplate,
-                ButtonScales,
-                ButtonCoarseStep,
-                MinimumButtonScore,
                 buttonSearchRegion,
                 cancellationToken);
 
             return new DetectionResult(
-                acceptedWindowAnchor,
+                titleDetection.AcceptedMatch,
                 buttonSearchResult.AcceptedMatch,
                 windowBounds,
-                windowAnchorSearchResult.BestCandidate,
+                titleDetection.VisibleAreaRatio,
+                titleDetection.BestCandidate,
                 buttonSearchResult.BestCandidate,
                 buttonSearchRegion);
         }
@@ -168,6 +203,127 @@ public sealed class CraftStartButtonAutomationService
                 screenshot.UnlockBits(bitmapData);
             }
         }
+    }
+
+    private TitleDetectionResult DetectCraftingLogTitle(
+        byte[] pixels,
+        int stride,
+        int width,
+        int height,
+        Rectangle screenBounds,
+        CancellationToken cancellationToken)
+    {
+        TemplateMatch? bestAcceptedMatch = null;
+        Rectangle? bestWindowBounds = null;
+        double bestVisibleAreaRatio = 0d;
+        TemplateMatch? bestCandidate = null;
+
+        foreach (double scale in TitleScales)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            if (scale < craftWindowDefinition.MinimumScale || scale > craftWindowDefinition.MaximumScale)
+            {
+                continue;
+            }
+
+            Rectangle? coarseBounds = FindBestCandidate(
+                pixels,
+                stride,
+                width,
+                height,
+                craftingLogTitleTemplate,
+                scale,
+                TitleCoarseStep,
+                null,
+                out double coarseScore);
+
+            if (coarseBounds is null || coarseScore < craftWindowDefinition.MinimumTitleScore * 0.80)
+            {
+                continue;
+            }
+
+            Rectangle refineArea = ExpandBounds(coarseBounds.Value, width, height, Math.Max(TitleCoarseStep * 4, 8));
+            Rectangle? refinedBounds = FindBestCandidate(
+                pixels,
+                stride,
+                width,
+                height,
+                craftingLogTitleTemplate,
+                scale,
+                1,
+                refineArea,
+                out double refinedScore);
+
+            if (refinedBounds is null)
+            {
+                continue;
+            }
+
+            TemplateMatch candidate = new(craftWindowDefinition.TemplateName, refinedBounds.Value, refinedScore, scale);
+            if (bestCandidate is null || candidate.Score > bestCandidate.Score)
+            {
+                bestCandidate = candidate;
+            }
+
+            if (candidate.Score < craftWindowDefinition.MinimumTitleScore)
+            {
+                continue;
+            }
+
+            Rectangle windowBounds = CalculateCraftWindowBounds(candidate);
+            if (!ValidateCraftWindowBounds(windowBounds, screenBounds, out double visibleAreaRatio))
+            {
+                continue;
+            }
+
+            if (bestAcceptedMatch is null || candidate.Score > bestAcceptedMatch.Score)
+            {
+                bestAcceptedMatch = candidate;
+                bestWindowBounds = windowBounds;
+                bestVisibleAreaRatio = visibleAreaRatio;
+            }
+        }
+
+        return new TitleDetectionResult(bestAcceptedMatch, bestWindowBounds, bestVisibleAreaRatio, bestCandidate);
+    }
+
+    private MatchSearchResult DetectCraftStartButton(
+        byte[] pixels,
+        int stride,
+        int width,
+        int height,
+        Rectangle searchRegion,
+        CancellationToken cancellationToken)
+    {
+        return FindBestMatch(
+            pixels,
+            stride,
+            width,
+            height,
+            craftStartButtonTemplate,
+            ButtonScales,
+            ButtonCoarseStep,
+            craftWindowDefinition.MinimumButtonScore,
+            searchRegion,
+            cancellationToken);
+    }
+
+    private Rectangle CalculateCraftWindowBounds(TemplateMatch titleMatch)
+    {
+        return ClampRectangle(
+            CraftWindowDetectionCalculator.CalculateCraftWindowBounds(titleMatch, craftWindowDefinition),
+            int.MaxValue,
+            int.MaxValue);
+    }
+
+    private bool ValidateCraftWindowBounds(Rectangle windowBounds, Rectangle screenBounds, out double visibleAreaRatio)
+    {
+        return CraftWindowDetectionCalculator.ValidateCraftWindowBounds(
+            windowBounds,
+            screenBounds,
+            craftWindowDefinition.MinimumVisibleAreaRatio,
+            out visibleAreaRatio);
     }
 
     private MatchSearchResult FindBestMatch(
@@ -274,7 +430,7 @@ public sealed class CraftStartButtonAutomationService
         {
             for (int x = minX; x <= maxX; x += step)
             {
-                double score = ScoreCandidate(pixels, stride, x, y, template, scale, bestScore);
+                double score = ScoreCandidate(pixels, stride, width, height, x, y, template, scale, bestScore);
                 if (score <= bestScore)
                 {
                     continue;
@@ -291,6 +447,8 @@ public sealed class CraftStartButtonAutomationService
     private static double ScoreCandidate(
         byte[] pixels,
         int stride,
+        int width,
+        int height,
         int candidateX,
         int candidateY,
         TemplateBitmap template,
@@ -303,10 +461,21 @@ public sealed class CraftStartButtonAutomationService
 
         foreach (TemplateSamplePoint sample in template.Samples)
         {
-            int screenX = candidateX + Math.Clamp((int)Math.Round(sample.X * scale), 0, Math.Max(0, (int)Math.Round((template.Width - 1) * scale)));
-            int screenY = candidateY + Math.Clamp((int)Math.Round(sample.Y * scale), 0, Math.Max(0, (int)Math.Round((template.Height - 1) * scale)));
+            int screenX = candidateX + Math.Clamp(
+                (int)Math.Round(sample.X * scale),
+                0,
+                Math.Max(0, (int)Math.Round((template.Width - 1) * scale)));
+            int screenY = candidateY + Math.Clamp(
+                (int)Math.Round(sample.Y * scale),
+                0,
+                Math.Max(0, (int)Math.Round((template.Height - 1) * scale)));
 
-            RgbColor screenColor = ReadPixel(pixels, stride, screenX, screenY);
+            if ((uint)screenX >= (uint)width || (uint)screenY >= (uint)height)
+            {
+                return 0d;
+            }
+
+            RgbColor screenColor = ReadPixel(pixels, stride, width, height, screenX, screenY);
             double distance = GetColorDistance(screenColor, sample.Color);
             totalScore += 1d - (distance / maxDistance);
             samplesChecked++;
@@ -322,24 +491,6 @@ public sealed class CraftStartButtonAutomationService
         }
 
         return samplesChecked == 0 ? 0d : totalScore / samplesChecked;
-    }
-
-    private static Rectangle TranslateAnchorToWindowBounds(TemplateMatch anchorMatch, int maxWidth, int maxHeight)
-    {
-        int left = anchorMatch.Bounds.Left - (int)Math.Round(WindowAnchorOffsetX * anchorMatch.Scale);
-        int top = anchorMatch.Bounds.Top - (int)Math.Round(WindowAnchorOffsetY * anchorMatch.Scale);
-        int width = (int)Math.Round(FullWindowWidth * anchorMatch.Scale);
-        int height = (int)Math.Round(FullWindowHeight * anchorMatch.Scale);
-        return ClampRectangle(new Rectangle(left, top, width, height), maxWidth, maxHeight);
-    }
-
-    private static Rectangle CreateButtonSearchRegion(Rectangle windowBounds)
-    {
-        int left = windowBounds.Left + (int)Math.Round(windowBounds.Width * 0.74);
-        int top = windowBounds.Top + (int)Math.Round(windowBounds.Height * 0.86);
-        int width = (int)Math.Round(windowBounds.Width * 0.22);
-        int height = (int)Math.Round(windowBounds.Height * 0.11);
-        return ClampRectangle(new Rectangle(left, top, width, height), int.MaxValue, int.MaxValue);
     }
 
     private static Rectangle ClampRectangle(Rectangle rectangle, int maxWidth, int maxHeight)
@@ -358,26 +509,64 @@ public sealed class CraftStartButtonAutomationService
             throw new FileNotFoundException($"Template image was not found: {path}", path);
         }
 
-        string content = File.ReadAllText(path);
-        string[] tokens = content
-            .Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries)
-            .Where(token => !token.StartsWith('#'))
-            .ToArray();
+        byte[] bytes = File.ReadAllBytes(path);
+        PpmHeader header = ReadPpmHeader(bytes, path);
 
-        if (tokens.Length < 4 || !string.Equals(tokens[0], "P3", StringComparison.Ordinal))
+        RgbColor[] pixels = header.Format switch
+        {
+            "P3" => ReadP3Pixels(bytes, header, path),
+            "P6" => ReadP6Pixels(bytes, header, path),
+            _ => throw new InvalidDataException($"Unsupported template format: {path}")
+        };
+
+        List<TemplateSamplePoint> samples = [];
+        for (int y = 0; y < header.Height; y += sampleStep)
+        {
+            for (int x = 0; x < header.Width; x += sampleStep)
+            {
+                samples.Add(new TemplateSamplePoint(x, y, pixels[(y * header.Width) + x]));
+            }
+        }
+
+        return new TemplateBitmap(name, header.Width, header.Height, samples);
+    }
+
+    private static PpmHeader ReadPpmHeader(byte[] bytes, string path)
+    {
+        int index = 0;
+        string format = ReadNextPpmToken(bytes, ref index, path);
+        if (!string.Equals(format, "P3", StringComparison.Ordinal)
+            && !string.Equals(format, "P6", StringComparison.Ordinal))
         {
             throw new InvalidDataException($"Unsupported template format: {path}");
         }
 
-        int width = int.Parse(tokens[1], CultureInfo.InvariantCulture);
-        int height = int.Parse(tokens[2], CultureInfo.InvariantCulture);
-        int maxValue = int.Parse(tokens[3], CultureInfo.InvariantCulture);
+        int width = int.Parse(ReadNextPpmToken(bytes, ref index, path), CultureInfo.InvariantCulture);
+        int height = int.Parse(ReadNextPpmToken(bytes, ref index, path), CultureInfo.InvariantCulture);
+        int maxValue = int.Parse(ReadNextPpmToken(bytes, ref index, path), CultureInfo.InvariantCulture);
         if (maxValue != 255)
         {
             throw new InvalidDataException($"Unsupported template max value: {path}");
         }
 
-        int pixelCount = width * height;
+        if (index >= bytes.Length || !char.IsWhiteSpace((char)bytes[index]))
+        {
+            throw new InvalidDataException($"Template header is incomplete: {path}");
+        }
+
+        index++;
+        return new PpmHeader(format, width, height, index);
+    }
+
+    private static RgbColor[] ReadP3Pixels(byte[] bytes, PpmHeader header, string path)
+    {
+        string content = System.Text.Encoding.ASCII.GetString(bytes);
+        string[] tokens = content
+            .Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries)
+            .Where(token => !token.StartsWith('#'))
+            .ToArray();
+
+        int pixelCount = header.Width * header.Height;
         if (tokens.Length < 4 + (pixelCount * 3))
         {
             throw new InvalidDataException($"Template pixel data is incomplete: {path}");
@@ -393,22 +582,82 @@ public sealed class CraftStartButtonAutomationService
             pixels[i] = new RgbColor(red, green, blue);
         }
 
-        List<TemplateSamplePoint> samples = [];
-        for (int y = 0; y < height; y += sampleStep)
-        {
-            for (int x = 0; x < width; x += sampleStep)
-            {
-                samples.Add(new TemplateSamplePoint(x, y, pixels[(y * width) + x]));
-            }
-        }
-
-        return new TemplateBitmap(name, width, height, samples);
+        return pixels;
     }
 
-
-    private static RgbColor ReadPixel(byte[] pixels, int stride, int x, int y)
+    private static RgbColor[] ReadP6Pixels(byte[] bytes, PpmHeader header, string path)
     {
+        int pixelDataLength = header.Width * header.Height * 3;
+        if (bytes.Length < header.PixelDataOffset + pixelDataLength)
+        {
+            throw new InvalidDataException($"Template pixel data is incomplete: {path}");
+        }
+
+        RgbColor[] pixels = new RgbColor[header.Width * header.Height];
+        int pixelOffset = header.PixelDataOffset;
+        for (int i = 0; i < pixels.Length; i++)
+        {
+            byte red = bytes[pixelOffset++];
+            byte green = bytes[pixelOffset++];
+            byte blue = bytes[pixelOffset++];
+            pixels[i] = new RgbColor(red, green, blue);
+        }
+
+        return pixels;
+    }
+
+    private static string ReadNextPpmToken(byte[] bytes, ref int index, string path)
+    {
+        SkipPpmWhitespaceAndComments(bytes, ref index);
+        if (index >= bytes.Length)
+        {
+            throw new InvalidDataException($"Template header is incomplete: {path}");
+        }
+
+        int start = index;
+        while (index < bytes.Length && !char.IsWhiteSpace((char)bytes[index]))
+        {
+            index++;
+        }
+
+        return System.Text.Encoding.ASCII.GetString(bytes, start, index - start);
+    }
+
+    private static void SkipPpmWhitespaceAndComments(byte[] bytes, ref int index)
+    {
+        while (index < bytes.Length)
+        {
+            if (char.IsWhiteSpace((char)bytes[index]))
+            {
+                index++;
+                continue;
+            }
+
+            if (bytes[index] != '#')
+            {
+                break;
+            }
+
+            while (index < bytes.Length && bytes[index] != '\n')
+            {
+                index++;
+            }
+        }
+    }
+
+    private static RgbColor ReadPixel(byte[] pixels, int stride, int width, int height, int x, int y)
+    {
+        if ((uint)x >= (uint)width || (uint)y >= (uint)height)
+        {
+            throw new ArgumentOutOfRangeException(nameof(x), $"Pixel coordinate is out of bounds. x={x}, y={y}, width={width}, height={height}");
+        }
+
         int offset = (y * stride) + (x * 4);
+        if (offset < 0 || offset + 2 >= pixels.Length)
+        {
+            throw new ArgumentOutOfRangeException(nameof(x), $"Pixel offset is out of bounds. offset={offset}, length={pixels.Length}, stride={stride}, x={x}, y={y}");
+        }
+
         byte blue = pixels[offset];
         byte green = pixels[offset + 1];
         byte red = pixels[offset + 2];
@@ -457,38 +706,62 @@ public sealed class CraftStartButtonAutomationService
         {
             regions.Add(new TemplateMatchOverlayRegion(
                 "craft-window-area",
-                OffsetBounds(windowBounds, captureBounds),
-                MediaColor.FromArgb(168, 76, 217, 100),
-                MediaColor.FromArgb(18, 76, 217, 100),
+                CraftWindowDetectionCalculator.OffsetBoundsToScreen(windowBounds, captureBounds),
+                MediaColor.FromArgb(196, 76, 217, 100),
+                MediaColor.FromArgb(24, 76, 217, 100),
                 true));
         }
 
         if (result.SearchRegion is Rectangle searchRegion)
         {
             regions.Add(new TemplateMatchOverlayRegion(
-                "search-region",
-                OffsetBounds(searchRegion, captureBounds),
+                "craft-start-search-region",
+                CraftWindowDetectionCalculator.OffsetBoundsToScreen(searchRegion, captureBounds),
                 MediaColor.FromArgb(224, 74, 163, 255),
-                MediaColor.FromArgb(48, 74, 163, 255),
+                MediaColor.FromArgb(40, 74, 163, 255),
                 true));
         }
 
         if (result.WindowAnchorMatch is not null)
         {
-            regions.Add(CreateOverlayRegion(result.WindowAnchorMatch, captureBounds, MediaColor.FromArgb(232, 76, 217, 100), MediaColor.FromArgb(84, 76, 217, 100)));
+            regions.Add(CreateOverlayRegion(
+                result.WindowAnchorMatch,
+                captureBounds,
+                MediaColor.FromArgb(232, 76, 217, 100),
+                MediaColor.FromArgb(72, 76, 217, 100),
+                "crafting-log-title",
+                includeScale: true));
         }
         else if (result.WindowAnchorCandidate is not null)
         {
-            regions.Add(CreateOverlayRegion(result.WindowAnchorCandidate, captureBounds, MediaColor.FromArgb(224, 255, 193, 7), MediaColor.FromArgb(40, 255, 193, 7), true, "window-anchor-candidate"));
+            regions.Add(CreateOverlayRegion(
+                result.WindowAnchorCandidate,
+                captureBounds,
+                MediaColor.FromArgb(224, 255, 193, 7),
+                MediaColor.FromArgb(32, 255, 193, 7),
+                "crafting-log-title-candidate",
+                useDashedStroke: true,
+                includeScale: true));
         }
 
         if (result.ButtonMatch is not null)
         {
-            regions.Add(CreateOverlayRegion(result.ButtonMatch, captureBounds, MediaColor.FromArgb(232, 255, 122, 69), MediaColor.FromArgb(64, 255, 122, 69)));
+            regions.Add(CreateOverlayRegion(
+                result.ButtonMatch,
+                captureBounds,
+                MediaColor.FromArgb(232, 255, 122, 69),
+                MediaColor.FromArgb(56, 255, 122, 69),
+                "craft-start-button"));
         }
         else if (result.ButtonCandidate is not null)
         {
-            regions.Add(CreateOverlayRegion(result.ButtonCandidate, captureBounds, MediaColor.FromArgb(224, 255, 193, 7), MediaColor.FromArgb(40, 255, 193, 7), true, "button-candidate"));
+            regions.Add(CreateOverlayRegion(
+                result.ButtonCandidate,
+                captureBounds,
+                MediaColor.FromArgb(224, 255, 193, 7),
+                MediaColor.FromArgb(32, 255, 193, 7),
+                "craft-start-button-candidate",
+                useDashedStroke: true));
         }
 
         templateMatchOverlayService.Show(captureBounds, regions);
@@ -499,26 +772,55 @@ public sealed class CraftStartButtonAutomationService
         Rectangle captureBounds,
         MediaColor strokeColor,
         MediaColor fillColor,
+        string labelPrefix,
         bool useDashedStroke = false,
-        string? labelPrefix = null)
+        bool includeScale = false)
     {
-        string prefix = labelPrefix ?? match.TemplateName;
-        string label = $"{prefix} {match.Score:F3}";
+        string label = includeScale
+            ? $"{labelPrefix} score={match.Score:F3} scale={match.Scale:F2}"
+            : $"{labelPrefix} score={match.Score:F3}";
         return new TemplateMatchOverlayRegion(
             label,
-            OffsetBounds(match.Bounds, captureBounds),
+            CraftWindowDetectionCalculator.OffsetBoundsToScreen(match.Bounds, captureBounds),
             strokeColor,
             fillColor,
             useDashedStroke);
     }
 
-    private static Rectangle OffsetBounds(Rectangle bounds, Rectangle captureBounds)
+    private string? SaveDebugImage(Bitmap screenshot, Rectangle captureBounds, DetectionResult result)
     {
-        return new Rectangle(
-            captureBounds.Left + bounds.Left,
-            captureBounds.Top + bounds.Top,
-            bounds.Width,
-            bounds.Height);
+        if (!saveDebugImages)
+        {
+            return null;
+        }
+
+        Directory.CreateDirectory(debugImageDirectoryPath);
+        string filePath = Path.Combine(
+            debugImageDirectoryPath,
+            $"craft-template-match-{DateTime.Now:yyyyMMdd-HHmmss-fff}.png");
+
+        using Bitmap debugBitmap = new(screenshot);
+        using Graphics graphics = Graphics.FromImage(debugBitmap);
+        graphics.SmoothingMode = SmoothingMode.HighQuality;
+
+        DrawDebugRectangle(graphics, result.WindowAnchorMatch?.Bounds ?? result.WindowAnchorCandidate?.Bounds, Color.LimeGreen);
+        DrawDebugRectangle(graphics, result.WindowBounds, Color.MediumSpringGreen);
+        DrawDebugRectangle(graphics, result.SearchRegion, Color.DeepSkyBlue);
+        DrawDebugRectangle(graphics, result.ButtonMatch?.Bounds ?? result.ButtonCandidate?.Bounds, Color.OrangeRed);
+
+        debugBitmap.Save(filePath, ImageFormat.Png);
+        return filePath;
+    }
+
+    private static void DrawDebugRectangle(Graphics graphics, Rectangle? bounds, Color color)
+    {
+        if (bounds is not Rectangle rectangle)
+        {
+            return;
+        }
+
+        using Pen pen = new(color, 2f);
+        graphics.DrawRectangle(pen, rectangle);
     }
 
     private static void ClickScreenPoint(Point point)
@@ -572,20 +874,31 @@ public sealed class CraftStartButtonAutomationService
         string? WindowTemplateName,
         string? ButtonTemplateName,
         Rectangle? WindowBounds,
+        double WindowVisibleAreaRatio,
         TemplateMatch? WindowAnchorMatch,
         TemplateMatch? WindowAnchorCandidate,
         TemplateMatch? ButtonCandidate,
-        Rectangle? SearchRegion);
+        Rectangle? SearchRegion,
+        string? DebugImagePath);
 
     private sealed record DetectionResult(
         TemplateMatch? WindowAnchorMatch,
         TemplateMatch? ButtonMatch,
         Rectangle? WindowBounds,
+        double WindowVisibleAreaRatio,
         TemplateMatch? WindowAnchorCandidate,
         TemplateMatch? ButtonCandidate,
         Rectangle? SearchRegion);
 
+    private sealed record TitleDetectionResult(
+        TemplateMatch? AcceptedMatch,
+        Rectangle? WindowBounds,
+        double VisibleAreaRatio,
+        TemplateMatch? BestCandidate);
+
     private sealed record MatchSearchResult(TemplateMatch? AcceptedMatch, TemplateMatch? BestCandidate);
+
+    private sealed record PpmHeader(string Format, int Width, int Height, int PixelDataOffset);
 
     private sealed record TemplateBitmap(
         string Name,
@@ -607,16 +920,6 @@ public sealed class CraftStartButtonAutomationService
 
     [DllImport("user32.dll", SetLastError = true)]
     private static extern uint SendInput(uint nInputs, [MarshalAs(UnmanagedType.LPArray), In] Input[] pInputs, int cbSize);
-
-    [DllImport("user32.dll", SetLastError = true)]
-    private static extern bool GetCursorPos(out NativePoint point);
-
-    [StructLayout(LayoutKind.Sequential)]
-    private struct NativePoint
-    {
-        public int X;
-        public int Y;
-    }
 
     [StructLayout(LayoutKind.Sequential)]
     private struct Input

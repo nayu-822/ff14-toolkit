@@ -2,7 +2,6 @@ using FF14Toolkit.App.Models.Configuration;
 using FF14Toolkit.App.Views;
 using Microsoft.Extensions.Options;
 using System.Drawing;
-using System.Diagnostics;
 using System.Threading;
 using System.Windows;
 using System.Windows.Interop;
@@ -37,13 +36,19 @@ public sealed class TemplateMatchOverlayService
         {
             overlayWindow ??= new TemplateMatchOverlayWindow();
             _ = new WindowInteropHelper(overlayWindow).EnsureHandle();
-            TemplateMatchOverlayDebugLogEntry logEntry = overlayWindow.ShowRegions(screenBounds, regions);
-            Debug.WriteLine(
-                $"TemplateMatchOverlay screenBounds={logEntry.PhysicalScreenBounds} dipWindowOrigin=({logEntry.DipWindowOrigin.X:F2},{logEntry.DipWindowOrigin.Y:F2}) dipWindowSize=({logEntry.DipWindowSize.Width:F2},{logEntry.DipWindowSize.Height:F2}) dpiScale=({logEntry.DpiScaleX:F3},{logEntry.DpiScaleY:F3})");
-            foreach (TemplateMatchOverlayDebugRegionLogEntry regionLog in logEntry.Regions)
+
+            try
             {
-                Debug.WriteLine(
-                    $"TemplateMatchOverlay region={regionLog.Label} physicalBounds={regionLog.PhysicalRegionBounds} dipOrigin=({regionLog.DipRegionOrigin.X:F2},{regionLog.DipRegionOrigin.Y:F2}) dipSize=({regionLog.DipRegionSize.Width:F2},{regionLog.DipRegionSize.Height:F2}) dipLabelOrigin=({regionLog.DipLabelOrigin.X:F2},{regionLog.DipLabelOrigin.Y:F2})");
+                overlayWindow.ShowRegions(screenBounds, regions);
+            }
+            catch (InvalidOperationException)
+            {
+                if (!overlayWindow.IsVisible)
+                {
+                    overlayWindow.Show();
+                }
+
+                overlayWindow.ShowRegions(screenBounds, regions);
             }
 
             if (!overlayWindow.IsVisible)

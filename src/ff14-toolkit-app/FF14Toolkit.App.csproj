@@ -28,7 +28,7 @@
 
   <Target Name="CopyCraftTemplates" AfterTargets="Build">
     <MakeDir Directories="$(OutDir)Assets\Templates\Crafting" />
-    <Copy SourceFiles="Assets\Templates\Crafting\craft-start-button.ppm;Assets\Templates\Crafting\craft-window-anchor.ppm"
+    <Copy SourceFiles="Assets\Templates\Crafting\craft-start-button.ppm;Assets\Templates\Crafting\craft-window-anchor.ppm;Assets\Templates\Crafting\crafting-log-title.ppm"
           DestinationFolder="$(OutDir)Assets\Templates\Crafting"
           SkipUnchangedFiles="true" />
   </Target>

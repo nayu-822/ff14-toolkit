@@ -328,7 +328,10 @@ public sealed class CraftSequenceHotkeyExecutionService
         string windowAnchorAccepted = FormatCandidate(clickResult.WindowAnchorMatch);
         string windowAnchorCandidate = FormatCandidate(clickResult.WindowAnchorCandidate);
         string buttonCandidate = FormatCandidate(clickResult.ButtonCandidate);
-        return $"windowBounds:{windowBounds} / searchRegion:{searchRegion} / windowAccepted:{clickResult.WindowTemplateName ?? "-"}:{clickResult.WindowScore:F3} / windowAnchorAccepted:{windowAnchorAccepted} / buttonAccepted:{clickResult.ButtonTemplateName ?? "-"}:{clickResult.ButtonScore:F3} / windowAnchorCandidate:{windowAnchorCandidate} / buttonCandidate:{buttonCandidate}";
+        string debugImagePath = string.IsNullOrWhiteSpace(clickResult.DebugImagePath)
+            ? "-"
+            : clickResult.DebugImagePath;
+        return $"windowBounds:{windowBounds} / visibleRatio:{clickResult.WindowVisibleAreaRatio:F3} / searchRegion:{searchRegion} / titleAccepted:{clickResult.WindowTemplateName ?? "-"}:{clickResult.WindowScore:F3} / titleCandidate:{windowAnchorCandidate} / titleMatch:{windowAnchorAccepted} / buttonAccepted:{clickResult.ButtonTemplateName ?? "-"}:{clickResult.ButtonScore:F3} / buttonCandidate:{buttonCandidate} / debugImage:{debugImagePath}";
     }
 
     private static string FormatCandidate(CraftStartButtonAutomationService.TemplateMatch? candidate)
@@ -339,7 +342,7 @@ public sealed class CraftSequenceHotkeyExecutionService
         }
 
         Rectangle bounds = candidate.Bounds;
-        return $"{candidate.TemplateName}:{candidate.Score:F3}@({bounds.Left},{bounds.Top},{bounds.Width},{bounds.Height})";
+        return $"{candidate.TemplateName}:{candidate.Score:F3}:scale={candidate.Scale:F2}@({bounds.Left},{bounds.Top},{bounds.Width},{bounds.Height})";
     }
 
     private void SetActiveExecution(ActiveExecutionState executionState)
