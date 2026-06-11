@@ -9,6 +9,7 @@ public sealed class TemplateMatchDebugVisualizer : ITemplateMatchDebugVisualizer
 {
     private readonly bool isEnabled;
     private readonly IOverlayService overlayService;
+    private readonly IOverlayEventSource overlayEventSource;
     private readonly TemplateMatchOverlayFrameFactory overlayFrameFactory;
     private readonly TemplateMatchDebugWindowService normalWindowService;
     private readonly TemplateMatchDebugVisibilityController visibilityController;
@@ -16,6 +17,7 @@ public sealed class TemplateMatchDebugVisualizer : ITemplateMatchDebugVisualizer
 
     public TemplateMatchDebugVisualizer(
         IOverlayService overlayService,
+        IOverlayEventSource overlayEventSource,
         TemplateMatchOverlayFrameFactory overlayFrameFactory,
         TemplateMatchDebugWindowService normalWindowService,
         TemplateMatchDebugVisibilityController visibilityController,
@@ -24,10 +26,12 @@ public sealed class TemplateMatchDebugVisualizer : ITemplateMatchDebugVisualizer
     {
         isEnabled = developmentOptions.Value.ShowTemplateMatchOverlay;
         this.overlayService = overlayService;
+        this.overlayEventSource = overlayEventSource;
         this.overlayFrameFactory = overlayFrameFactory;
         this.normalWindowService = normalWindowService;
         this.visibilityController = visibilityController;
         this.logger = logger;
+        this.overlayEventSource.ElementClicked += OnOverlayElementClicked;
     }
 
     public async Task ShowAsync(TemplateMatchDebugFrame frame, CancellationToken cancellationToken = default)
@@ -43,21 +47,7 @@ public sealed class TemplateMatchDebugVisualizer : ITemplateMatchDebugVisualizer
         }
 
         Rectangle? clickableBounds = overlayFrameFactory.GetClickableBounds(frame.Result);
-        TemplateMatchDebugVisibilityController.VisibilityDecision decision = visibilityController.Evaluate(
-            frame.MonitorId,
-            clickableBounds);
-
-        if (decision.SuppressedNow)
-        {
-            logger.LogInformation($"Template monitor debug view suppressed: {frame.MonitorId}");
-        }
-
-        if (decision.RestoredNow)
-        {
-            logger.LogInformation($"Template monitor debug view restored: {frame.MonitorId}");
-        }
-
-        if (decision.IsSuppressed)
+        if (visibilityController.IsSuppressed(frame.MonitorId))
         {
             logger.LogDebug($"Template monitor debug frame skipped: MonitorId={frame.MonitorId}, ViewMode={frame.ViewMode}, Status={frame.Result.Status}, Reason=Suppressed");
             await HideByModeAsync(frame.MonitorId, frame.ViewMode, cancellationToken).ConfigureAwait(false);
@@ -148,6 +138,33 @@ public sealed class TemplateMatchDebugVisualizer : ITemplateMatchDebugVisualizer
     private static string CreateFrameId(string monitorId)
     {
         return $"template-match:{monitorId}";
+    }
+
+    private void OnOverlayElementClicked(object? sender, OverlayElementClickedEventArgs eventArgs)
+    {
+        if (!string.Equals(eventArgs.OwnerId, TemplateMatchOverlayFrameFactory.OwnerId, StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        string? monitorId = TryGetMonitorId(eventArgs.FrameId);
+        if (string.IsNullOrWhiteSpace(monitorId))
+        {
+            return;
+        }
+
+        if (visibilityController.Suppress(monitorId))
+        {
+            logger.LogInformation($"Template monitor debug view suppressed: {monitorId}");
+        }
+    }
+
+    private static string? TryGetMonitorId(string frameId)
+    {
+        const string prefix = "template-match:";
+        return frameId.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)
+            ? frameId[prefix.Length..]
+            : null;
     }
 
     private sealed record TemplateDebugVisualizationDecision(

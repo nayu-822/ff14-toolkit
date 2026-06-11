@@ -25,7 +25,10 @@ public sealed class TemplateMatchOverlayFrameFactory
         for (int i = 0; i < regions.Count; i++)
         {
             TemplateMatchOverlayRegion region = regions[i];
+            OverlayInteraction interaction = CreateInteraction(frame, region);
             elements.Add(new OverlayRectangleElement(
+                FrameId: frameId,
+                OwnerId: OwnerId,
                 ElementId: $"{frameId}:region:{i}",
                 Bounds: region.Bounds,
                 Stroke: new OverlayStroke(
@@ -34,7 +37,8 @@ public sealed class TemplateMatchOverlayFrameFactory
                     region.UseDashedStroke ? OverlayDashStyle.Dash : OverlayDashStyle.Solid),
                 Fill: new OverlayFill(ToOverlayColor(region.FillColor)),
                 Label: region.Label,
-                ZIndex: i));
+                ZIndex: i,
+                Interaction: interaction));
         }
 
         return new OverlayFrame(
@@ -133,5 +137,19 @@ public sealed class TemplateMatchOverlayFrameFactory
     private static OverlayColor ToOverlayColor(MediaColor color)
     {
         return new OverlayColor(color.A, color.R, color.G, color.B);
+    }
+
+    private static OverlayInteraction CreateInteraction(
+        TemplateMatchDebugFrame frame,
+        TemplateMatchOverlayRegion region)
+    {
+        if (region.Bounds == frame.Result.SearchBounds)
+        {
+            return OverlayInteraction.None;
+        }
+
+        return new OverlayInteraction(
+            IsHitTestVisible: true,
+            ClickAction: OverlayClickAction.RaiseEvent);
     }
 }

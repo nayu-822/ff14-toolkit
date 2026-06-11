@@ -31,6 +31,13 @@ public sealed record OverlayStroke(
 public sealed record OverlayFill(
     OverlayColor Color);
 
+public sealed record OverlayInteraction(
+    bool IsHitTestVisible,
+    OverlayClickAction ClickAction)
+{
+    public static OverlayInteraction None { get; } = new(false, OverlayClickAction.None);
+}
+
 public sealed record OverlayFrameOptions(
     bool Topmost,
     bool ShowActivated,
@@ -39,19 +46,25 @@ public sealed record OverlayFrameOptions(
     bool KeepVisible);
 
 public abstract record OverlayElement(
+    string FrameId,
+    string OwnerId,
     string ElementId,
     int ZIndex,
-    bool IsVisible);
+    bool IsVisible,
+    OverlayInteraction Interaction);
 
 public sealed record OverlayRectangleElement(
+    string FrameId,
+    string OwnerId,
     string ElementId,
     Rectangle Bounds,
     OverlayStroke Stroke,
     OverlayFill? Fill,
     string? Label,
     int ZIndex,
-    bool IsVisible = true)
-    : OverlayElement(ElementId, ZIndex, IsVisible);
+    bool IsVisible = true,
+    OverlayInteraction? Interaction = null)
+    : OverlayElement(FrameId, OwnerId, ElementId, ZIndex, IsVisible, Interaction ?? OverlayInteraction.None);
 
 public sealed record OverlayFrame(
     string FrameId,

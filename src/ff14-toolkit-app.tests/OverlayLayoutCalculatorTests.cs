@@ -43,6 +43,8 @@ public sealed class OverlayLayoutCalculatorTests
             new Rectangle(0, 0, 2560, 1440),
             [
                 new OverlayRectangleElement(
+                    "frame-1",
+                    "owner-1",
                     "rect-1",
                     rectangleBounds,
                     new OverlayStroke(new OverlayColor(255, 0, 255, 0), 2d, OverlayDashStyle.Solid),

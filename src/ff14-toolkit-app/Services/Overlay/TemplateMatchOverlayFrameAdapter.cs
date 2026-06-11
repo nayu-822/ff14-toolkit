@@ -19,6 +19,8 @@ public sealed class TemplateMatchOverlayFrameAdapter
         {
             TemplateMatchOverlayRegion region = frame.Regions[i];
             elements.Add(new OverlayRectangleElement(
+                FrameId: frameId,
+                OwnerId: OwnerId,
                 ElementId: $"{frameId}:region:{i}",
                 Bounds: region.Bounds,
                 Stroke: new OverlayStroke(
@@ -27,7 +29,8 @@ public sealed class TemplateMatchOverlayFrameAdapter
                     region.UseDashedStroke ? OverlayDashStyle.Dash : OverlayDashStyle.Solid),
                 Fill: new OverlayFill(ToOverlayColor(region.FillColor)),
                 Label: region.Label,
-                ZIndex: i));
+                ZIndex: i,
+                Interaction: OverlayInteraction.None));
         }
 
         return new OverlayFrame(

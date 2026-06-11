@@ -8,7 +8,7 @@ using System.Windows.Threading;
 
 namespace FF14Toolkit.App.Services.Overlay;
 
-public sealed class TemplateMatchOverlayService : IOverlayService
+public sealed class TemplateMatchOverlayService : IOverlayService, IOverlayEventSource
 {
     private const string ActiveFrameId = "template-match:active";
     private const string AggregateFrameId = "overlay:aggregate";
@@ -25,6 +25,10 @@ public sealed class TemplateMatchOverlayService : IOverlayService
     private IOverlayFrameWindow? overlayWindow;
     private int overlayVersion;
     private int handleCreatedLogged;
+
+    public event EventHandler<OverlayElementClickedEventArgs>? ElementClicked;
+
+    public event EventHandler<OverlayFrameClosedEventArgs>? FrameClosed;
 
     public TemplateMatchOverlayService(
         IOptions<DevelopmentOptions> developmentOptions,
@@ -92,14 +96,16 @@ public sealed class TemplateMatchOverlayService : IOverlayService
         {
             try
             {
-                if (overlayWindow is null)
+                IOverlayFrameWindow? window = overlayWindow;
+                if (window is null)
                 {
                     return;
                 }
 
                 ClearAutoHideSources();
                 frameStore.Clear();
-                overlayWindow.Close();
+                window.ElementClicked -= OnOverlayWindowElementClicked;
+                window.Close();
                 overlayWindow = null;
             }
             catch (Exception exception)
@@ -148,13 +154,20 @@ public sealed class TemplateMatchOverlayService : IOverlayService
         try
         {
             CancelAutoHide(frameId);
-            frameStore.Remove(frameId);
+            OverlayFrame? removedFrame = frameStore.GetAll()
+                .FirstOrDefault(frame => string.Equals(frame.FrameId, frameId, StringComparison.OrdinalIgnoreCase));
+            _ = frameStore.Remove(frameId);
 
             int currentVersion = Interlocked.Increment(ref overlayVersion);
             await dispatcher.InvokeAsync(() =>
             {
                 RenderCurrentFrames(currentVersion);
             }).Task.ConfigureAwait(false);
+
+            if (removedFrame is not null)
+            {
+                FrameClosed?.Invoke(this, new OverlayFrameClosedEventArgs(removedFrame.FrameId, removedFrame.OwnerId, reason));
+            }
         }
         catch (Exception exception)
         {
@@ -182,6 +195,11 @@ public sealed class TemplateMatchOverlayService : IOverlayService
             {
                 RenderCurrentFrames(currentVersion);
             }).Task.ConfigureAwait(false);
+
+            foreach (OverlayFrame frame in removedFrames)
+            {
+                FrameClosed?.Invoke(this, new OverlayFrameClosedEventArgs(frame.FrameId, frame.OwnerId, reason));
+            }
         }
         catch (Exception exception)
         {
@@ -198,6 +216,7 @@ public sealed class TemplateMatchOverlayService : IOverlayService
         try
         {
             ClearAutoHideSources();
+            IReadOnlyList<OverlayFrame> removedFrames = frameStore.GetAll();
             frameStore.Clear();
 
             int currentVersion = Interlocked.Increment(ref overlayVersion);
@@ -205,6 +224,11 @@ public sealed class TemplateMatchOverlayService : IOverlayService
             {
                 RenderCurrentFrames(currentVersion);
             }).Task.ConfigureAwait(false);
+
+            foreach (OverlayFrame frame in removedFrames)
+            {
+                FrameClosed?.Invoke(this, new OverlayFrameClosedEventArgs(frame.FrameId, frame.OwnerId, reason));
+            }
         }
         catch (Exception exception)
         {
@@ -266,7 +290,12 @@ public sealed class TemplateMatchOverlayService : IOverlayService
 
         OverlayFrame displayFrame = CreateDisplayFrame(screenBounds, frames);
 
-        overlayWindow ??= windowFactory();
+        if (overlayWindow is null)
+        {
+            overlayWindow = windowFactory();
+            overlayWindow.ElementClicked += OnOverlayWindowElementClicked;
+        }
+
         OverlayPresenter.Present(overlayWindow, displayFrame);
         if (Interlocked.Exchange(ref handleCreatedLogged, 1) == 0)
         {
@@ -294,6 +323,45 @@ public sealed class TemplateMatchOverlayService : IOverlayService
             screenBounds,
             elements,
             latestFrame.Options with { AutoHideAfter = null, KeepVisible = true });
+    }
+
+    private void OnOverlayWindowElementClicked(object? sender, OverlayElementClickedEventArgs eventArgs)
+    {
+        ElementClicked?.Invoke(this, eventArgs);
+
+        OverlayFrame? frame = frameStore.GetAll()
+            .FirstOrDefault(candidate => string.Equals(candidate.FrameId, eventArgs.FrameId, StringComparison.OrdinalIgnoreCase)
+                && string.Equals(candidate.OwnerId, eventArgs.OwnerId, StringComparison.OrdinalIgnoreCase));
+        OverlayRectangleElement? element = frame?.Elements
+            .OfType<OverlayRectangleElement>()
+            .FirstOrDefault(candidate => string.Equals(candidate.ElementId, eventArgs.ElementId, StringComparison.OrdinalIgnoreCase));
+
+        if (element is null)
+        {
+            return;
+        }
+
+        switch (element.Interaction.ClickAction)
+        {
+            case OverlayClickAction.None:
+            case OverlayClickAction.RaiseEvent:
+                return;
+
+            case OverlayClickAction.HideFrame:
+                ObserveFireAndForget(
+                    HideFrameAsync(eventArgs.FrameId, OverlayCloseReason.ElementClicked),
+                    $"Failed to hide clicked overlay frame: {eventArgs.FrameId}");
+                break;
+
+            case OverlayClickAction.HideOwner:
+                ObserveFireAndForget(
+                    HideOwnerAsync(eventArgs.OwnerId, OverlayCloseReason.ElementClicked),
+                    $"Failed to hide clicked overlay owner: {eventArgs.OwnerId}");
+                break;
+
+            default:
+                throw new ArgumentOutOfRangeException();
+        }
     }
 
     private void ResetAutoHide(OverlayFrame frame)

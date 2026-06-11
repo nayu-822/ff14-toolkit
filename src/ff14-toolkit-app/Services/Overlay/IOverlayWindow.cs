@@ -4,6 +4,8 @@ public interface IOverlayFrameWindow
 {
     bool IsVisible { get; }
 
+    event EventHandler<OverlayElementClickedEventArgs>? ElementClicked;
+
     void EnsureHandle();
 
     void ShowFrame(OverlayFrame frame);

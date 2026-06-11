@@ -1,4 +1,14 @@
+using System.Drawing;
+
 namespace FF14Toolkit.App.Services.Overlay;
+
+public enum OverlayClickAction
+{
+    None = 0,
+    RaiseEvent = 1,
+    HideFrame = 2,
+    HideOwner = 3
+}
 
 public enum OverlayCloseReason
 {
@@ -9,6 +19,24 @@ public enum OverlayCloseReason
     ExplicitlyClosed = 4,
     Cleared = 5
 }
+
+public interface IOverlayEventSource
+{
+    event EventHandler<OverlayElementClickedEventArgs>? ElementClicked;
+
+    event EventHandler<OverlayFrameClosedEventArgs>? FrameClosed;
+}
+
+public sealed record OverlayElementClickedEventArgs(
+    string FrameId,
+    string OwnerId,
+    string ElementId,
+    Point ScreenPosition);
+
+public sealed record OverlayFrameClosedEventArgs(
+    string FrameId,
+    string OwnerId,
+    OverlayCloseReason Reason);
 
 public interface IOverlayService
 {

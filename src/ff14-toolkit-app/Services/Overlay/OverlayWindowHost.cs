@@ -9,6 +9,12 @@ public sealed class OverlayFrameWindowHost : IOverlayFrameWindow
 
     public bool IsVisible => window.IsVisible;
 
+    public event EventHandler<OverlayElementClickedEventArgs>? ElementClicked
+    {
+        add => window.ElementClicked += value;
+        remove => window.ElementClicked -= value;
+    }
+
     public void EnsureHandle()
     {
         _ = new WindowInteropHelper(window).EnsureHandle();

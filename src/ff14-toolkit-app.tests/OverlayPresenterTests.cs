@@ -31,6 +31,8 @@ public sealed class OverlayPresenterTests
 
         public bool IsVisible { get; private set; }
 
+        public event EventHandler<OverlayElementClickedEventArgs>? ElementClicked;
+
         public void EnsureHandle()
         {
             Calls.Add("EnsureHandle");

@@ -61,6 +61,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<TemplateMatchOverlayFrameFactory>();
         services.AddSingleton<TemplateMatchOverlayService>();
         services.AddSingleton<IOverlayService>(serviceProvider => serviceProvider.GetRequiredService<TemplateMatchOverlayService>());
+        services.AddSingleton<IOverlayEventSource>(serviceProvider => serviceProvider.GetRequiredService<TemplateMatchOverlayService>());
         services.AddSingleton<ITemplateResourceLoader, PpmP6TemplateLoader>();
         services.AddSingleton<IScreenCaptureService, ScreenCaptureService>();
         services.AddSingleton<ITemplateMatcher, TemplateMatcher>();

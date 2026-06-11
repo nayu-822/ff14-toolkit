@@ -5,6 +5,7 @@ using System.Windows.Controls;
 using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Shapes;
+using DrawingPoint = System.Drawing.Point;
 using MediaBrushes = System.Windows.Media.Brushes;
 using MediaColor = System.Windows.Media.Color;
 
@@ -12,17 +13,27 @@ namespace FF14Toolkit.App.Views;
 
 public partial class OverlayFrameWindow : Window
 {
+    private const int WindowMessageNcHitTest = 0x0084;
     private const int ExtendedWindowStyleIndex = -20;
     private const int ExtendedStyleTransparent = 0x00000020;
     private const int ExtendedStyleNoActivate = 0x08000000;
     private const int WindowPosFlags = 0x0040 | 0x0020 | 0x0001 | 0x0002 | 0x0004;
+    private const int HitTestClient = 1;
+    private const int HitTestTransparent = -1;
     private static readonly IntPtr HwndTopmost = new(-1);
     private OverlayInputMode currentInputMode = OverlayInputMode.ClickThrough;
+    private HwndSource? hwndSource;
+    private IReadOnlyList<OverlayRectangleElement> interactiveElements = [];
+    private OverlayRectangleElement? lastHitElement;
+    private DrawingPoint lastHitScreenPosition;
+
+    public event EventHandler<OverlayElementClickedEventArgs>? ElementClicked;
 
     public OverlayFrameWindow()
     {
         InitializeComponent();
         SourceInitialized += OnSourceInitialized;
+        PreviewMouseLeftButtonDown += OnPreviewMouseLeftButtonDown;
     }
 
     public void ShowFrame(OverlayFrame frame)
@@ -42,6 +53,13 @@ public partial class OverlayFrameWindow : Window
         RootCanvas.Width = layout.DipWindowSize.Width;
         RootCanvas.Height = layout.DipWindowSize.Height;
         RootCanvas.Children.Clear();
+        interactiveElements = frame.Elements
+            .OfType<OverlayRectangleElement>()
+            .Where(element => element.IsVisible && element.Interaction.IsHitTestVisible)
+            .OrderByDescending(element => element.ZIndex)
+            .ThenByDescending(element => element.ElementId, StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+        lastHitElement = null;
 
         foreach (OverlayRectangleLayout rectangleLayout in layout.Rectangles)
         {
@@ -135,8 +153,61 @@ public partial class OverlayFrameWindow : Window
 
     private void OnSourceInitialized(object? sender, EventArgs e)
     {
+        hwndSource = (HwndSource?)PresentationSource.FromVisual(this);
+        hwndSource?.AddHook(WndProc);
         UpdateExtendedWindowStyles();
         SetWindowPos(new WindowInteropHelper(this).Handle, HwndTopmost, 0, 0, 0, 0, WindowPosFlags);
+    }
+
+    private void OnPreviewMouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    {
+        if (lastHitElement is null)
+        {
+            return;
+        }
+
+        OverlayRectangleElement element = lastHitElement;
+        ElementClicked?.Invoke(
+            this,
+            new OverlayElementClickedEventArgs(
+                element.FrameId,
+                element.OwnerId,
+                element.ElementId,
+                lastHitScreenPosition));
+    }
+
+    private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
+    {
+        if (msg != WindowMessageNcHitTest)
+        {
+            return IntPtr.Zero;
+        }
+
+        DrawingPoint screenPoint = GetScreenPointFromLParam(lParam);
+        lastHitScreenPosition = screenPoint;
+
+        switch (currentInputMode)
+        {
+            case OverlayInputMode.ClickThrough:
+                lastHitElement = null;
+                handled = true;
+                return new IntPtr(HitTestTransparent);
+
+            case OverlayInputMode.FullyInteractive:
+                lastHitElement = null;
+                handled = true;
+                return new IntPtr(HitTestClient);
+
+            case OverlayInputMode.InteractiveElementsOnly:
+                lastHitElement = interactiveElements.FirstOrDefault(element => element.Bounds.Contains(screenPoint));
+                handled = true;
+                return new IntPtr(lastHitElement is null ? HitTestTransparent : HitTestClient);
+
+            default:
+                lastHitElement = null;
+                handled = true;
+                return new IntPtr(HitTestTransparent);
+        }
     }
 
     private void UpdateExtendedWindowStyles()
@@ -165,6 +236,14 @@ public partial class OverlayFrameWindow : Window
     private static MediaColor ToMediaColor(OverlayColor color)
     {
         return MediaColor.FromArgb(color.A, color.R, color.G, color.B);
+    }
+
+    private static DrawingPoint GetScreenPointFromLParam(IntPtr lParam)
+    {
+        int value = lParam.ToInt32();
+        int x = unchecked((short)(value & 0xFFFF));
+        int y = unchecked((short)((value >> 16) & 0xFFFF));
+        return new DrawingPoint(x, y);
     }
 
     [System.Runtime.InteropServices.DllImport("user32.dll", EntryPoint = "GetWindowLong")]
