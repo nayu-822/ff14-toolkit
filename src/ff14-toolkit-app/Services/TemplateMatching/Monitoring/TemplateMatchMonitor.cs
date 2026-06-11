@@ -128,7 +128,7 @@ public sealed class TemplateMatchMonitor : ITemplateMatchMonitor, ITemplateMonit
     {
         Exception? failure = null;
         bool cancelled = false;
-        bool initialized = false;
+        bool startCompletionSignaled = false;
         bool completedBySelf = false;
         long processedFrameCount = 0;
         DateTimeOffset? startedAt = null;
@@ -139,7 +139,6 @@ public sealed class TemplateMatchMonitor : ITemplateMatchMonitor, ITemplateMonit
         {
             resource = templateResourceLoader.Load(definition.Resource);
             logger.LogInformation($"Template resource loaded: {definition.Resource.TemplateId}");
-            initialized = true;
 
             startedAt = DateTimeOffset.Now;
             UpdateStatus(new TemplateMonitorStatus(
@@ -179,7 +178,7 @@ public sealed class TemplateMatchMonitor : ITemplateMatchMonitor, ITemplateMonit
                     .ConfigureAwait(false);
             }
 
-            session.StartedCompletion.TrySetResult();
+            startCompletionSignaled = session.StartedCompletion.TrySetResult();
             while (!cancellationToken.IsCancellationRequested)
             {
                 long frameStartedAt = System.Diagnostics.Stopwatch.GetTimestamp();
@@ -264,7 +263,7 @@ public sealed class TemplateMatchMonitor : ITemplateMatchMonitor, ITemplateMonit
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
             cancelled = true;
-            if (!initialized)
+            if (!startCompletionSignaled)
             {
                 session.StartedCompletion.TrySetCanceled(cancellationToken);
             }
@@ -272,7 +271,7 @@ public sealed class TemplateMatchMonitor : ITemplateMatchMonitor, ITemplateMonit
         catch (Exception exception)
         {
             failure = exception;
-            if (!initialized)
+            if (!startCompletionSignaled)
             {
                 session.StartedCompletion.TrySetException(exception);
             }
@@ -281,6 +280,12 @@ public sealed class TemplateMatchMonitor : ITemplateMatchMonitor, ITemplateMonit
         }
         finally
         {
+            if (!session.StartedCompletion.Task.IsCompleted)
+            {
+                session.StartedCompletion.TrySetException(
+                    new InvalidOperationException("Template monitor ended before startup completed."));
+            }
+
             await CleanupSessionAsync(
                 definition,
                 session,

@@ -8,9 +8,8 @@ using System.Windows.Threading;
 
 namespace FF14Toolkit.App.Services.Overlay;
 
-public sealed class TemplateMatchOverlayService
+public sealed class TemplateMatchOverlayService : IOverlayService
 {
-    private static readonly TimeSpan DisplayDuration = TimeSpan.FromSeconds(1.6);
     private const string ActiveFrameId = "template-match:active";
 
     private readonly Dispatcher dispatcher;
@@ -19,6 +18,9 @@ public sealed class TemplateMatchOverlayService
     private readonly Func<ITemplateMatchOverlayWindow> windowFactory;
     private readonly IOverlayFrameStore frameStore;
     private readonly TemplateMatchOverlayFrameAdapter frameAdapter;
+    private readonly Lock syncRoot = new();
+    private readonly Dictionary<string, CancellationTokenSource> autoHideSources = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, TemplateMatchOverlayFrame> templateFrames = new(StringComparer.OrdinalIgnoreCase);
     private ITemplateMatchOverlayWindow? overlayWindow;
     private int overlayVersion;
     private int handleCreatedLogged;
@@ -67,39 +69,14 @@ public sealed class TemplateMatchOverlayService
 
     public async Task ShowFrameAsync(Rectangle screenBounds, TemplateMatchOverlayFrame frame, bool keepVisible)
     {
-        if (!isEnabled)
+        TimeSpan? autoHideAfter = keepVisible ? null : TimeSpan.FromSeconds(1.6);
+        OverlayFrame overlayFrame = frameAdapter.CreateOverlayFrame(ActiveFrameId, screenBounds, frame, keepVisible, autoHideAfter);
+        lock (syncRoot)
         {
-            return;
+            templateFrames[overlayFrame.FrameId] = frame;
         }
 
-        try
-        {
-            int currentVersion = Interlocked.Increment(ref overlayVersion);
-            OverlayFrame overlayFrame = frameAdapter.CreateOverlayFrame(ActiveFrameId, screenBounds, frame);
-            frameStore.AddOrUpdate(overlayFrame);
-            await dispatcher.InvokeAsync(() =>
-            {
-                overlayWindow ??= windowFactory();
-                TemplateMatchOverlayFrame presentedFrame = frameAdapter.ToTemplateMatchOverlayFrame(overlayFrame, frame);
-                TemplateMatchOverlayPresenter.Present(overlayWindow, screenBounds, presentedFrame);
-                if (Interlocked.Exchange(ref handleCreatedLogged, 1) == 0)
-                {
-                    logger.LogInformation("Overlay window handle created.");
-                }
-
-                logger.LogDebug($"Template-match overlay frame updated. State={frame.State}, Regions={frame.Regions.Count}, KeepVisible={keepVisible}");
-            }).Task.ConfigureAwait(false);
-
-            if (!keepVisible)
-            {
-                _ = HideLaterAsync(currentVersion);
-            }
-        }
-        catch (Exception exception)
-        {
-            logger.LogError("Template-match overlay update failed.", exception);
-            throw;
-        }
+        await ShowOrUpdateAsync(overlayFrame).ConfigureAwait(false);
     }
 
     public void Hide()
@@ -109,20 +86,7 @@ public sealed class TemplateMatchOverlayService
 
     public async Task HideAsync()
     {
-        try
-        {
-            Interlocked.Increment(ref overlayVersion);
-            frameStore.Remove(ActiveFrameId);
-            await dispatcher.InvokeAsync(() =>
-            {
-                overlayWindow?.Hide();
-            }).Task.ConfigureAwait(false);
-        }
-        catch (Exception exception)
-        {
-            logger.LogError("Template-match overlay hide/stop failed.", exception);
-            throw;
-        }
+        await HideFrameAsync(ActiveFrameId, OverlayCloseReason.ExplicitlyClosed).ConfigureAwait(false);
     }
 
     public void Shutdown()
@@ -137,6 +101,11 @@ public sealed class TemplateMatchOverlayService
                     return;
                 }
 
+                ClearAutoHideSources();
+                lock (syncRoot)
+                {
+                    templateFrames.Clear();
+                }
                 frameStore.Clear();
                 overlayWindow.Close();
                 overlayWindow = null;
@@ -151,25 +120,120 @@ public sealed class TemplateMatchOverlayService
         _ = ObserveDispatcherOperationAsync(operation);
     }
 
-    private async Task HideLaterAsync(int version)
+    public async Task ShowOrUpdateAsync(
+        OverlayFrame frame,
+        CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
+        if (!isEnabled)
+        {
+            return;
+        }
+
         try
         {
-            await Task.Delay(DisplayDuration).ConfigureAwait(false);
+            frameStore.AddOrUpdate(frame);
+            ResetAutoHide(frame);
+            int currentVersion = Interlocked.Increment(ref overlayVersion);
             await dispatcher.InvokeAsync(() =>
             {
-                if (version != overlayVersion)
-                {
-                    return;
-                }
-
-                frameStore.Remove(ActiveFrameId);
-                overlayWindow?.Hide();
+                RenderCurrentFrames(currentVersion);
             }).Task.ConfigureAwait(false);
         }
         catch (Exception exception)
         {
-            logger.LogError("Template-match overlay hide/stop failed.", exception);
+            logger.LogError("Template-match overlay update failed.", exception);
+            throw;
+        }
+    }
+
+    public async Task HideFrameAsync(
+        string frameId,
+        OverlayCloseReason reason,
+        CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        try
+        {
+            CancelAutoHide(frameId);
+            frameStore.Remove(frameId);
+            lock (syncRoot)
+            {
+                templateFrames.Remove(frameId);
+            }
+
+            int currentVersion = Interlocked.Increment(ref overlayVersion);
+            await dispatcher.InvokeAsync(() =>
+            {
+                RenderCurrentFrames(currentVersion);
+            }).Task.ConfigureAwait(false);
+        }
+        catch (Exception exception)
+        {
+            logger.LogError($"Template-match overlay hide failed. Reason={reason}", exception);
+            throw;
+        }
+    }
+
+    public async Task HideOwnerAsync(
+        string ownerId,
+        OverlayCloseReason reason,
+        CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        try
+        {
+            IReadOnlyList<OverlayFrame> removedFrames = frameStore.RemoveByOwner(ownerId);
+            foreach (OverlayFrame frame in removedFrames)
+            {
+                CancelAutoHide(frame.FrameId);
+            }
+
+            lock (syncRoot)
+            {
+                foreach (OverlayFrame frame in removedFrames)
+                {
+                    templateFrames.Remove(frame.FrameId);
+                }
+            }
+
+            int currentVersion = Interlocked.Increment(ref overlayVersion);
+            await dispatcher.InvokeAsync(() =>
+            {
+                RenderCurrentFrames(currentVersion);
+            }).Task.ConfigureAwait(false);
+        }
+        catch (Exception exception)
+        {
+            logger.LogError($"Template-match overlay owner hide failed. Reason={reason}", exception);
+            throw;
+        }
+    }
+
+    public async Task ClearAsync(
+        OverlayCloseReason reason,
+        CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        try
+        {
+            ClearAutoHideSources();
+            frameStore.Clear();
+            lock (syncRoot)
+            {
+                templateFrames.Clear();
+            }
+
+            int currentVersion = Interlocked.Increment(ref overlayVersion);
+            await dispatcher.InvokeAsync(() =>
+            {
+                RenderCurrentFrames(currentVersion);
+            }).Task.ConfigureAwait(false);
+        }
+        catch (Exception exception)
+        {
+            logger.LogError($"Template-match overlay clear failed. Reason={reason}", exception);
+            throw;
         }
     }
 
@@ -199,6 +263,120 @@ public sealed class TemplateMatchOverlayService
         catch (Exception exception)
         {
             logger.LogError(message, exception);
+        }
+    }
+
+    private void RenderCurrentFrames(int version)
+    {
+        if (version != overlayVersion)
+        {
+            return;
+        }
+
+        IReadOnlyList<OverlayFrame> frames = frameStore.GetAll()
+            .OrderBy(frame => frame.OwnerId, StringComparer.OrdinalIgnoreCase)
+            .ThenBy(frame => frame.FrameId, StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+
+        if (frames.Count == 0)
+        {
+            overlayWindow?.Hide();
+            return;
+        }
+
+        Rectangle screenBounds = frames
+            .Select(frame => frame.ScreenBounds)
+            .Aggregate(Rectangle.Union);
+
+        OverlayFrame frameToPresent = frames[^1];
+        TemplateMatchOverlayFrame displayFrame = CreateDisplayFrame(frameToPresent, frames);
+
+        overlayWindow ??= windowFactory();
+        TemplateMatchOverlayPresenter.Present(overlayWindow, screenBounds, displayFrame);
+        if (Interlocked.Exchange(ref handleCreatedLogged, 1) == 0)
+        {
+            logger.LogInformation("Overlay window handle created.");
+        }
+    }
+
+    private TemplateMatchOverlayFrame CreateDisplayFrame(OverlayFrame latestFrame, IReadOnlyList<OverlayFrame> frames)
+    {
+        lock (syncRoot)
+        {
+            if (frames.Count == 1
+                && templateFrames.TryGetValue(latestFrame.FrameId, out TemplateMatchOverlayFrame? sourceFrame))
+            {
+                return frameAdapter.ToTemplateMatchOverlayFrame(latestFrame, sourceFrame);
+            }
+        }
+
+        return frameAdapter.CreateDisplayFrame(frames);
+    }
+
+    private void ResetAutoHide(OverlayFrame frame)
+    {
+        CancelAutoHide(frame.FrameId);
+        if (frame.Options.AutoHideAfter is not TimeSpan autoHideAfter)
+        {
+            return;
+        }
+
+        CancellationTokenSource cancellationTokenSource = new();
+        lock (syncRoot)
+        {
+            autoHideSources[frame.FrameId] = cancellationTokenSource;
+        }
+
+        ObserveFireAndForget(
+            AutoHideFrameAsync(frame.FrameId, autoHideAfter, cancellationTokenSource.Token),
+            $"Failed to auto-hide overlay frame: {frame.FrameId}");
+    }
+
+    private async Task AutoHideFrameAsync(string frameId, TimeSpan delay, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await Task.Delay(delay, cancellationToken).ConfigureAwait(false);
+            if (cancellationToken.IsCancellationRequested)
+            {
+                return;
+            }
+
+            await HideFrameAsync(frameId, OverlayCloseReason.AutoHidden).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException)
+        {
+        }
+    }
+
+    private void CancelAutoHide(string frameId)
+    {
+        CancellationTokenSource? cancellationTokenSource = null;
+        lock (syncRoot)
+        {
+            if (autoHideSources.Remove(frameId, out CancellationTokenSource? existingSource))
+            {
+                cancellationTokenSource = existingSource;
+            }
+        }
+
+        cancellationTokenSource?.Cancel();
+        cancellationTokenSource?.Dispose();
+    }
+
+    private void ClearAutoHideSources()
+    {
+        List<CancellationTokenSource> sources;
+        lock (syncRoot)
+        {
+            sources = autoHideSources.Values.ToList();
+            autoHideSources.Clear();
+        }
+
+        foreach (CancellationTokenSource source in sources)
+        {
+            source.Cancel();
+            source.Dispose();
         }
     }
 }

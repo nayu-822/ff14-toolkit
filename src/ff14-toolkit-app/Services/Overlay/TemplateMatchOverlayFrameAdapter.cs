@@ -10,7 +10,9 @@ public sealed class TemplateMatchOverlayFrameAdapter
     public OverlayFrame CreateOverlayFrame(
         string frameId,
         Rectangle screenBounds,
-        TemplateMatchOverlayFrame frame)
+        TemplateMatchOverlayFrame frame,
+        bool keepVisible,
+        TimeSpan? autoHideAfter)
     {
         List<OverlayElement> elements = new(frame.Regions.Count);
         for (int i = 0; i < frame.Regions.Count; i++)
@@ -37,8 +39,8 @@ public sealed class TemplateMatchOverlayFrameAdapter
                 Topmost: true,
                 ShowActivated: false,
                 InputMode: OverlayInputMode.InteractiveElementsOnly,
-                AutoHideAfter: null,
-                KeepVisible: true));
+                AutoHideAfter: autoHideAfter,
+                KeepVisible: keepVisible));
     }
 
     public TemplateMatchOverlayFrame ToTemplateMatchOverlayFrame(
@@ -57,6 +59,31 @@ public sealed class TemplateMatchOverlayFrameAdapter
             .ToList();
 
         return sourceFrame with { Regions = regions };
+    }
+
+    public TemplateMatchOverlayFrame CreateDisplayFrame(IReadOnlyList<OverlayFrame> overlayFrames)
+    {
+        List<TemplateMatchOverlayRegion> regions = overlayFrames
+            .SelectMany(frame => frame.Elements
+                .OfType<OverlayRectangleElement>()
+                .Where(element => element.IsVisible)
+                .OrderBy(element => element.ZIndex)
+                .Select(element => new TemplateMatchOverlayRegion(
+                    element.Label ?? element.ElementId,
+                    element.Bounds,
+                    ToMediaColor(element.Stroke.Color),
+                    ToMediaColor(element.Fill?.Color ?? default),
+                    element.Stroke.DashStyle != OverlayDashStyle.Solid)))
+            .ToList();
+
+        return new TemplateMatchOverlayFrame(
+            TemplateMatchOverlayState.Searching,
+            string.Empty,
+            null,
+            null,
+            null,
+            regions,
+            null);
     }
 
     private static OverlayColor ToOverlayColor(MediaColor color)

@@ -67,6 +67,15 @@ public partial class TemplateMatchOverlayWindow : Window
 
     private void AddStatusVisual(TemplateMatchOverlayFrame frame)
     {
+        if (string.IsNullOrWhiteSpace(frame.TargetName)
+            && string.IsNullOrWhiteSpace(frame.Message)
+            && frame.BestScore is null
+            && frame.Threshold is null
+            && frame.Scale is null)
+        {
+            return;
+        }
+
         MediaColor accentColor = frame.State switch
         {
             TemplateMatchOverlayState.Matched => MediaColor.FromArgb(255, 76, 217, 100),

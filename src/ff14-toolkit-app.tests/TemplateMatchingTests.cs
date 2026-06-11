@@ -194,6 +194,49 @@ public sealed class TemplateMatchingTests
     }
 
     [TestMethod]
+    public async Task TemplateMatchMonitor_StartAsync_FailsWhenSearchingVisualizationFails()
+    {
+        using ScreenCaptureFrame capture = CreateCaptureFrame(
+            new Rectangle(10, 20, 6, 4),
+            6,
+            4,
+            new Rectangle(2, 1, 2, 2),
+            new byte[] { 255, 0, 0, 0, 255, 0, 0, 0, 255, 255, 255, 255 });
+        TemplateResource resource = new(
+            new TemplateResourceDefinition("sample", "sample.json"),
+            new TemplateResourceMetadata("sample", "sample.ppm", null, 100, 80, 0, 0, 2, 2, 0.99),
+            new TemplateImage(2, 2, new byte[] { 255, 0, 0, 0, 255, 0, 0, 0, 255, 255, 255, 255 }));
+        FakeScreenCaptureService captureService = new(capture);
+        FakeTemplateResourceLoader loader = new(resource);
+        TemplateMatcher matcher = new();
+        TemplateMatchResultPublisher publisher = new();
+        ThrowingDebugVisualizer debugVisualizer = new();
+        TemplateMatchDebugVisibilityController visibilityController = new();
+        CraftSequenceHotkeyLogService logger = new(Options.Create(new FF14Toolkit.App.Models.Configuration.CacheOptions
+        {
+            RootPath = Path.Combine(Path.GetTempPath(), "ff14-toolkit-tests-cache")
+        }));
+        TemplateMatchMonitor monitor = new(captureService, loader, matcher, publisher, debugVisualizer, visibilityController, logger);
+
+        await Assert.ThrowsExactlyAsync<InvalidOperationException>(async () =>
+            await monitor.StartAsync(
+                new TemplateMonitorDefinition(
+                    "sample-monitor",
+                    "SAMPLE",
+                    resource.Definition,
+                    new TemplateMatchRequest(
+                        "sample",
+                        capture.ScreenBounds,
+                        null,
+                        [1.0],
+                        0.99,
+                        TemplateMatchMode.RgbSamples),
+                    TimeSpan.FromMilliseconds(50),
+                    EnableDebugVisualization: true,
+                    DebugViewMode: TemplateMatchDebugViewMode.Overlay)));
+    }
+
+    [TestMethod]
     public void TemplateMatchOverlayFrameFactory_UsesMatchedBoundsBeforeCandidate()
     {
         TemplateMatchOverlayFrameFactory factory = new();
@@ -275,7 +318,12 @@ public sealed class TemplateMatchingTests
             ],
             null);
 
-        OverlayFrame overlayFrame = adapter.CreateOverlayFrame("template-match:sample", new Rectangle(100, 100, 400, 300), source);
+        OverlayFrame overlayFrame = adapter.CreateOverlayFrame(
+            "template-match:sample",
+            new Rectangle(100, 100, 400, 300),
+            source,
+            keepVisible: true,
+            autoHideAfter: null);
         TemplateMatchOverlayFrame roundTripped = adapter.ToTemplateMatchOverlayFrame(overlayFrame, source);
 
         Assert.AreEqual("template-match:sample", overlayFrame.FrameId);
@@ -284,6 +332,31 @@ public sealed class TemplateMatchingTests
         Assert.AreEqual(1, roundTripped.Regions.Count);
         Assert.AreEqual(source.Regions[0].Bounds, roundTripped.Regions[0].Bounds);
         Assert.IsTrue(roundTripped.Regions[0].UseDashedStroke);
+    }
+
+    [TestMethod]
+    public void TemplateMatchOverlayFrameAdapter_MapsKeepVisibleAndAutoHide()
+    {
+        TemplateMatchOverlayFrameAdapter adapter = new();
+        TemplateMatchOverlayFrame source = new(
+            TemplateMatchOverlayState.Matched,
+            "SAMPLE",
+            0.95,
+            0.90,
+            1.0,
+            [],
+            null);
+
+        OverlayFrame overlayFrame = adapter.CreateOverlayFrame(
+            "template-match:sample",
+            new Rectangle(100, 100, 400, 300),
+            source,
+            keepVisible: false,
+            autoHideAfter: TimeSpan.FromSeconds(1));
+
+        Assert.IsFalse(overlayFrame.Options.KeepVisible);
+        Assert.AreEqual(TimeSpan.FromSeconds(1), overlayFrame.Options.AutoHideAfter);
+        Assert.AreEqual(OverlayInputMode.InteractiveElementsOnly, overlayFrame.Options.InputMode);
     }
 
     private static string CreateTempDirectory()
@@ -381,6 +454,19 @@ public sealed class TemplateMatchingTests
         public Task HideAsync(string monitorId, CancellationToken cancellationToken = default)
         {
             HideCount++;
+            return Task.CompletedTask;
+        }
+    }
+
+    private sealed class ThrowingDebugVisualizer : ITemplateMatchDebugVisualizer
+    {
+        public Task ShowAsync(TemplateMatchDebugFrame frame, CancellationToken cancellationToken = default)
+        {
+            throw new InvalidOperationException("debug show failed");
+        }
+
+        public Task HideAsync(string monitorId, CancellationToken cancellationToken = default)
+        {
             return Task.CompletedTask;
         }
     }
