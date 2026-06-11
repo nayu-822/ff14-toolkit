@@ -1,0 +1,11 @@
+{
+  "templateId": "craft-start-button",
+  "template": "craft-start-button.ppm",
+  "referenceWindowWidth": 894,
+  "referenceWindowHeight": 634,
+  "referenceAnchorOffsetX": 0,
+  "referenceAnchorOffsetY": 0,
+  "referenceTemplateWidth": 96,
+  "referenceTemplateHeight": 24,
+  "minimumScore": 0.60
+}

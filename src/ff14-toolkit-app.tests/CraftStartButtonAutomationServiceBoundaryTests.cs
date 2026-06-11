@@ -1,6 +1,7 @@
-using FF14Toolkit.App.Services.Crafting;
+using System.Drawing;
+using FF14Toolkit.App.Services.TemplateMatching;
+using FF14Toolkit.App.Services.TemplateMatching.Matching;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System.Reflection;
 
 namespace FF14Toolkit.App.Tests;
 
@@ -8,28 +9,47 @@ namespace FF14Toolkit.App.Tests;
 public sealed class CraftStartButtonAutomationServiceBoundaryTests
 {
     [TestMethod]
-    public void ScoreCandidate_ReturnsZero_WhenScaledSampleWouldLeaveScreen()
+    public void TemplateMatcher_ReturnsNotMatched_WhenScaledTemplateWouldLeaveScreen()
     {
-        Type serviceType = typeof(CraftStartButtonAutomationService);
-        Type templateBitmapType = serviceType.GetNestedType("TemplateBitmap", BindingFlags.NonPublic)!;
-        Type samplePointType = serviceType.GetNestedType("TemplateSamplePoint", BindingFlags.NonPublic)!;
-        Type rgbColorType = serviceType.GetNestedType("RgbColor", BindingFlags.NonPublic)!;
+        TemplateMatcher matcher = new();
+        TemplateResource resource = new(
+            new TemplateResourceDefinition("sample", "sample.json"),
+            new TemplateResourceMetadata("sample", "sample.ppm", null, 100, 80, 0, 0, 10, 10, 0.80),
+            new TemplateImage(10, 10, CreateWhitePixels(10, 10)));
+        using ScreenCaptureFrame capture = new(
+            new Rectangle(0, 0, 10, 10),
+            10,
+            10,
+            40,
+            new byte[10 * 10 * 4],
+            DateTimeOffset.Now);
 
-        object color = Activator.CreateInstance(rgbColorType, (byte)255, (byte)255, (byte)255)!;
-        object sample = Activator.CreateInstance(samplePointType, 9, 9, color)!;
-        Array sampleArray = Array.CreateInstance(samplePointType, 1);
-        sampleArray.SetValue(sample, 0);
-        object template = Activator.CreateInstance(templateBitmapType, "test", 10, 10, sampleArray)!;
+        TemplateMatchResult result = matcher.Match(
+            capture,
+            resource,
+            new TemplateMatchRequest(
+                "sample",
+                capture.ScreenBounds,
+                new Rectangle(0, 0, 1, 1),
+                [1.25],
+                0.80,
+                TemplateMatchMode.RgbSamples,
+                SampleStep: 1));
 
-        MethodInfo scoreCandidate = serviceType.GetMethod(
-            "ScoreCandidate",
-            BindingFlags.Static | BindingFlags.NonPublic)!;
+        Assert.AreEqual(TemplateMatchStatus.NotMatched, result.Status);
+        Assert.IsNull(result.MatchedBounds);
+        Assert.IsNull(result.BestCandidateBounds);
+        Assert.AreEqual(0d, result.BestScore, 0.0001d);
+    }
 
-        byte[] pixels = new byte[10 * 10 * 4];
-        object? result = scoreCandidate.Invoke(
-            null,
-            [pixels, 40, 10, 10, 0, 0, template, 1.25d, 0d]);
+    private static byte[] CreateWhitePixels(int width, int height)
+    {
+        byte[] pixels = new byte[width * height * 3];
+        for (int i = 0; i < pixels.Length; i++)
+        {
+            pixels[i] = 255;
+        }
 
-        Assert.AreEqual(0d, (double)result!, 0.0001d);
+        return pixels;
     }
 }

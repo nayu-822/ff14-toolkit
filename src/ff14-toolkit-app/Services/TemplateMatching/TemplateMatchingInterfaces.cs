@@ -19,6 +19,13 @@ public interface ITemplateMatcher
         CancellationToken cancellationToken = default);
 }
 
+public interface ITemplateMatchExecutor
+{
+    Task<TemplateMatchExecutionResult> ExecuteAsync(
+        TemplateMatchExecutionRequest request,
+        CancellationToken cancellationToken = default);
+}
+
 public interface ITemplateMatchMonitor
 {
     Task StartAsync(

@@ -49,7 +49,7 @@ public sealed class PpmP6TemplateLoader : ITemplateResourceLoader
         ValidateMetadata(definition.TemplateId, metadata, metadataPath);
 
         string templatePath = Path.Combine(Path.GetDirectoryName(metadataPath)!, metadata.Template);
-        TemplateImage image = LoadP6Image(templatePath);
+        TemplateImage image = LoadImage(templatePath);
         if (image.Width != metadata.ReferenceTemplateWidth || image.Height != metadata.ReferenceTemplateHeight)
         {
             throw new InvalidDataException($"Template size does not match metadata: {templatePath}");
@@ -76,7 +76,7 @@ public sealed class PpmP6TemplateLoader : ITemplateResourceLoader
         }
     }
 
-    private static TemplateImage LoadP6Image(string templatePath)
+    private static TemplateImage LoadImage(string templatePath)
     {
         if (!File.Exists(templatePath))
         {
@@ -85,9 +85,10 @@ public sealed class PpmP6TemplateLoader : ITemplateResourceLoader
 
         using FileStream stream = File.OpenRead(templatePath);
         string magic = ReadToken(stream, templatePath);
-        if (!string.Equals(magic, "P6", StringComparison.Ordinal))
+        if (!string.Equals(magic, "P6", StringComparison.Ordinal)
+            && !string.Equals(magic, "P3", StringComparison.Ordinal))
         {
-            throw new InvalidDataException($"Only P6 template images are supported: {templatePath}");
+            throw new InvalidDataException($"Unsupported template format: {templatePath}");
         }
 
         int width = int.Parse(ReadToken(stream, templatePath), CultureInfo.InvariantCulture);
@@ -98,6 +99,13 @@ public sealed class PpmP6TemplateLoader : ITemplateResourceLoader
             throw new InvalidDataException($"Unsupported template max value: {templatePath}");
         }
 
+        return string.Equals(magic, "P6", StringComparison.Ordinal)
+            ? LoadP6Pixels(stream, templatePath, width, height)
+            : LoadP3Pixels(stream, templatePath, width, height);
+    }
+
+    private static TemplateImage LoadP6Pixels(FileStream stream, string templatePath, int width, int height)
+    {
         int pixelLength = checked(width * height * 3);
         byte[] pixels = new byte[pixelLength];
         int offset = 0;
@@ -115,6 +123,24 @@ public sealed class PpmP6TemplateLoader : ITemplateResourceLoader
         if (stream.ReadByte() >= 0)
         {
             throw new InvalidDataException($"Template pixel data contains trailing bytes: {templatePath}");
+        }
+
+        return new TemplateImage(width, height, pixels);
+    }
+
+    private static TemplateImage LoadP3Pixels(FileStream stream, string templatePath, int width, int height)
+    {
+        int pixelLength = checked(width * height * 3);
+        byte[] pixels = new byte[pixelLength];
+        for (int i = 0; i < pixelLength; i++)
+        {
+            pixels[i] = byte.Parse(ReadToken(stream, templatePath), CultureInfo.InvariantCulture);
+        }
+
+        string? extraToken = TryReadToken(stream, templatePath);
+        if (extraToken is not null)
+        {
+            throw new InvalidDataException($"Template pixel data contains trailing tokens: {templatePath}");
         }
 
         return new TemplateImage(width, height, pixels);
@@ -152,6 +178,17 @@ public sealed class PpmP6TemplateLoader : ITemplateResourceLoader
         }
 
         return Encoding.ASCII.GetString(bytes.ToArray());
+    }
+
+    private static string? TryReadToken(Stream stream, string templatePath)
+    {
+        SkipWhitespaceAndComments(stream);
+        if (stream.Position >= stream.Length)
+        {
+            return null;
+        }
+
+        return ReadToken(stream, templatePath);
     }
 
     private static void SkipWhitespaceAndComments(Stream stream)

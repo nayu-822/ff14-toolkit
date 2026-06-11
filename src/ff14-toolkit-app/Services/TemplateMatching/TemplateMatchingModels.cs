@@ -83,6 +83,28 @@ public sealed record TemplateMatchResult(
     DateTimeOffset CapturedAt,
     string? ErrorMessage);
 
+public sealed record TemplateMatchExecutionRequest(
+    string RequestId,
+    TemplateResourceDefinition Resource,
+    Rectangle CaptureBounds,
+    Rectangle? SearchBounds,
+    double MinimumScore,
+    IReadOnlyList<double> Scales,
+    TemplateMatchMode Mode,
+    int SampleStep = 1,
+    bool IncludeCapturePreview = false);
+
+public sealed record TemplateMatchExecutionMetrics(
+    TimeSpan ResourceLoadDuration,
+    TimeSpan CaptureDuration,
+    TimeSpan MatchingDuration,
+    TimeSpan TotalDuration);
+
+public sealed record TemplateMatchExecutionResult(
+    TemplateMatchResult Result,
+    TemplateMatchExecutionMetrics Metrics,
+    TemplateMatchCapturePreview? CapturePreview);
+
 public sealed record TemplateMatchDebugFrame(
     string MonitorId,
     string TargetName,

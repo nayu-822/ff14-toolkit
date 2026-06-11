@@ -45,6 +45,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<CraftActionSequenceStore>();
         services.AddSingleton<CraftSequenceHotkeyStore>();
         services.AddSingleton<CraftSequenceHotkeyLogService>();
+        services.AddSingleton<ICraftWindowBoundsResolver, CraftWindowBoundsResolver>();
         services.AddSingleton<CraftStartButtonAutomationService>();
         services.AddSingleton<CraftSequenceHotkeyExecutionService>();
         services.AddSingleton<IGameDataService, LuminaGameDataService>();
@@ -65,6 +66,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<ITemplateResourceLoader, PpmP6TemplateLoader>();
         services.AddSingleton<IScreenCaptureService, ScreenCaptureService>();
         services.AddSingleton<ITemplateMatcher, TemplateMatcher>();
+        services.AddSingleton<ITemplateMatchExecutor, TemplateMatchExecutor>();
         services.AddSingleton<ITemplateMatchResultSink, TemplateMatchResultPublisher>();
         services.AddSingleton<TemplateMatchResultPublisher>(serviceProvider => (TemplateMatchResultPublisher)serviceProvider.GetRequiredService<ITemplateMatchResultSink>());
         services.AddSingleton<TemplateMatchDebugVisibilityController>();

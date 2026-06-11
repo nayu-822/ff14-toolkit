@@ -56,7 +56,7 @@ public sealed class TemplateMatchingTests
     }
 
     [TestMethod]
-    public void PpmP6TemplateLoader_RejectsP3()
+    public void PpmP6TemplateLoader_LoadsAsciiPixels()
     {
         string directoryPath = CreateTempDirectory();
 
@@ -82,8 +82,11 @@ public sealed class TemplateMatchingTests
             File.WriteAllText(templatePath, "P3\n1 1\n255\n255 0 0\n");
 
             PpmP6TemplateLoader loader = new();
+            TemplateResource resource = loader.Load(new TemplateResourceDefinition("sample", metadataPath));
 
-            Assert.ThrowsExactly<InvalidDataException>(() => loader.Load(new TemplateResourceDefinition("sample", metadataPath)));
+            Assert.AreEqual(1, resource.Image.Width);
+            Assert.AreEqual(1, resource.Image.Height);
+            CollectionAssert.AreEqual(new byte[] { 255, 0, 0 }, resource.Image.RgbPixels.ToArray());
         }
         finally
         {
@@ -132,6 +135,39 @@ public sealed class TemplateMatchingTests
         Assert.AreEqual(TemplateMatchStatus.Matched, result.Status);
         Assert.AreEqual(new Rectangle(103, 201, 2, 2), result.MatchedBounds);
         Assert.AreEqual(new Rectangle(100, 200, 8, 6), result.SearchBounds);
+    }
+
+    [TestMethod]
+    public async Task TemplateMatchExecutor_ReturnsMetricsAndPreview()
+    {
+        using ScreenCaptureFrame capture = CreateCaptureFrame(
+            new Rectangle(10, 20, 6, 4),
+            6,
+            4,
+            new Rectangle(2, 1, 2, 2),
+            new byte[] { 255, 0, 0, 0, 255, 0, 0, 0, 255, 255, 255, 255 });
+        TemplateResource resource = new(
+            new TemplateResourceDefinition("sample", "sample.json"),
+            new TemplateResourceMetadata("sample", "sample.ppm", null, 100, 80, 0, 0, 2, 2, 0.99),
+            new TemplateImage(2, 2, new byte[] { 255, 0, 0, 0, 255, 0, 0, 0, 255, 255, 255, 255 }));
+        TemplateMatchExecutor executor = new(new FakeTemplateResourceLoader(resource), new FakeScreenCaptureService(capture), new TemplateMatcher());
+
+        TemplateMatchExecutionResult result = await executor.ExecuteAsync(
+            new TemplateMatchExecutionRequest(
+                "sample-request",
+                resource.Definition,
+                capture.ScreenBounds,
+                null,
+                0.99,
+                [1.0],
+                TemplateMatchMode.RgbSamples,
+                SampleStep: 1,
+                IncludeCapturePreview: true));
+
+        Assert.AreEqual(TemplateMatchStatus.Matched, result.Result.Status);
+        Assert.IsNotNull(result.CapturePreview);
+        Assert.AreEqual(capture.ScreenBounds, result.CapturePreview!.ScreenBounds);
+        Assert.IsTrue(result.Metrics.TotalDuration >= result.Metrics.MatchingDuration);
     }
 
     [TestMethod]
