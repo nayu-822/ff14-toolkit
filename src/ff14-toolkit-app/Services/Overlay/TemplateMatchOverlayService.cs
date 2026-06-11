@@ -11,17 +11,18 @@ namespace FF14Toolkit.App.Services.Overlay;
 public sealed class TemplateMatchOverlayService : IOverlayService
 {
     private const string ActiveFrameId = "template-match:active";
+    private const string AggregateFrameId = "overlay:aggregate";
+    private const string AggregateOwnerId = "overlay-service";
 
     private readonly Dispatcher dispatcher;
     private readonly bool isEnabled;
     private readonly CraftSequenceHotkeyLogService logger;
-    private readonly Func<ITemplateMatchOverlayWindow> windowFactory;
+    private readonly Func<IOverlayFrameWindow> windowFactory;
     private readonly IOverlayFrameStore frameStore;
     private readonly TemplateMatchOverlayFrameAdapter frameAdapter;
     private readonly Lock syncRoot = new();
     private readonly Dictionary<string, CancellationTokenSource> autoHideSources = new(StringComparer.OrdinalIgnoreCase);
-    private readonly Dictionary<string, TemplateMatchOverlayFrame> templateFrames = new(StringComparer.OrdinalIgnoreCase);
-    private ITemplateMatchOverlayWindow? overlayWindow;
+    private IOverlayFrameWindow? overlayWindow;
     private int overlayVersion;
     private int handleCreatedLogged;
 
@@ -30,7 +31,7 @@ public sealed class TemplateMatchOverlayService : IOverlayService
         CraftSequenceHotkeyLogService logger,
         IOverlayFrameStore frameStore,
         TemplateMatchOverlayFrameAdapter frameAdapter)
-        : this(developmentOptions, logger, frameStore, frameAdapter, static () => new TemplateMatchOverlayWindowHost())
+        : this(developmentOptions, logger, frameStore, frameAdapter, static () => new OverlayFrameWindowHost())
     {
     }
 
@@ -39,7 +40,7 @@ public sealed class TemplateMatchOverlayService : IOverlayService
         CraftSequenceHotkeyLogService logger,
         IOverlayFrameStore frameStore,
         TemplateMatchOverlayFrameAdapter frameAdapter,
-        Func<ITemplateMatchOverlayWindow> windowFactory)
+        Func<IOverlayFrameWindow> windowFactory)
     {
         dispatcher = Application.Current.Dispatcher;
         isEnabled = developmentOptions.Value.ShowTemplateMatchOverlay;
@@ -71,11 +72,6 @@ public sealed class TemplateMatchOverlayService : IOverlayService
     {
         TimeSpan? autoHideAfter = keepVisible ? null : TimeSpan.FromSeconds(1.6);
         OverlayFrame overlayFrame = frameAdapter.CreateOverlayFrame(ActiveFrameId, screenBounds, frame, keepVisible, autoHideAfter);
-        lock (syncRoot)
-        {
-            templateFrames[overlayFrame.FrameId] = frame;
-        }
-
         await ShowOrUpdateAsync(overlayFrame).ConfigureAwait(false);
     }
 
@@ -102,10 +98,6 @@ public sealed class TemplateMatchOverlayService : IOverlayService
                 }
 
                 ClearAutoHideSources();
-                lock (syncRoot)
-                {
-                    templateFrames.Clear();
-                }
                 frameStore.Clear();
                 overlayWindow.Close();
                 overlayWindow = null;
@@ -157,10 +149,6 @@ public sealed class TemplateMatchOverlayService : IOverlayService
         {
             CancelAutoHide(frameId);
             frameStore.Remove(frameId);
-            lock (syncRoot)
-            {
-                templateFrames.Remove(frameId);
-            }
 
             int currentVersion = Interlocked.Increment(ref overlayVersion);
             await dispatcher.InvokeAsync(() =>
@@ -189,14 +177,6 @@ public sealed class TemplateMatchOverlayService : IOverlayService
                 CancelAutoHide(frame.FrameId);
             }
 
-            lock (syncRoot)
-            {
-                foreach (OverlayFrame frame in removedFrames)
-                {
-                    templateFrames.Remove(frame.FrameId);
-                }
-            }
-
             int currentVersion = Interlocked.Increment(ref overlayVersion);
             await dispatcher.InvokeAsync(() =>
             {
@@ -219,10 +199,6 @@ public sealed class TemplateMatchOverlayService : IOverlayService
         {
             ClearAutoHideSources();
             frameStore.Clear();
-            lock (syncRoot)
-            {
-                templateFrames.Clear();
-            }
 
             int currentVersion = Interlocked.Increment(ref overlayVersion);
             await dispatcher.InvokeAsync(() =>
@@ -288,29 +264,36 @@ public sealed class TemplateMatchOverlayService : IOverlayService
             .Select(frame => frame.ScreenBounds)
             .Aggregate(Rectangle.Union);
 
-        OverlayFrame frameToPresent = frames[^1];
-        TemplateMatchOverlayFrame displayFrame = CreateDisplayFrame(frameToPresent, frames);
+        OverlayFrame displayFrame = CreateDisplayFrame(screenBounds, frames);
 
         overlayWindow ??= windowFactory();
-        TemplateMatchOverlayPresenter.Present(overlayWindow, screenBounds, displayFrame);
+        OverlayPresenter.Present(overlayWindow, displayFrame);
         if (Interlocked.Exchange(ref handleCreatedLogged, 1) == 0)
         {
             logger.LogInformation("Overlay window handle created.");
         }
     }
 
-    private TemplateMatchOverlayFrame CreateDisplayFrame(OverlayFrame latestFrame, IReadOnlyList<OverlayFrame> frames)
+    private static OverlayFrame CreateDisplayFrame(Rectangle screenBounds, IReadOnlyList<OverlayFrame> frames)
     {
-        lock (syncRoot)
+        if (frames.Count == 1)
         {
-            if (frames.Count == 1
-                && templateFrames.TryGetValue(latestFrame.FrameId, out TemplateMatchOverlayFrame? sourceFrame))
-            {
-                return frameAdapter.ToTemplateMatchOverlayFrame(latestFrame, sourceFrame);
-            }
+            return frames[0];
         }
 
-        return frameAdapter.CreateDisplayFrame(frames);
+        OverlayFrame latestFrame = frames[^1];
+        List<OverlayElement> elements = frames
+            .SelectMany(frame => frame.Elements)
+            .OrderBy(element => element.ZIndex)
+            .ThenBy(element => element.ElementId, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        return new OverlayFrame(
+            AggregateFrameId,
+            AggregateOwnerId,
+            screenBounds,
+            elements,
+            latestFrame.Options with { AutoHideAfter = null, KeepVisible = true });
     }
 
     private void ResetAutoHide(OverlayFrame frame)
