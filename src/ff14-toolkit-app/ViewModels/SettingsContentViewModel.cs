@@ -72,6 +72,7 @@ public sealed class SettingsContentViewModel : ShellContentViewModel
 
             characterSettingsStore.Select(value?.ProfileId);
             OnPropertyChanged(nameof(CharacterSettingsCurrentPath));
+            OnPropertyChanged(nameof(CharacterUiInfoSummary));
         }
     }
 
@@ -106,6 +107,10 @@ public sealed class SettingsContentViewModel : ShellContentViewModel
     public string CharacterSettingsCurrentPath => string.IsNullOrWhiteSpace(characterSettingsStore.RootPath)
         ? localizationService["Settings_Unconfigured"]
         : characterSettingsStore.RootPath;
+
+    public string CharacterUiInfoTitle => "ADDON.DAT UI Info";
+
+    public string CharacterUiInfoSummary => BuildCharacterUiInfoSummary();
 
     public string CharacterListNameColumnLabel => localizationService["Settings_CharacterNameColumnLabel"];
 
@@ -270,6 +275,7 @@ public sealed class SettingsContentViewModel : ShellContentViewModel
         RefreshRegisteredCharacters();
         SelectedCharacter = RegisteredCharacters.FirstOrDefault(item => item.ProfileId == savedProfile.ProfileId);
         BeginCreateCharacter();
+        OnPropertyChanged(nameof(CharacterUiInfoSummary));
     }
 
     private bool CanSaveHotkeys()
@@ -310,6 +316,7 @@ public sealed class SettingsContentViewModel : ShellContentViewModel
 
         SelectedCharacter = RegisteredCharacters.FirstOrDefault(item => item.ProfileId == characterSettingsStore.SelectedProfileId);
         OnPropertyChanged(nameof(CharacterSettingsCurrentPath));
+        OnPropertyChanged(nameof(CharacterUiInfoSummary));
     }
 
     private void NotifyCharacterFormChanged()
@@ -334,6 +341,8 @@ public sealed class SettingsContentViewModel : ShellContentViewModel
         OnPropertyChanged(nameof(CharacterSettingsSelectionLabel));
         OnPropertyChanged(nameof(CharacterSettingsCurrentPathLabel));
         OnPropertyChanged(nameof(CharacterSettingsCurrentPath));
+        OnPropertyChanged(nameof(CharacterUiInfoTitle));
+        OnPropertyChanged(nameof(CharacterUiInfoSummary));
         OnPropertyChanged(nameof(CharacterListNameColumnLabel));
         OnPropertyChanged(nameof(CharacterListWorldColumnLabel));
         OnPropertyChanged(nameof(CharacterListEditColumnLabel));
@@ -345,5 +354,35 @@ public sealed class SettingsContentViewModel : ShellContentViewModel
         OnPropertyChanged(nameof(CharacterSettingsSaveButtonLabel));
         OnPropertyChanged(nameof(CharacterSettingsCreateButtonLabel));
         OnPropertyChanged(nameof(CharacterListEmptyMessage));
+    }
+
+    private string BuildCharacterUiInfoSummary()
+    {
+        if (SelectedCharacter?.UiLayoutInfo is not CharacterUiLayoutInfo info)
+        {
+            return "ADDON.DAT has not been imported yet. Save the character settings to refresh UI info.";
+        }
+
+        if (info.HasError)
+        {
+            return $"Failed to load ADDON.DAT: {info.LoadError}";
+        }
+
+        List<string> lines =
+        [
+            $"Source: {info.SourcePath}",
+            $"Dataset: {info.DataSetName}",
+            $"Elements: {info.ElementCount}",
+            $"Scaled elements: {info.NonDefaultScaleElementCount}"
+        ];
+
+        if (info.HighlightElements.Count > 0)
+        {
+            lines.Add("Highlights:");
+            lines.AddRange(info.HighlightElements.Select(item =>
+                $"  {item.DisplayName} ({item.ElementId}) pos=({item.X:0.##}, {item.Y:0.##}) size={item.Width}x{item.Height} scale={item.Scale:0.##}"));
+        }
+
+        return string.Join(Environment.NewLine, lines);
     }
 }

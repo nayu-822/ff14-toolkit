@@ -10,6 +10,8 @@ public sealed class CharacterProfile
 
     public string RootPath { get; set; } = string.Empty;
 
+    public CharacterUiLayoutInfo? UiLayoutInfo { get; set; }
+
     public string DisplayLabel => string.IsNullOrWhiteSpace(WorldName)
         ? CharacterName
         : $"{CharacterName} ({WorldName})";

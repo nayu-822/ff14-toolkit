@@ -1,0 +1,15 @@
+{
+  "displayName": "CRAFTING LOG タイトル",
+  "templateMetadataPath": "crafting-log-title.json",
+  "scales": [0.80, 0.90, 1.00, 1.10, 1.25],
+  "minimumScore": 0.85,
+  "sampleStep": 1,
+  "searchOptions": {
+    "coarsePositionStep": 6,
+    "coarseSampleStep": 4,
+    "refineRadius": 12,
+    "refinePositionStep": 1,
+    "refineSampleStep": 1,
+    "maximumRefineCandidates": 6
+  }
+}

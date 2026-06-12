@@ -3,8 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             mc:Ignorable="d"
-             PreviewMouseLeftButtonDown="OnRootPreviewMouseLeftButtonDown">
+             mc:Ignorable="d">
     <Border Padding="24"
             Style="{StaticResource SurfaceCardStyle}">
         <Grid>
@@ -15,8 +14,6 @@
                 <RowDefinition Height="12" />
                 <RowDefinition Height="*" />
                 <RowDefinition Height="16" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="12" />
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
@@ -104,9 +101,8 @@
                                         <ComboBox Grid.Column="2"
                                                   Margin="8,0,8,0"
                                                   ItemsSource="{Binding DataContext.AvailableSequences, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                  SelectedValuePath="SequenceId"
                                                   DisplayMemberPath="DisplayName"
-                                                  SelectedValue="{Binding SelectedSequenceId, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                  SelectedItem="{Binding SelectedSequence, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                                   Style="{StaticResource ToolkitComboBoxStyle}" />
 
                                         <TextBox Grid.Column="3"
@@ -138,38 +134,13 @@
                 </TextBlock>
             </Grid>
 
-            <StackPanel Grid.Row="6"
-                        Orientation="Horizontal">
-                <TextBlock VerticalAlignment="Center"
-                           Foreground="{StaticResource AppMutedTextBrush}"
-                           Text="{Binding TemplateMatchMonitoringStatusLabel}" />
-                <Button Margin="16,0,0,0"
-                        MinWidth="160"
-                        Padding="16,8"
-                        Command="{Binding StartMonitoringCommand}"
-                        Content="{Binding StartMonitoringButtonLabel}"
-                        Style="{StaticResource SecondaryButtonStyle}" />
-                <Button Margin="8,0,0,0"
-                        MinWidth="160"
-                        Padding="16,8"
-                        Command="{Binding StopMonitoringCommand}"
-                        Content="{Binding StopMonitoringButtonLabel}"
-                        Style="{StaticResource SecondaryButtonStyle}" />
-            </StackPanel>
-            <StackPanel Grid.Row="8">
-                <TextBlock Foreground="{StaticResource AppMutedTextBrush}"
-                           Text="{Binding MonitorStatusSummary}" />
-                <TextBlock Margin="0,4,0,12"
-                           TextWrapping="Wrap"
-                           Foreground="{StaticResource AppMutedTextBrush}"
-                           Text="{Binding MonitorStatusDetails}" />
-                <Button HorizontalAlignment="Left"
-                        MinWidth="88"
-                        Padding="16,8"
-                        Command="{Binding SaveCommand}"
-                        Content="{Binding SaveButtonLabel}"
-                        Style="{StaticResource PrimaryButtonStyle}" />
-            </StackPanel>
+            <Button Grid.Row="6"
+                    HorizontalAlignment="Left"
+                    MinWidth="88"
+                    Padding="16,8"
+                    Command="{Binding SaveCommand}"
+                    Content="{Binding SaveButtonLabel}"
+                    Style="{StaticResource PrimaryButtonStyle}" />
         </Grid>
     </Border>
 </UserControl>

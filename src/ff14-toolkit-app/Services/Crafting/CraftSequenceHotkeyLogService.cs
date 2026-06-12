@@ -32,6 +32,11 @@ public sealed class CraftSequenceHotkeyLogService
         Write("DEBUG", message);
     }
 
+    public void LogWarning(string message)
+    {
+        Write("WARN", message);
+    }
+
     public void LogError(string message, Exception? exception = null)
     {
         if (exception is null)

@@ -140,8 +140,7 @@ public partial class MainWindow : Window
         for (int slotNumber = 1; slotNumber <= 5; slotNumber++)
         {
             CraftSequenceHotkeyBinding binding = craftSequenceHotkeyStore.GetBinding(slotNumber);
-            bool isConfigured = IsCraftSequenceHotkeyConfigured(binding);
-            if (!isConfigured)
+            if (!IsCraftSequenceHotkeyConfigured(binding))
             {
                 craftSequenceHotkeyLogService.LogInformation($"Craft sequence hotkey not configured: {binding.HotkeyText}");
                 continue;

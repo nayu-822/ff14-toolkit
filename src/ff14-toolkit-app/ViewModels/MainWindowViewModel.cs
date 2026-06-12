@@ -1,6 +1,7 @@
 using FF14Toolkit.App.Models.Configuration;
 using FF14Toolkit.App.Models.Localization;
 using FF14Toolkit.App.Infrastructure;
+using FF14Toolkit.App.Services.Addon;
 using FF14Toolkit.App.Services.Configuration;
 using FF14Toolkit.App.Services.Crafting;
 using FF14Toolkit.App.Services.GameData;
@@ -8,7 +9,6 @@ using FF14Toolkit.App.Services.Hotbar;
 using FF14Toolkit.App.Services.Keybind;
 using FF14Toolkit.App.Services.Localization;
 using FF14Toolkit.App.Services.OverlayPlugin;
-using FF14Toolkit.App.Services.TemplateMatching;
 using Microsoft.Extensions.Options;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -23,6 +23,8 @@ public sealed class MainWindowViewModel : ViewModelBase
     private readonly CraftActionSequenceListContentViewModel craftActionSequenceListContentViewModel;
     private readonly CraftActionSequenceContentViewModel craftActionSequenceEditorContentViewModel;
     private readonly CraftSequenceHotkeySettingsContentViewModel craftSequenceHotkeySettingsContentViewModel;
+    private readonly AddonContentViewModel addonContentViewModel;
+    private readonly KeybindContentViewModel keybindContentViewModel;
     private readonly HotbarContentViewModel hotbarContentViewModel;
     private readonly OverlayPluginConnectionStateService overlayPluginConnectionStateService;
     private readonly OverlayPluginInfoContentViewModel overlayPluginInfoContentViewModel;
@@ -38,12 +40,11 @@ public sealed class MainWindowViewModel : ViewModelBase
         CharacterSettingsStore characterSettingsStore,
         HotkeySettingsStore hotkeySettingsStore,
         IGameDataService gameDataService,
+        IAddonDataService addonDataService,
         IHotbarDataService hotbarDataService,
         IKeybindDataService keybindDataService,
         CraftActionSequenceStore craftActionSequenceStore,
         CraftSequenceHotkeyStore craftSequenceHotkeyStore,
-        CraftStartButtonAutomationService craftStartButtonAutomationService,
-        ITemplateMonitorStatusSource templateMonitorStatusSource,
         OverlayPluginConnectionStateService overlayPluginConnectionStateService,
         IOverlayPluginWebSocketSessionService overlayPluginWebSocketSessionService)
     {
@@ -68,9 +69,15 @@ public sealed class MainWindowViewModel : ViewModelBase
         craftSequenceHotkeySettingsContentViewModel = new CraftSequenceHotkeySettingsContentViewModel(
             localizationService,
             craftActionSequenceStore,
-            craftSequenceHotkeyStore,
-            craftStartButtonAutomationService,
-            templateMonitorStatusSource);
+            craftSequenceHotkeyStore);
+        addonContentViewModel = new AddonContentViewModel(
+            localizationService,
+            characterSettingsStore,
+            addonDataService);
+        keybindContentViewModel = new KeybindContentViewModel(
+            localizationService,
+            characterSettingsStore,
+            keybindDataService);
         hotbarContentViewModel = new HotbarContentViewModel(
             localizationService,
             characterSettingsStore,
@@ -92,6 +99,8 @@ public sealed class MainWindowViewModel : ViewModelBase
             craftActionSequenceListContentViewModel,
             craftActionSequenceEditorContentViewModel,
             craftSequenceHotkeySettingsContentViewModel,
+            addonContentViewModel,
+            keybindContentViewModel,
             hotbarContentViewModel,
             overlayPluginInfoContentViewModel,
             overlayPluginWSServerContentViewModel);
@@ -217,6 +226,16 @@ public sealed class MainWindowViewModel : ViewModelBase
             "Nav_Hotbar",
             "Section_Hotbar_Description");
 
+        ShellNavigationItemViewModel developmentAddon = CreateNavigationItem(
+            "development-addon",
+            "Nav_DevelopmentAddon",
+            "Section_DevelopmentAddon_Description");
+
+        ShellNavigationItemViewModel developmentKeybind = CreateNavigationItem(
+            "development-keybind",
+            "Nav_DevelopmentKeybind",
+            "Section_DevelopmentKeybind_Description");
+
         ShellNavigationItemViewModel overlayPluginWSServer = CreateNavigationItem(
             "development-overlayplugin-wsserver",
             "Nav_DevelopmentOverlayPluginWSServer",
@@ -227,7 +246,7 @@ public sealed class MainWindowViewModel : ViewModelBase
             "Nav_Development",
             "Section_Development_Description",
             isSelectable: false,
-            children: [developmentHotbar, developmentInfo, overlayPluginWSServer]);
+            children: [developmentHotbar, developmentKeybind, developmentAddon, developmentInfo, overlayPluginWSServer]);
 
         return
         [
@@ -340,6 +359,18 @@ public sealed class MainWindowViewModel : ViewModelBase
         if (CurrentContentViewModel is HotbarContentViewModel hotbarContentViewModel)
         {
             await hotbarContentViewModel.InitializeAsync();
+            return;
+        }
+
+        if (CurrentContentViewModel is AddonContentViewModel addonContentViewModel)
+        {
+            await addonContentViewModel.InitializeAsync();
+            return;
+        }
+
+        if (CurrentContentViewModel is KeybindContentViewModel keybindContentViewModel)
+        {
+            await keybindContentViewModel.InitializeAsync();
         }
     }
 
@@ -350,6 +381,8 @@ public sealed class MainWindowViewModel : ViewModelBase
         CraftActionSequenceListContentViewModel craftActionSequenceListContentViewModel,
         CraftActionSequenceContentViewModel craftActionSequenceEditorContentViewModel,
         CraftSequenceHotkeySettingsContentViewModel craftSequenceHotkeySettingsContentViewModel,
+        AddonContentViewModel addonContentViewModel,
+        KeybindContentViewModel keybindContentViewModel,
         HotbarContentViewModel hotbarContentViewModel,
         OverlayPluginInfoContentViewModel overlayPluginInfoContentViewModel,
         OverlayPluginWSServerContentViewModel overlayPluginWSServerContentViewModel)
@@ -378,6 +411,8 @@ public sealed class MainWindowViewModel : ViewModelBase
             ["crafting-sequences"] = craftActionSequenceListContentViewModel,
             ["crafting-sequence-editor"] = craftActionSequenceEditorContentViewModel,
             ["crafting-sequence-hotkeys"] = craftSequenceHotkeySettingsContentViewModel,
+            ["development-keybind"] = keybindContentViewModel,
+            ["development-addon"] = addonContentViewModel,
             ["development-info"] = overlayPluginInfoContentViewModel,
             ["development-overlayplugin-wsserver"] = overlayPluginWSServerContentViewModel,
             ["icons"] = new PlaceholderContentViewModel(

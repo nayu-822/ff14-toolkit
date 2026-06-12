@@ -1,5 +1,5 @@
 using FF14Toolkit.App.Models.Overlay;
-using FF14Toolkit.App.Services.Localization;
+using FF14Toolkit.App.Services.Crafting;
 using FF14Toolkit.App.ViewModels;
 using FF14Toolkit.App.Views;
 using System.Windows;
@@ -14,7 +14,7 @@ public sealed class OverlayWorkspaceService
     private const double DefaultMargin = 24;
 
     private readonly OverlayLayoutStore layoutStore;
-    private readonly ILocalizationService localizationService;
+    private readonly CraftSequenceOverlayStateService craftSequenceOverlayStateService;
     private readonly DispatcherTimer persistTimer;
     private readonly Dictionary<string, OverlayWindowLayout> layoutsById;
     private readonly List<OverlayWindowHost> overlayWindows;
@@ -24,10 +24,10 @@ public sealed class OverlayWorkspaceService
 
     public OverlayWorkspaceService(
         OverlayLayoutStore layoutStore,
-        ILocalizationService localizationService)
+        CraftSequenceOverlayStateService craftSequenceOverlayStateService)
     {
         this.layoutStore = layoutStore;
-        this.localizationService = localizationService;
+        this.craftSequenceOverlayStateService = craftSequenceOverlayStateService;
         layoutsById = layoutStore.LoadLayouts()
             .Where(IsValidLayout)
             .ToDictionary(layout => layout.WindowId, StringComparer.OrdinalIgnoreCase);
@@ -96,7 +96,7 @@ public sealed class OverlayWorkspaceService
 
         foreach (OverlayWindowDefinition definition in CreateDefinitions())
         {
-            OverlayWindow window = new(new OverlayWindowViewModel(localizationService, definition.TitleResourceKey));
+            OverlayWindow window = new(new OverlayWindowViewModel(craftSequenceOverlayStateService));
             window.LayoutChanged += OnOverlayWindowLayoutChanged;
             window.SetEditMode(IsEditMode);
             ApplyLayout(window, definition);
@@ -249,13 +249,11 @@ public sealed class OverlayWorkspaceService
     {
         return
         [
-            new OverlayWindowDefinition("overlay-top-left", "Overlay_WindowTitle1", OverlayAnchor.TopLeft),
-            new OverlayWindowDefinition("overlay-top-right", "Overlay_WindowTitle2", OverlayAnchor.TopRight),
-            new OverlayWindowDefinition("overlay-bottom-right", "Overlay_WindowTitle3", OverlayAnchor.BottomRight)
+            new OverlayWindowDefinition("craft-sequence-overlay", OverlayAnchor.TopRight)
         ];
     }
 
-    private sealed record OverlayWindowDefinition(string WindowId, string TitleResourceKey, OverlayAnchor Anchor);
+    private sealed record OverlayWindowDefinition(string WindowId, OverlayAnchor Anchor);
 
     private sealed record OverlayWindowHost(OverlayWindowDefinition Definition, OverlayWindow Window);
 

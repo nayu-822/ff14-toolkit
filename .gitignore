@@ -52,3 +52,4 @@ artifacts/**/[Bb]in/
 artifacts/**/[Oo]bj/
 artifacts/verification-build/
 src/ff14-toolkit-app/artifacts/
+src/ff14-toolkit-app.tests/artifacts/

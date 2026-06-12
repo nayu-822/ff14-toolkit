@@ -1,10 +1,7 @@
 using FF14Toolkit.App.Services.Configuration;
-using FF14Toolkit.App.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
-using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using System.Windows.Media;
 using System.Windows.Threading;
 
 namespace FF14Toolkit.App.Views;
@@ -12,7 +9,6 @@ namespace FF14Toolkit.App.Views;
 public partial class CraftSequenceHotkeySettingsContentView : UserControl
 {
     private readonly HotkeyCaptureState? hotkeyCaptureState;
-    private CraftSequenceHotkeySlotViewModel? activeCapturingSlot;
 
     public CraftSequenceHotkeySettingsContentView()
     {
@@ -36,13 +32,12 @@ public partial class CraftSequenceHotkeySettingsContentView : UserControl
 
     private void OnHotKeyTextBoxGotKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e)
     {
-        if (sender is not TextBox textBox || textBox.DataContext is not CraftSequenceHotkeySlotViewModel slot)
-        {
-            return;
-        }
-
         hotkeyCaptureState?.BeginCapture();
-        SetActiveCapturingSlot(slot);
+
+        if (sender is TextBox textBox && textBox.DataContext is ViewModels.CraftSequenceHotkeySlotViewModel slotViewModel)
+        {
+            slotViewModel.IsCapturingHotkey = true;
+        }
     }
 
     private void OnHotKeyTextBoxLostKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e)
@@ -55,7 +50,11 @@ public partial class CraftSequenceHotkeySettingsContentView : UserControl
             }
 
             hotkeyCaptureState?.EndCapture();
-            SetActiveCapturingSlot(null);
+
+            if (sender is TextBox slotTextBox && slotTextBox.DataContext is ViewModels.CraftSequenceHotkeySlotViewModel slotViewModel)
+            {
+                slotViewModel.IsCapturingHotkey = false;
+            }
         }, DispatcherPriority.Input);
     }
 
@@ -85,7 +84,8 @@ public partial class CraftSequenceHotkeySettingsContentView : UserControl
             return;
         }
 
-        string hotKeyText = HotkeyTextUtility.FormatHotKeyText(Keyboard.Modifiers, key);
+        ModifierKeys modifiers = Keyboard.Modifiers;
+        string hotKeyText = HotkeyTextUtility.FormatHotKeyText(modifiers, key);
         if (string.IsNullOrWhiteSpace(hotKeyText))
         {
             return;
@@ -99,51 +99,5 @@ public partial class CraftSequenceHotkeySettingsContentView : UserControl
     private void OnHotKeyTextBoxPreviewTextInput(object sender, TextCompositionEventArgs e)
     {
         e.Handled = true;
-    }
-
-    private void OnRootPreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-    {
-        if (e.OriginalSource is DependencyObject dependencyObject && FindAncestor<TextBox>(dependencyObject) is not null)
-        {
-            return;
-        }
-
-        Keyboard.ClearFocus();
-    }
-
-    private void SetActiveCapturingSlot(CraftSequenceHotkeySlotViewModel? nextSlot)
-    {
-        if (ReferenceEquals(activeCapturingSlot, nextSlot))
-        {
-            return;
-        }
-
-        if (activeCapturingSlot is not null)
-        {
-            activeCapturingSlot.IsCapturingHotkey = false;
-        }
-
-        activeCapturingSlot = nextSlot;
-
-        if (activeCapturingSlot is not null)
-        {
-            activeCapturingSlot.IsCapturingHotkey = true;
-        }
-    }
-
-    private static T? FindAncestor<T>(DependencyObject? dependencyObject)
-        where T : DependencyObject
-    {
-        while (dependencyObject is not null)
-        {
-            if (dependencyObject is T typedObject)
-            {
-                return typedObject;
-            }
-
-            dependencyObject = VisualTreeHelper.GetParent(dependencyObject);
-        }
-
-        return null;
     }
 }

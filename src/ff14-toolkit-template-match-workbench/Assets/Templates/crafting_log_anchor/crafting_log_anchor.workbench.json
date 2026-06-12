@@ -1,0 +1,15 @@
+{
+  "displayName": "CRAFTING LOG Anchor",
+  "templateMetadataPath": "crafting_log_anchor.json",
+  "scales": [1.00, 0.95, 1.05],
+  "minimumScore": 0.95,
+  "sampleStep": 1,
+  "searchOptions": {
+    "coarsePositionStep": 4,
+    "coarseSampleStep": 2,
+    "refineRadius": 10,
+    "refinePositionStep": 1,
+    "refineSampleStep": 1,
+    "maximumRefineCandidates": 5
+  }
+}

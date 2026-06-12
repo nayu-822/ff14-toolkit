@@ -495,6 +495,18 @@
   <data name="Nav_DevelopmentOverlayPluginWSServer" xml:space="preserve">
     <value>OverlayPlugin WSServer</value>
   </data>
+  <data name="Nav_DevelopmentKeybind" xml:space="preserve">
+    <value>KEYBIND.DAT</value>
+  </data>
+  <data name="Nav_DevelopmentAddon" xml:space="preserve">
+    <value>ADDON.DAT</value>
+  </data>
+  <data name="Section_DevelopmentKeybind_Description" xml:space="preserve">
+    <value>Browse commands and assignments parsed from KEYBIND.DAT.</value>
+  </data>
+  <data name="Section_DevelopmentAddon_Description" xml:space="preserve">
+    <value>Browse UI layout elements parsed from ADDON.DAT.</value>
+  </data>
   <data name="Section_DevelopmentOverlayPluginWSServer_Description" xml:space="preserve">
     <value>Test OverlayPlugin WebSocket requests and responses.</value>
   </data>

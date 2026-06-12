@@ -34,6 +34,14 @@
             <views:HotbarContentView />
         </DataTemplate>
 
+        <DataTemplate DataType="{x:Type viewModels:AddonContentViewModel}">
+            <views:AddonContentView />
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type viewModels:KeybindContentViewModel}">
+            <views:KeybindContentView />
+        </DataTemplate>
+
         <DataTemplate DataType="{x:Type viewModels:OverlayPluginWSServerContentViewModel}">
             <views:OverlayPluginWSServerContentView />
         </DataTemplate>

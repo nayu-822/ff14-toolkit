@@ -10,6 +10,7 @@ public sealed class CharacterProfileItemViewModel : ViewModelBase
         CharacterName = profile.CharacterName;
         WorldName = profile.WorldName;
         RootPath = profile.RootPath;
+        UiLayoutInfo = profile.UiLayoutInfo;
     }
 
     public Guid ProfileId { get; }
@@ -19,6 +20,8 @@ public sealed class CharacterProfileItemViewModel : ViewModelBase
     public string WorldName { get; }
 
     public string RootPath { get; }
+
+    public CharacterUiLayoutInfo? UiLayoutInfo { get; }
 
     public string DisplayLabel => string.IsNullOrWhiteSpace(WorldName)
         ? CharacterName

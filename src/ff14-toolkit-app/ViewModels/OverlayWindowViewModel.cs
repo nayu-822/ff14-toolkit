@@ -1,24 +1,22 @@
-using FF14Toolkit.App.Services.Localization;
+using FF14Toolkit.App.Services.Crafting;
 using System.ComponentModel;
 
 namespace FF14Toolkit.App.ViewModels;
 
 public sealed class OverlayWindowViewModel : ViewModelBase
 {
-    private readonly ILocalizationService localizationService;
-    private readonly string titleKey;
+    private readonly CraftSequenceOverlayStateService overlayStateService;
     private bool isEditMode;
     private string modeHint;
 
-    public OverlayWindowViewModel(ILocalizationService localizationService, string titleKey)
+    public OverlayWindowViewModel(CraftSequenceOverlayStateService overlayStateService)
     {
-        this.localizationService = localizationService;
-        this.titleKey = titleKey;
-        modeHint = localizationService["Overlay_ModeNormal"];
-        this.localizationService.PropertyChanged += OnLocalizationPropertyChanged;
+        this.overlayStateService = overlayStateService;
+        modeHint = "クリック透過";
+        overlayStateService.PropertyChanged += OnOverlayStatePropertyChanged;
     }
 
-    public string Title => localizationService[titleKey];
+    public string Title => "クラフトシーケンス";
 
     public string ModeHint
     {
@@ -26,27 +24,44 @@ public sealed class OverlayWindowViewModel : ViewModelBase
         private set => SetProperty(ref modeHint, value);
     }
 
+    public string StatusText => overlayStateService.StatusText;
+
+    public string SequenceName => overlayStateService.SequenceName;
+
+    public string DetailText => overlayStateService.DetailText;
+
+    public string CurrentActionText => overlayStateService.CurrentActionText;
+
+    public string CycleText => overlayStateService.CycleText;
+
+    public string LastKeyText => overlayStateService.LastKeyText;
+
+    public string UpdatedAtText => overlayStateService.UpdatedAtText;
+
+    public bool IsRunning => overlayStateService.IsRunning;
+
     public void SetEditMode(bool isEditMode)
     {
         this.isEditMode = isEditMode;
         UpdateModeHint();
     }
 
-    private void OnLocalizationPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    private void OnOverlayStatePropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName is nameof(ILocalizationService.CurrentCulture)
-            or nameof(ILocalizationService.CurrentCultureName)
-            or "Item[]")
-        {
-            OnPropertyChanged(nameof(Title));
-            UpdateModeHint();
-        }
+        OnPropertyChanged(nameof(StatusText));
+        OnPropertyChanged(nameof(SequenceName));
+        OnPropertyChanged(nameof(DetailText));
+        OnPropertyChanged(nameof(CurrentActionText));
+        OnPropertyChanged(nameof(CycleText));
+        OnPropertyChanged(nameof(LastKeyText));
+        OnPropertyChanged(nameof(UpdatedAtText));
+        OnPropertyChanged(nameof(IsRunning));
     }
 
     private void UpdateModeHint()
     {
         ModeHint = isEditMode
-            ? localizationService["Overlay_ModeEdit"]
-            : localizationService["Overlay_ModeNormal"];
+            ? "編集モード"
+            : "クリック透過";
     }
 }

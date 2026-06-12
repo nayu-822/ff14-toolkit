@@ -1,4 +1,6 @@
+using FF14Toolkit.App.Models.Addon;
 using FF14Toolkit.App.Models.Configuration;
+using FF14Toolkit.App.Services.Addon;
 using Microsoft.Extensions.Options;
 using System.IO;
 using System.Text.Json;
@@ -14,11 +16,13 @@ public sealed class CharacterSettingsStore
 
     private readonly string storagePath;
     private readonly List<CharacterProfile> profiles;
+    private readonly IAddonDataService addonDataService;
     private Guid? selectedProfileId;
 
     public CharacterSettingsStore(
         IOptions<CacheOptions> cacheOptions,
-        IOptions<CharacterSettingsOptions> characterSettingsOptions)
+        IOptions<CharacterSettingsOptions> characterSettingsOptions,
+        IAddonDataService addonDataService)
     {
         if (cacheOptions is null)
         {
@@ -30,6 +34,7 @@ public sealed class CharacterSettingsStore
             throw new ArgumentNullException(nameof(characterSettingsOptions));
         }
 
+        this.addonDataService = addonDataService ?? throw new ArgumentNullException(nameof(addonDataService));
         storagePath = ResolveStoragePath(cacheOptions.Value);
 
         CharacterSettingsState state = new()
@@ -152,7 +157,7 @@ public sealed class CharacterSettingsStore
         }
     }
 
-    private static CharacterProfile NormalizeProfile(CharacterProfile profile)
+    private CharacterProfile NormalizeProfile(CharacterProfile profile)
     {
         CharacterProfile normalizedProfile = CloneProfile(profile);
         if (normalizedProfile.ProfileId == Guid.Empty)
@@ -163,7 +168,48 @@ public sealed class CharacterSettingsStore
         normalizedProfile.CharacterName = normalizedProfile.CharacterName.Trim();
         normalizedProfile.WorldName = normalizedProfile.WorldName.Trim();
         normalizedProfile.RootPath = normalizedProfile.RootPath.Trim();
+        normalizedProfile.UiLayoutInfo = LoadUiLayoutInfo(normalizedProfile);
         return normalizedProfile;
+    }
+
+    private CharacterUiLayoutInfo? LoadUiLayoutInfo(CharacterProfile profile)
+    {
+        if (string.IsNullOrWhiteSpace(profile.RootPath))
+        {
+            return profile.UiLayoutInfo;
+        }
+
+        try
+        {
+            AddonAnalysisResult analysisResult = addonDataService.AnalyzePath(profile.RootPath);
+
+            return new CharacterUiLayoutInfo
+            {
+                SourcePath = analysisResult.SourcePath,
+                DataSetName = analysisResult.ParseResult.Header.DataSetName,
+                ElementCount = analysisResult.Entries.Count,
+                NonDefaultScaleElementCount = analysisResult.NonDefaultScaleEntryCount,
+                HighlightElements = analysisResult.HighlightEntries
+                    .Select(entry => new CharacterUiLayoutElementInfo
+                    {
+                        ElementId = $"0x{entry.AddonNameHash:X8}",
+                        DisplayName = entry.DisplayName,
+                        X = entry.X,
+                        Y = entry.Y,
+                        Scale = entry.Scale,
+                        Width = entry.Width,
+                        Height = entry.Height
+                    })
+                    .ToList()
+            };
+        }
+        catch (Exception ex)
+        {
+            return new CharacterUiLayoutInfo
+            {
+                LoadError = ex.Message
+            };
+        }
     }
 
     private static CharacterProfile CloneProfile(CharacterProfile profile)
@@ -173,7 +219,29 @@ public sealed class CharacterSettingsStore
             ProfileId = profile.ProfileId,
             CharacterName = profile.CharacterName,
             WorldName = profile.WorldName,
-            RootPath = profile.RootPath
+            RootPath = profile.RootPath,
+            UiLayoutInfo = profile.UiLayoutInfo is null
+                ? null
+                : new CharacterUiLayoutInfo
+                {
+                    SourcePath = profile.UiLayoutInfo.SourcePath,
+                    DataSetName = profile.UiLayoutInfo.DataSetName,
+                    ElementCount = profile.UiLayoutInfo.ElementCount,
+                    NonDefaultScaleElementCount = profile.UiLayoutInfo.NonDefaultScaleElementCount,
+                    LoadError = profile.UiLayoutInfo.LoadError,
+                    HighlightElements = profile.UiLayoutInfo.HighlightElements
+                        .Select(item => new CharacterUiLayoutElementInfo
+                        {
+                            ElementId = item.ElementId,
+                            DisplayName = item.DisplayName,
+                            X = item.X,
+                            Y = item.Y,
+                            Scale = item.Scale,
+                            Width = item.Width,
+                            Height = item.Height
+                        })
+                        .ToList()
+                }
         };
     }
 

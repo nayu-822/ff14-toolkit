@@ -1,0 +1,12 @@
+{
+  "templateId": "crafting_start_button",
+  "template": "crafting_start_button.ppm",
+  "preview": "crafting_start_button.png",
+  "referenceWindowWidth": 2048,
+  "referenceWindowHeight": 1151,
+  "referenceAnchorOffsetX": 1268,
+  "referenceAnchorOffsetY": 695,
+  "referenceTemplateWidth": 89,
+  "referenceTemplateHeight": 14,
+  "minimumScore": 0.90
+}

@@ -1,0 +1,131 @@
+<Window x:Class="FF14Toolkit.TemplateMatchWorkbench.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        Title="FF14 Toolkit Template Match Workbench"
+        Width="1680"
+        Height="980"
+        MinWidth="1400"
+        MinHeight="860">
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="2.2*" />
+            <RowDefinition Height="1*" />
+        </Grid.RowDefinitions>
+
+        <Border Grid.Row="0"
+                Padding="16"
+                Background="#FFF6F1E8"
+                BorderBrush="#FFD6C8B2"
+                BorderThickness="1"
+                CornerRadius="10">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="280" />
+                    <ColumnDefinition Width="20" />
+                    <ColumnDefinition Width="420" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0"
+                            Orientation="Horizontal"
+                            VerticalAlignment="Center">
+                    <Button MinWidth="120"
+                            Padding="14,8"
+                            Click="OpenImageButton_Click"
+                            Content="画像読込" />
+                    <Button Margin="10,0,0,0"
+                            MinWidth="132"
+                            Padding="14,8"
+                            Click="RunMatchButton_Click"
+                            Content="マッチング実行" />
+                    <Button Margin="10,0,0,0"
+                            MinWidth="96"
+                            Padding="14,8"
+                            Click="RefreshProfilesButton_Click"
+                            Content="再読込" />
+                </StackPanel>
+
+                <StackPanel Grid.Column="1"
+                            Margin="12,0,0,0">
+                    <TextBlock FontWeight="SemiBold" Text="テンプレート設定" />
+                    <ComboBox Margin="0,6,0,0"
+                              ItemsSource="{Binding TemplateProfiles}"
+                              SelectedItem="{Binding SelectedTemplateProfile}"
+                              DisplayMemberPath="DisplayName" />
+                </StackPanel>
+
+                <TextBlock Grid.Column="3"
+                           Margin="0,0,0,0"
+                           Text="{Binding SelectedTemplateDetails}"
+                           TextWrapping="Wrap" />
+
+                <StackPanel Grid.Column="4"
+                            Margin="16,0,0,0">
+                    <TextBlock FontWeight="SemiBold" Text="テンプレート配置フォルダ" />
+                    <TextBlock Margin="0,6,0,0"
+                               Text="{Binding TemplatesRootPath}"
+                               TextWrapping="Wrap" />
+                    <TextBlock Margin="0,12,0,0"
+                               FontWeight="SemiBold"
+                               Text="画像配置フォルダ" />
+                    <TextBlock Margin="0,6,0,0"
+                               Text="{Binding InputImagesRootPath}"
+                               TextWrapping="Wrap" />
+                    <TextBlock Margin="0,12,0,0"
+                               Foreground="#FF6B5A45"
+                               FontSize="13"
+                               Text="{Binding StatusText}"
+                               TextWrapping="Wrap" />
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <Border Grid.Row="1"
+                Margin="0,12,0,12"
+                Padding="12"
+                Background="#FFFDFBF7"
+                BorderBrush="#FFE3D7C4"
+                BorderThickness="1"
+                CornerRadius="10">
+            <TextBlock Text="{Binding ResultSummary}"
+                       FontFamily="Consolas"
+                       TextWrapping="Wrap" />
+        </Border>
+
+        <GroupBox Grid.Row="2" Header="検出可視化">
+            <Border Margin="8" Background="#FF101010">
+                <Image Source="{Binding AnnotatedImage}"
+                       Stretch="Uniform"
+                       HorizontalAlignment="Stretch"
+                       VerticalAlignment="Stretch" />
+            </Border>
+        </GroupBox>
+
+        <DataGrid Grid.Row="3"
+                  Margin="0,12,0,0"
+                  AutoGenerateColumns="False"
+                  CanUserAddRows="False"
+                  CanUserDeleteRows="False"
+                  IsReadOnly="True"
+                  ItemsSource="{Binding ScaleStatistics}">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Scale" Binding="{Binding Scale, StringFormat=F2}" Width="70" />
+                <DataGridTextColumn Header="Width" Binding="{Binding Width}" Width="70" />
+                <DataGridTextColumn Header="Height" Binding="{Binding Height}" Width="70" />
+                <DataGridTextColumn Header="Candidates" Binding="{Binding CandidatePositionCount}" Width="110" />
+                <DataGridTextColumn Header="ScoreCalls" Binding="{Binding ScoreCandidateCallCount}" Width="100" />
+                <DataGridTextColumn Header="Comparisons" Binding="{Binding SampleComparisonCount}" Width="120" />
+                <DataGridTextColumn Header="EarlyExit" Binding="{Binding EarlyExitCount}" Width="90" />
+                <DataGridTextColumn Header="AvgSamples" Binding="{Binding AverageSamplesPerCandidate, StringFormat=F1}" Width="90" />
+                <DataGridTextColumn Header="ElapsedMs" Binding="{Binding ElapsedMilliseconds, StringFormat=F1}" Width="90" />
+                <DataGridTextColumn Header="BestScore" Binding="{Binding BestScore, StringFormat=F3}" Width="90" />
+            </DataGrid.Columns>
+        </DataGrid>
+    </Grid>
+</Window>

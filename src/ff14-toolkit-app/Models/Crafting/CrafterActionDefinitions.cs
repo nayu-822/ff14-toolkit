@@ -93,6 +93,11 @@ public sealed class CrafterActionVariant
 
 public static class CrafterActionDefinitions
 {
+    // Community macro conventions usually treat progress/quality/restoration steps as 3s
+    // and buff/observation-style steps as 2s.
+    private const int StandardActionWaitMilliseconds = 3000;
+    private const int StatusActionWaitMilliseconds = 2000;
+
     private static readonly IReadOnlyList<CrafterClassJobInfo> CrafterJobs =
     [
         new(8, "CRP"),
@@ -111,7 +116,7 @@ public static class CrafterActionDefinitions
         Create(CrafterActionId.BasicTouch, "加工", "Basic Touch", "Veredelung", "Ouvrage de base", [100002u, 100016u, 100031u, 100076u, 100046u, 100061u, 100091u, 100106u], [1502u, 1552u, 1602u, 1652u, 1702u, 1752u, 1802u, 1852u]),
         Create(CrafterActionId.MastersMend, "マスターズメンド", "Master's Mend", "Wiederherstellung", "Réparation de maître", [100003u, 100017u, 100032u, 100077u, 100047u, 100062u, 100092u, 100107u], [1952u, 1952u, 1952u, 1952u, 1952u, 1952u, 1952u, 1952u]),
         Create(CrafterActionId.StandardTouch, "中級加工", "Standard Touch", "Solide Veredelung", "Ouvrage standard", [100004u, 100018u, 100034u, 100078u, 100048u, 100064u, 100093u, 100109u], [1516u, 1566u, 1616u, 1665u, 1716u, 1765u, 1816u, 1865u]),
-        Create(CrafterActionId.Observe, "経過観察", "Observe", "Beobachten", "Observation", [100010u, 100023u, 100040u, 100082u, 100053u, 100070u, 100099u, 100113u], [1954u, 1954u, 1954u, 1954u, 1954u, 1954u, 1954u, 1954u]),
+        Create(CrafterActionId.Observe, "経過観察", "Observe", "Beobachten", "Observation", [100010u, 100023u, 100040u, 100082u, 100053u, 100070u, 100099u, 100113u], [1954u, 1954u, 1954u, 1954u, 1954u, 1954u, 1954u, 1954u], StatusActionWaitMilliseconds),
         Create(CrafterActionId.PreciseTouch, "集中加工", "Precise Touch", "Präzise Veredelung", "Ouvrage précis", [100128u, 100129u, 100130u, 100131u, 100132u, 100133u, 100134u, 100135u], [1524u, 1574u, 1625u, 1676u, 1724u, 1774u, 1825u, 1875u]),
         Create(CrafterActionId.CarefulSynthesis, "模範作業", "Careful Synthesis", "Sorgfältige Bearbeitung", "Travail prudent", [100203u, 100204u, 100205u, 100206u, 100207u, 100208u, 100209u, 100210u], [1986u, 1986u, 1986u, 1986u, 1986u, 1986u, 1986u, 1986u]),
         Create(CrafterActionId.PrudentTouch, "倹約加工", "Prudent Touch", "Nachhaltige Veredelung", "Ouvrage parcimonieux", [100227u, 100228u, 100229u, 100230u, 100231u, 100232u, 100233u, 100234u], [1535u, 1584u, 1635u, 1686u, 1734u, 1784u, 1835u, 1886u]),
@@ -122,28 +127,28 @@ public static class CrafterActionDefinitions
         Create(CrafterActionId.ByregotsBlessing, "ビエルゴの祝福", "Byregot's Blessing", "Byregots Benediktion", "Bénédiction de Byregot", [100339u, 100340u, 100341u, 100342u, 100343u, 100344u, 100345u, 100346u], [1975u, 1975u, 1975u, 1975u, 1975u, 1975u, 1975u, 1975u]),
         Create(CrafterActionId.HastyTouch, "ヘイスティタッチ", "Hasty Touch", "Hastige Veredelung", "Ouvrage hâtif", [100355u, 100356u, 100357u, 100358u, 100359u, 100360u, 100361u, 100362u], [1989u, 1989u, 1989u, 1989u, 1989u, 1989u, 1989u, 1989u]),
         Create(CrafterActionId.RapidSynthesis, "突貫作業", "Rapid Synthesis", "Schnelle Bearbeitung", "Travail rapide", [100363u, 100364u, 100365u, 100366u, 100367u, 100368u, 100369u, 100370u], [1988u, 1988u, 1988u, 1988u, 1988u, 1988u, 1988u, 1988u]),
-        Create(CrafterActionId.TricksOfTheTrade, "秘訣", "Tricks of the Trade", "Kunstgriff", "Ficelles du métier", [100371u, 100372u, 100373u, 100374u, 100375u, 100376u, 100377u, 100378u], [1990u, 1990u, 1990u, 1990u, 1990u, 1990u, 1990u, 1990u]),
+        Create(CrafterActionId.TricksOfTheTrade, "秘訣", "Tricks of the Trade", "Kunstgriff", "Ficelles du métier", [100371u, 100372u, 100373u, 100374u, 100375u, 100376u, 100377u, 100378u], [1990u, 1990u, 1990u, 1990u, 1990u, 1990u, 1990u, 1990u], StatusActionWaitMilliseconds),
         Create(CrafterActionId.MuscleMemory, "確信", "Muscle Memory", "Motorisches Gedächtnis", "Mémoire musculaire", [100379u, 100380u, 100381u, 100382u, 100383u, 100384u, 100385u, 100386u], [1994u, 1994u, 1994u, 1994u, 1994u, 1994u, 1994u, 1994u]),
         Create(CrafterActionId.Reflect, "真価", "Reflect", "Einkehr", "Véritable valeur", [100387u, 100388u, 100389u, 100390u, 100391u, 100392u, 100393u, 100394u], [1982u, 1982u, 1982u, 1982u, 1982u, 1982u, 1982u, 1982u]),
-        Create(CrafterActionId.CarefulObservation, "設計変更", "Careful Observation", "Planänderung", "Changement de patron", [100395u, 100396u, 100397u, 100398u, 100399u, 100400u, 100401u, 100402u], [1984u, 1984u, 1984u, 1984u, 1984u, 1984u, 1984u, 1984u]),
+        Create(CrafterActionId.CarefulObservation, "設計変更", "Careful Observation", "Planänderung", "Changement de patron", [100395u, 100396u, 100397u, 100398u, 100399u, 100400u, 100401u, 100402u], [1984u, 1984u, 1984u, 1984u, 1984u, 1984u, 1984u, 1984u], StatusActionWaitMilliseconds),
         Create(CrafterActionId.Groundwork, "下地作業", "Groundwork", "Vorarbeit", "Travail préparatoire", [100403u, 100404u, 100405u, 100406u, 100407u, 100408u, 100409u, 100410u], [1518u, 1568u, 1618u, 1667u, 1718u, 1767u, 1818u, 1867u]),
         Create(CrafterActionId.AdvancedTouch, "上級加工", "Advanced Touch", "Höhere Veredelung", "Ouvrage avancé", [100411u, 100412u, 100413u, 100414u, 100415u, 100416u, 100417u, 100418u], [1519u, 1569u, 1620u, 1669u, 1719u, 1769u, 1820u, 1869u]),
-        Create(CrafterActionId.HeartAndSoul, "一心不乱", "Heart and Soul", "Mit Leib und Seele", "Attention totale", [100419u, 100420u, 100421u, 100422u, 100423u, 100424u, 100425u, 100426u], [1996u, 1996u, 1996u, 1996u, 1996u, 1996u, 1996u, 1996u]),
+        Create(CrafterActionId.HeartAndSoul, "一心不乱", "Heart and Soul", "Mit Leib und Seele", "Attention totale", [100419u, 100420u, 100421u, 100422u, 100423u, 100424u, 100425u, 100426u], [1996u, 1996u, 1996u, 1996u, 1996u, 1996u, 1996u, 1996u], StatusActionWaitMilliseconds),
         Create(CrafterActionId.PrudentSynthesis, "倹約作業", "Prudent Synthesis", "Rationelle Bearbeitung", "Travail économe", [100427u, 100428u, 100429u, 100430u, 100431u, 100432u, 100433u, 100434u], [1520u, 1570u, 1621u, 1670u, 1720u, 1770u, 1821u, 1870u]),
         Create(CrafterActionId.TrainedFinesse, "匠の神業", "Trained Finesse", "Götter Werk", "Main divine", [100435u, 100436u, 100437u, 100438u, 100439u, 100440u, 100441u, 100442u], [1997u, 1997u, 1997u, 1997u, 1997u, 1997u, 1997u, 1997u]),
         Create(CrafterActionId.RefinedTouch, "洗練加工", "Refined Touch", "Raffinierte Veredelung", "Ouvrage raffiné", [100443u, 100444u, 100445u, 100446u, 100447u, 100448u, 100449u, 100450u], [1522u, 1572u, 1623u, 1674u, 1722u, 1772u, 1823u, 1873u]),
-        Create(CrafterActionId.QuickInnovation, "クイックイノベーション", "Quick Innovation", "Spontane Innovation", "Innovation instantanée", [100459u, 100460u, 100461u, 100462u, 100463u, 100464u, 100465u, 100466u], [1999u, 1999u, 1999u, 1999u, 1999u, 1999u, 1999u, 1999u]),
+        Create(CrafterActionId.QuickInnovation, "クイックイノベーション", "Quick Innovation", "Spontane Innovation", "Innovation instantanée", [100459u, 100460u, 100461u, 100462u, 100463u, 100464u, 100465u, 100466u], [1999u, 1999u, 1999u, 1999u, 1999u, 1999u, 1999u, 1999u], StatusActionWaitMilliseconds),
         Create(CrafterActionId.ImmaculateMend, "パーフェクトメンド", "Immaculate Mend", "Winkelzug", "Réparation totale", [100467u, 100468u, 100469u, 100470u, 100471u, 100472u, 100473u, 100474u], [1950u, 1950u, 1950u, 1950u, 1950u, 1950u, 1950u, 1950u]),
-        Create(CrafterActionId.TrainedPerfection, "匠の絶技", "Trained Perfection", "Meisters Beitrag", "Main suprême", [100475u, 100476u, 100477u, 100478u, 100479u, 100480u, 100481u, 100482u], [1926u, 1926u, 1926u, 1926u, 1926u, 1926u, 1926u, 1926u]),
-        Create(CrafterActionId.WasteNot, "倹約", "Waste Not", "Waste Not", "Waste Not", [4631u, 4632u, 4633u, 4634u, 4635u, 4636u, 4637u, 4638u], [1992u, 1992u, 1992u, 1992u, 1992u, 1992u, 1992u, 1992u]),
-        Create(CrafterActionId.Veneration, "ヴェネレーション", "Veneration", "Veneration", "Veneration", [19297u, 19298u, 19299u, 19300u, 19301u, 19302u, 19303u, 19304u], [1995u, 1995u, 1995u, 1995u, 1995u, 1995u, 1995u, 1995u]),
-        Create(CrafterActionId.GreatStrides, "グレートストライド", "Great Strides", "Great Strides", "Great Strides", [260u, 261u, 262u, 263u, 264u, 265u, 266u, 267u], [1955u, 1955u, 1955u, 1955u, 1955u, 1955u, 1955u, 1955u]),
-        Create(CrafterActionId.Innovation, "イノベーション", "Innovation", "Innovation", "Innovation", [19004u, 19005u, 19006u, 19007u, 19008u, 19009u, 19010u, 19011u], [1987u, 1987u, 1987u, 1987u, 1987u, 1987u, 1987u, 1987u]),
-        Create(CrafterActionId.WasteNotII, "長期倹約", "Waste Not II", "Waste Not II", "Waste Not II", [4639u, 4640u, 4641u, 4642u, 4643u, 4644u, 19002u, 19003u], [1993u, 1993u, 1993u, 1993u, 1993u, 1993u, 1993u, 1993u]),
-        Create(CrafterActionId.Manipulation, "マニピュレーション", "Manipulation", "Manipulation", "Manipulation", [4574u, 4575u, 4576u, 4577u, 4578u, 4579u, 4580u, 4581u], [1985u, 1985u, 1985u, 1985u, 1985u, 1985u, 1985u, 1985u]),
+        Create(CrafterActionId.TrainedPerfection, "匠の絶技", "Trained Perfection", "Meisters Beitrag", "Main suprême", [100475u, 100476u, 100477u, 100478u, 100479u, 100480u, 100481u, 100482u], [1926u, 1926u, 1926u, 1926u, 1926u, 1926u, 1926u, 1926u], StatusActionWaitMilliseconds),
+        Create(CrafterActionId.WasteNot, "倹約", "Waste Not", "Waste Not", "Waste Not", [4631u, 4632u, 4633u, 4634u, 4635u, 4636u, 4637u, 4638u], [1992u, 1992u, 1992u, 1992u, 1992u, 1992u, 1992u, 1992u], StatusActionWaitMilliseconds),
+        Create(CrafterActionId.Veneration, "ヴェネレーション", "Veneration", "Veneration", "Veneration", [19297u, 19298u, 19299u, 19300u, 19301u, 19302u, 19303u, 19304u], [1995u, 1995u, 1995u, 1995u, 1995u, 1995u, 1995u, 1995u], StatusActionWaitMilliseconds),
+        Create(CrafterActionId.GreatStrides, "グレートストライド", "Great Strides", "Great Strides", "Great Strides", [260u, 261u, 262u, 263u, 264u, 265u, 266u, 267u], [1955u, 1955u, 1955u, 1955u, 1955u, 1955u, 1955u, 1955u], StatusActionWaitMilliseconds),
+        Create(CrafterActionId.Innovation, "イノベーション", "Innovation", "Innovation", "Innovation", [19004u, 19005u, 19006u, 19007u, 19008u, 19009u, 19010u, 19011u], [1987u, 1987u, 1987u, 1987u, 1987u, 1987u, 1987u, 1987u], StatusActionWaitMilliseconds),
+        Create(CrafterActionId.WasteNotII, "長期倹約", "Waste Not II", "Waste Not II", "Waste Not II", [4639u, 4640u, 4641u, 4642u, 4643u, 4644u, 19002u, 19003u], [1993u, 1993u, 1993u, 1993u, 1993u, 1993u, 1993u, 1993u], StatusActionWaitMilliseconds),
+        Create(CrafterActionId.Manipulation, "マニピュレーション", "Manipulation", "Manipulation", "Manipulation", [4574u, 4575u, 4576u, 4577u, 4578u, 4579u, 4580u, 4581u], [1985u, 1985u, 1985u, 1985u, 1985u, 1985u, 1985u, 1985u], StatusActionWaitMilliseconds),
         Create(CrafterActionId.FocusedSynthesis, "注視作業", "Focused Synthesis", "Focused Synthesis", "Focused Synthesis", [100235u, 100236u, 100237u, 100238u, 100239u, 100240u, 100241u, 100242u], [786u, 786u, 786u, 786u, 786u, 786u, 786u, 786u]),
         Create(CrafterActionId.FocusedTouch, "注視加工", "Focused Touch", "Focused Touch", "Focused Touch", [100243u, 100244u, 100245u, 100246u, 100247u, 100248u, 100249u, 100250u], [786u, 786u, 786u, 786u, 786u, 786u, 786u, 786u]),
-        Create(CrafterActionId.FinalAppraisal, "最終確認", "Final Appraisal", "Final Appraisal", "Final Appraisal", [19012u, 19013u, 19014u, 19015u, 19016u, 19017u, 19018u, 19019u], [1983u, 1983u, 1983u, 1983u, 1983u, 1983u, 1983u, 1983u]),
+        Create(CrafterActionId.FinalAppraisal, "最終確認", "Final Appraisal", "Final Appraisal", "Final Appraisal", [19012u, 19013u, 19014u, 19015u, 19016u, 19017u, 19018u, 19019u], [1983u, 1983u, 1983u, 1983u, 1983u, 1983u, 1983u, 1983u], StatusActionWaitMilliseconds),
         Create(CrafterActionId.DaringTouch, "デアリングタッチ", "Daring Touch", "Daring Touch", "Daring Touch", [100451u, 100452u, 100453u, 100454u, 100455u, 100456u, 100457u, 100458u], [1998u, 1998u, 1998u, 1998u, 1998u, 1998u, 1998u, 1998u])
     ];
 
@@ -172,7 +177,7 @@ public static class CrafterActionDefinitions
         string nameFr,
         IReadOnlyList<uint> luminaActionIds,
         IReadOnlyList<uint> iconIds,
-        int postActionWaitMilliseconds = 3000)
+        int postActionWaitMilliseconds = StandardActionWaitMilliseconds)
     {
         if (luminaActionIds.Count != CrafterJobs.Count)
         {

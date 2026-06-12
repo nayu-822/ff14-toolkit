@@ -1,0 +1,12 @@
+{
+  "templateId": "crafting_log_anchor",
+  "template": "crafting_log_anchor.ppm",
+  "preview": "crafting_log_anchor.png",
+  "referenceWindowWidth": 2048,
+  "referenceWindowHeight": 1151,
+  "referenceAnchorOffsetX": 652,
+  "referenceAnchorOffsetY": 206,
+  "referenceTemplateWidth": 173,
+  "referenceTemplateHeight": 32,
+  "minimumScore": 0.95
+}

@@ -233,7 +233,7 @@ public sealed class HotbarContentViewModel : ShellContentViewModel
             return HotbarSlotViewModel.Empty(entry.SlotId);
         }
 
-        string hotbarCommand = BuildHotbarCommand(entry.HotbarId, entry.SlotId);
+        string hotbarCommand = HotbarCommandTextUtility.BuildHotbarCommand(entry.HotbarId, entry.SlotId);
         string tooltip = !string.IsNullOrWhiteSpace(entry.ResolvedCommandName)
             ? entry.ResolvedCommandName!
             : $"{entry.SlotTypeName} #{entry.CommandId}";
@@ -280,29 +280,6 @@ public sealed class HotbarContentViewModel : ShellContentViewModel
             : string.Join(" / ", parts);
     }
 
-    private static string BuildHotbarCommand(byte hotbarId, byte slotId)
-    {
-        string hotbarToken = hotbarId switch
-        {
-            <= 9 => (hotbarId + 1).ToString(CultureInfo.InvariantCulture),
-            10 => "EX",
-            _ => (hotbarId + 1).ToString(CultureInfo.InvariantCulture)
-        };
-
-        return $"HOTBAR_{hotbarToken}_{GetHotbarSlotToken(slotId)}";
-    }
-
-    private static string GetHotbarSlotToken(byte slotId)
-    {
-        return slotId switch
-        {
-            <= 8 => (slotId + 1).ToString(CultureInfo.InvariantCulture),
-            9 => "0",
-            10 => "A",
-            11 => "B",
-            _ => (slotId + 1).ToString(CultureInfo.InvariantCulture)
-        };
-    }
 }
 
 public sealed class HotbarJobOptionViewModel

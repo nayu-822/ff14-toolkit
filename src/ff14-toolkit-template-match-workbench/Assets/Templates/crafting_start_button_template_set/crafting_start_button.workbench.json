@@ -1,0 +1,15 @@
+{
+  "displayName": "Crafting Start Button",
+  "templateMetadataPath": "crafting_start_button.json",
+  "scales": [1.00, 0.95, 1.05, 0.90, 1.10],
+  "minimumScore": 0.90,
+  "sampleStep": 1,
+  "searchOptions": {
+    "coarsePositionStep": 4,
+    "coarseSampleStep": 2,
+    "refineRadius": 10,
+    "refinePositionStep": 1,
+    "refineSampleStep": 1,
+    "maximumRefineCandidates": 5
+  }
+}

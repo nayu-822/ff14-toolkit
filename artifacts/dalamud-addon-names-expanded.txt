@@ -1,0 +1,4 @@
+AddonContextMenuTitle
+AddonContextSub
+ContextMenu
+NamePlate

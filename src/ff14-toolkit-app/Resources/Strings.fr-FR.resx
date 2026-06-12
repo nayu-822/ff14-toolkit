@@ -432,6 +432,18 @@
   <data name="Nav_DevelopmentOverlayPluginWSServer" xml:space="preserve">
     <value>OverlayPlugin WSServer</value>
   </data>
+  <data name="Nav_DevelopmentKeybind" xml:space="preserve">
+    <value>KEYBIND.DAT</value>
+  </data>
+  <data name="Nav_DevelopmentAddon" xml:space="preserve">
+    <value>ADDON.DAT</value>
+  </data>
+  <data name="Section_DevelopmentKeybind_Description" xml:space="preserve">
+    <value>Afficher les commandes et raccourcis lus depuis KEYBIND.DAT.</value>
+  </data>
+  <data name="Section_DevelopmentAddon_Description" xml:space="preserve">
+    <value>Afficher les elements d'interface analyses depuis ADDON.DAT.</value>
+  </data>
   <data name="Section_DevelopmentOverlayPluginWSServer_Description" xml:space="preserve">
     <value>Tester les requetes et reponses WebSocket d'OverlayPlugin.</value>
   </data>

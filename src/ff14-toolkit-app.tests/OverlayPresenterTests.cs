@@ -27,11 +27,13 @@ public sealed class OverlayPresenterTests
 
     private sealed class FakeOverlayWindow : IOverlayFrameWindow
     {
+#pragma warning disable CS0067
         public List<string> Calls { get; } = [];
 
         public bool IsVisible { get; private set; }
 
         public event EventHandler<OverlayElementClickedEventArgs>? ElementClicked;
+#pragma warning restore CS0067
 
         public void EnsureHandle()
         {

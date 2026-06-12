@@ -151,6 +151,8 @@
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="12" />
                     <RowDefinition Height="Auto" />
+                    <RowDefinition Height="12" />
+                    <RowDefinition Height="Auto" />
                     <RowDefinition Height="16" />
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="10" />
@@ -204,7 +206,26 @@
                                Text="{Binding CharacterSettingsCurrentPath}" />
                 </Grid>
 
-                <Grid Grid.Row="6"
+                <Grid Grid.Row="6">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="110" />
+                        <ColumnDefinition Width="12" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock VerticalAlignment="Top"
+                               FontWeight="SemiBold"
+                               Foreground="{StaticResource AppTextBrush}"
+                               Text="{Binding CharacterUiInfoTitle}" />
+
+                    <TextBlock Grid.Column="2"
+                               Foreground="{StaticResource AppMutedTextBrush}"
+                               FontFamily="Consolas"
+                               TextWrapping="Wrap"
+                               Text="{Binding CharacterUiInfoSummary}" />
+                </Grid>
+
+                <Grid Grid.Row="8"
                       Grid.IsSharedSizeScope="True">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
@@ -317,7 +338,7 @@
                     </Grid>
                 </Grid>
 
-                <Grid Grid.Row="8">
+                <Grid Grid.Row="10">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="Auto" />
@@ -337,7 +358,7 @@
                             Style="{StaticResource QuietButtonStyle}" />
                 </Grid>
 
-                <Grid Grid.Row="10">
+                <Grid Grid.Row="12">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="10" />

@@ -7,6 +7,7 @@ public sealed class CraftSequenceHotkeySlotViewModel : ObservableObject
 {
     private bool isEnabled;
     private Guid? selectedSequenceId;
+    private CraftSequenceOptionViewModel? selectedSequence;
     private string hotkeyText;
     private string repeatCountText;
     private bool isCapturingHotkey;
@@ -43,7 +44,38 @@ public sealed class CraftSequenceHotkeySlotViewModel : ObservableObject
     public Guid? SelectedSequenceId
     {
         get => selectedSequenceId;
-        set => SetProperty(ref selectedSequenceId, value);
+        set
+        {
+            if (!SetProperty(ref selectedSequenceId, value))
+            {
+                return;
+            }
+
+            if (selectedSequence?.SequenceId != value)
+            {
+                selectedSequence = null;
+                OnPropertyChanged(nameof(SelectedSequence));
+            }
+        }
+    }
+
+    public CraftSequenceOptionViewModel? SelectedSequence
+    {
+        get => selectedSequence;
+        set
+        {
+            if (!SetProperty(ref selectedSequence, value))
+            {
+                return;
+            }
+
+            Guid? nextSequenceId = value?.SequenceId;
+            if (selectedSequenceId != nextSequenceId)
+            {
+                selectedSequenceId = nextSequenceId;
+                OnPropertyChanged(nameof(SelectedSequenceId));
+            }
+        }
     }
 
     public string RepeatCountText
@@ -68,5 +100,13 @@ public sealed class CraftSequenceHotkeySlotViewModel : ObservableObject
             SequenceId = SelectedSequenceId,
             RepeatCount = repeatCount
         };
+    }
+
+    public void UpdateSelectedSequenceOption(CraftSequenceOptionViewModel? option)
+    {
+        selectedSequence = option;
+        selectedSequenceId = option?.SequenceId;
+        OnPropertyChanged(nameof(SelectedSequence));
+        OnPropertyChanged(nameof(SelectedSequenceId));
     }
 }
